@@ -8,6 +8,8 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <h1>Trips</h1>
         <p>Select a trip to view and manage its registrations.</p>
+
+        <button className="create-trip-button">Create Trip</button>
       </div>
 
       <section className="trips-section">

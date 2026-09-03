@@ -11,3 +11,58 @@
 .trip-management-page button:hover {
   background-color: #256628;
 }
+
+.selection-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.trip-management-page .delete-button {
+  background-color: #c62828;
+}
+
+.trip-management-page .delete-button:hover {
+  background-color: #a61f1f;
+}
+.add-selection-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  align-items: center;
+}
+.add-selection-form input {
+  width: 250px;
+  padding: 12px 14px;
+  border: 1px solid #2f7d32;
+  border-radius: 6px;
+  font-size: 16px;
+}
+.add-selection-form input:nth-child(2) {
+  width: 350px;
+}
+
+.trip-management-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+.selection-full {
+  font-weight: bold;
+  color: #c62828;
+}
+.trip-management-page .activate-button {
+  background-color: black;
+}
+
+.trip-management-page .activate-button:hover {
+  background-color: #256628;
+}
+
+.trip-management-page .deactivate-button {
+  background-color: #e67e22;
+}
+
+.trip-management-page .deactivate-button:hover {
+  background-color: #c96a16;
+}
