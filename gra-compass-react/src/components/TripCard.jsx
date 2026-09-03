@@ -8,6 +8,7 @@ const TripCard = ({
   startDate,
   endDate,
   registrationCount,
+  imagePreview,
 }) => {
   const navigate = useNavigate();
 
@@ -17,7 +18,9 @@ const TripCard = ({
 
   return (
     <div className="trip-card">
-      <div className="trip-card-image">Trip Image</div>
+      <div className="trip-card-image">
+        {imagePreview ? <img src={imagePreview} alt={name} /> : "Trip Image"}
+      </div>
 
       <div className="trip-card-content">
         <h3>{name}</h3>

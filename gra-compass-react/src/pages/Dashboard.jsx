@@ -1,15 +1,22 @@
 import TripCard from "../components/TripCard";
 import "../components/Dashboard.css";
-import trips from "../data/mockTrips";
 
-const Dashboard = () => {
+import { useNavigate } from "react-router-dom";
+
+const Dashboard = ({ trips }) => {
+  const navigate = useNavigate();
   return (
     <main className="dashboard">
       <div className="dashboard-header">
         <h1>Trips</h1>
         <p>Select a trip to view and manage its registrations.</p>
 
-        <button className="create-trip-button">Create Trip</button>
+        <button
+          className="create-trip-button"
+          onClick={() => navigate("/trips/create")}
+        >
+          Create Trip
+        </button>
       </div>
 
       <section className="trips-section">
@@ -25,6 +32,7 @@ const Dashboard = () => {
               startDate={trip.startDate}
               endDate={trip.endDate}
               registrationCount={trip.registrationCount}
+              imagePreview={trip.imagePreview}
             />
           ))}
         </div>

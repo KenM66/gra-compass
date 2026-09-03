@@ -44,3 +44,9 @@
 .trip-card-content button:hover {
   background-color: #256628;
 }
+.trip-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

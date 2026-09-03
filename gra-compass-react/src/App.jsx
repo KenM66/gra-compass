@@ -7,15 +7,18 @@ import RegistrationDetails from "./pages/RegistrationDetails";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import TripManagement from "./pages/TripManagement";
+import CreateTrip from "./pages/CreateTrip";
+import { useState } from "react";
+import tripsData from "./data/mockTrips";
 
 const App = () => {
+  const [trips, setTrips] = useState(tripsData);
+
   return (
     <BrowserRouter>
       <Navbar />
 
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-
         <Route
           path="/trips/:tripId/registrations"
           element={<Registrations />}
@@ -29,6 +32,12 @@ const App = () => {
         <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/trips/:tripId/manage" element={<TripManagement />} />
+
+        <Route
+          path="/trips/create"
+          element={<CreateTrip setTrips={setTrips} />}
+        />
+        <Route path="/" element={<Dashboard trips={trips} />} />
       </Routes>
     </BrowserRouter>
   );
