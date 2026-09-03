@@ -1,0 +1,42 @@
+.registrations-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+.registrations-header {
+  margin-bottom: 30px;
+}
+
+.registrations-header h1 {
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.registrations-header p {
+  margin: 0;
+  color: #666;
+}
+
+.registration-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.registration-search {
+  margin-bottom: 30px;
+}
+
+.registration-search input {
+  width: 100%;
+  max-width: 600px;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 1px solid #2f7d32;
+  border-radius: 8px;
+  outline: none;
+}
+
+.registration-search input:focus {
+  border-width: 2px;
+}

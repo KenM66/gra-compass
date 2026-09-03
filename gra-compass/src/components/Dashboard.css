@@ -1,0 +1,30 @@
+.dashboard {
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 40px;
+}
+
+.dashboard-header h1 {
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.dashboard-header p {
+  color: #666;
+  margin: 0;
+}
+
+.trips-section h2 {
+  margin-bottom: 20px;
+}
+
+.trip-list {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding-bottom: 20px;
+}

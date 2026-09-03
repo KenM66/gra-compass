@@ -1,0 +1,13 @@
+.trip-management-page button {
+  padding: 10px 16px;
+  background-color: #2f7d32;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.trip-management-page button:hover {
+  background-color: #256628;
+}

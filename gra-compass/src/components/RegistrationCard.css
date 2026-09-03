@@ -1,0 +1,36 @@
+.registration-card {
+  width: 320px;
+  background-color: white;
+  border: 1px solid #2f7d32;
+  border-radius: 10px;
+  padding: 20px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.registration-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.registration-card h3 {
+  margin: 0 0 16px 0;
+  color: #2f7d32;
+  font-size: 18px;
+}
+
+.registration-card p {
+  margin: 8px 0;
+  color: #444;
+}
+
+.registration-card .traveler-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+}
+
+.registration-card .traveler-email {
+  color: #666;
+}
