@@ -50,3 +50,6 @@
   object-fit: cover;
   display: block;
 }
+.trip-card-content button + button {
+  margin-left: 10px;
+}

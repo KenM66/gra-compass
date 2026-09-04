@@ -66,3 +66,44 @@
 .trip-management-page .deactivate-button:hover {
   background-color: #c96a16;
 }
+
+.trip-details-edit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.trip-details-edit label {
+  width: 120px;
+  font-weight: 600;
+}
+
+.trip-details-edit input {
+  width: 300px;
+  padding: 10px 12px;
+}
+
+.trip-details-edit button {
+  width: 80px;
+  padding: 10px 16px;
+  background-color: lightgrey;
+  color: #333;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.trip-details-edit button:hover {
+  background-color: #f2f2f2;
+  border-color: #2f7d32;
+}
+
+.saved-input {
+  color: #2f7d32;
+  background-color: #eaf4ff;
+  font-weight: 600;
+  opacity: 1;
+  cursor: default;
+}

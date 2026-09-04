@@ -73,3 +73,28 @@
     grid-template-columns: 1fr;
   }
 }
+
+.details-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.details-section-header h2 {
+  margin: 0;
+}
+
+.details-section-header button {
+  padding: 8px 16px;
+  background-color: white;
+  color: #333;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.details-section-header button:hover {
+  background-color: lightblue;
+  border-color: #2f7d32;
+}

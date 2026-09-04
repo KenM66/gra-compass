@@ -1,9 +1,12 @@
 import { useParams } from "react-router-dom";
 import "../components/RegistrationDetails.css";
 import registrationsByTrip from "../data/mockRegistrations";
+import { useState } from "react";
 
 const RegistrationDetails = () => {
   const { tripId, id } = useParams();
+
+  const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
 
   const registrations = registrationsByTrip[tripId] || [];
 
@@ -29,7 +32,16 @@ const RegistrationDetails = () => {
 
       <div className="details-grid">
         <section className="details-section">
-          <h2>Personal Information</h2>
+          <div className="details-section-header">
+            <h2>Personal Information</h2>
+
+            <button
+              type="button"
+              onClick={() => setIsEditingPersonalInfo(true)}
+            >
+              Edit
+            </button>
+          </div>
 
           <div className="detail-row">
             <span>First Name</span>

@@ -2,12 +2,166 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 
 import selectionsByTrip from "../data/mockTripSelections";
-import trips from "../data/mockTrips";
+
 import "../components/TripManagement.css";
 
-const TripManagement = () => {
+const TripManagement = ({ trips, setTrips }) => {
   const { tripId } = useParams();
   const trip = trips.find((trip) => trip.id === Number(tripId));
+  const [editTripName, setEditTripName] = useState(trip?.name || "");
+  const [editDestination, setEditDestination] = useState(
+    trip?.destination || "",
+  );
+
+  const formatDateForInput = (dateValue) => {
+    if (!dateValue) return "";
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toISOString().split("T")[0];
+  };
+
+  const formatDateForDisplay = (dateValue) => {
+    if (!dateValue) return "";
+
+    const date = new Date(`${dateValue}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+      return dateValue;
+    }
+
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const [editStartDate, setEditStartDate] = useState(
+    formatDateForInput(trip?.startDate),
+  );
+
+  const [editEndDate, setEditEndDate] = useState(
+    formatDateForInput(trip?.endDate),
+  );
+  const [editImagePreview, setEditImagePreview] = useState(
+    trip?.imagePreview || "",
+  );
+
+  const [isEditingTrip, setIsEditingTrip] = useState(false);
+  const [savedField, setSavedField] = useState("");
+
+  const showSavedFeedback = (fieldName) => {
+    setSavedField(fieldName);
+
+    setTimeout(() => {
+      setSavedField("");
+    }, 2000);
+  };
+
+  const handleSaveTripName = () => {
+    if (!editTripName.trim()) {
+      alert("Trip name is required.");
+      return;
+    }
+
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              name: editTripName.trim(),
+            }
+          : currentTrip,
+      ),
+    );
+    showSavedFeedback("name");
+  };
+
+  const handleSaveDestination = () => {
+    if (!editDestination.trim()) {
+      alert("Destination is required.");
+      return;
+    }
+
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              destination: editDestination.trim(),
+            }
+          : currentTrip,
+      ),
+    );
+    showSavedFeedback("destination");
+  };
+
+  const handleSaveStartDate = () => {
+    if (!editStartDate) {
+      alert("Start date is required.");
+      return;
+    }
+
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              startDate: editStartDate,
+            }
+          : currentTrip,
+      ),
+    );
+    showSavedFeedback("startDate");
+  };
+
+  const handleSaveEndDate = () => {
+    if (!editEndDate) {
+      alert("End date is required.");
+      return;
+    }
+
+    if (editEndDate < editStartDate) {
+      alert("End date cannot be before the start date.");
+      return;
+    }
+
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              endDate: editEndDate,
+            }
+          : currentTrip,
+      ),
+    );
+    showSavedFeedback("endDate");
+  };
+  const handleSaveTripImage = () => {
+    if (!editImagePreview) {
+      alert("Please select an image.");
+      return;
+    }
+
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              imagePreview: editImagePreview,
+            }
+          : currentTrip,
+      ),
+    );
+
+    showSavedFeedback("image");
+  };
 
   const [selections, setSelections] = useState(selectionsByTrip[tripId] || []);
 
@@ -135,8 +289,114 @@ const TripManagement = () => {
 
   return (
     <main className="trip-management-page">
+      {isEditingTrip && (
+        <div className="trip-edit-section">
+          <div className="trip-details-edit">
+            <label htmlFor="editTripName">Trip Name</label>
+            <input
+              id="editTripName"
+              type="text"
+              value={savedField === "name" ? "Saved!" : editTripName}
+              onChange={(event) => setEditTripName(event.target.value)}
+              className={savedField === "name" ? "saved-input" : ""}
+              disabled={savedField === "name"}
+            />
+
+            <button type="button" onClick={handleSaveTripName}>
+              Save
+            </button>
+          </div>
+
+          <div className="trip-details-edit">
+            <label htmlFor="editDestination">Destination</label>
+            <input
+              id="editDestination"
+              type="text"
+              value={savedField === "destination" ? "Saved!" : editDestination}
+              onChange={(event) => setEditDestination(event.target.value)}
+              className={savedField === "destination" ? "saved-input" : ""}
+              disabled={savedField === "destination"}
+            />
+            <button type="button" onClick={handleSaveDestination}>
+              Save
+            </button>
+          </div>
+
+          <div className="trip-details-edit">
+            <label htmlFor="editStartDate">Start Date</label>
+
+            <input
+              id="editStartDate"
+              type="date"
+              value={editStartDate}
+              onChange={(event) => setEditStartDate(event.target.value)}
+              className={savedField === "startDate" ? "saved-input" : ""}
+            />
+            <button type="button" onClick={handleSaveStartDate}>
+              Save
+            </button>
+          </div>
+
+          <div className="trip-details-edit">
+            <label htmlFor="editEndDate">End Date</label>
+
+            <input
+              id="editEndDate"
+              type="date"
+              value={editEndDate}
+              onChange={(event) => setEditEndDate(event.target.value)}
+              className={savedField === "endDate" ? "saved-input" : ""}
+            />
+            <button type="button" onClick={handleSaveEndDate}>
+              Save
+            </button>
+          </div>
+          <div className="trip-details-edit">
+            <label htmlFor="editTripImage">Trip Image</label>
+
+            <input
+              id="editTripImage"
+              type="file"
+              accept="image/*"
+              onChange={(event) => {
+                const file = event.target.files[0];
+
+                if (file) {
+                  setEditImagePreview(URL.createObjectURL(file));
+                }
+              }}
+            />
+            {editImagePreview && (
+              <img
+                src={editImagePreview}
+                alt="Trip preview"
+                className="trip-image-preview"
+              />
+            )}
+            <button
+              type="button"
+              onClick={handleSaveTripImage}
+              disabled={savedField === "image"}
+            >
+              Save
+            </button>
+          </div>
+          <button type="button" onClick={() => setIsEditingTrip(false)}>
+            Done Editing
+          </button>
+        </div>
+      )}
+
       <h1>{trip?.name || "Trip Management"}</h1>
       <p>{trip?.destination}</p>
+      <p>
+        {formatDateForDisplay(trip?.startDate)} -{" "}
+        {formatDateForDisplay(trip?.endDate)}
+      </p>
+
+      <button type="button" onClick={() => setIsEditingTrip(true)}>
+        Edit Trip
+      </button>
 
       <section>
         <h2>Available Trip Selections</h2>

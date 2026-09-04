@@ -31,7 +31,10 @@ const App = () => {
 
         <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/trips/:tripId/manage" element={<TripManagement />} />
+        <Route
+          path="/trips/:tripId/manage"
+          element={<TripManagement trips={trips} setTrips={setTrips} />}
+        />
 
         <Route
           path="/trips/create"
