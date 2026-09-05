@@ -8,6 +8,29 @@ import "../components/TripManagement.css";
 const TripManagement = ({ trips, setTrips }) => {
   const { tripId } = useParams();
   const trip = trips.find((trip) => trip.id === Number(tripId));
+  console.log("Current trip:", trip);
+  const getRegistrationStatus = () => {
+    if (!trip) {
+      return "OPEN";
+    }
+
+    if (trip.registrationCapacity === 0) {
+      return "NOT OPEN";
+    }
+
+    if (trip.registrationCount >= trip.registrationCapacity) {
+      return "FULL";
+    }
+
+    if (trip.registrationsPaused) {
+      return "PAUSED";
+    }
+
+    return "OPEN";
+  };
+
+  const registrationStatus = getRegistrationStatus();
+
   const [editTripName, setEditTripName] = useState(trip?.name || "");
   const [editDestination, setEditDestination] = useState(
     trip?.destination || "",
@@ -172,6 +195,12 @@ const TripManagement = ({ trips, setTrips }) => {
   const [editName, setEditName] = useState("");
   const [newMaxCapacity, setNewMaxCapacity] = useState("");
   const [editMaxCapacity, setEditMaxCapacity] = useState("");
+  const [isEditingRegistrationSettings, setIsEditingRegistrationSettings] =
+    useState(false);
+
+  const [editRegistrationCapacity, setEditRegistrationCapacity] = useState(
+    trip?.registrationCapacity ?? 0,
+  );
 
   const handleAddSelection = () => {
     if (!newType.trim() || !newName.trim()) {
@@ -287,6 +316,56 @@ const TripManagement = ({ trips, setTrips }) => {
     setSelections(updatedSelections);
   };
 
+  const handlePauseRegistrations = () => {
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              registrationsPaused: true,
+            }
+          : currentTrip,
+      ),
+    );
+  };
+
+  const handleResumeRegistrations = () => {
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              registrationsPaused: false,
+            }
+          : currentTrip,
+      ),
+    );
+  };
+
+  const handleSaveRegistrationCapacity = () => {
+    const capacity = Number(editRegistrationCapacity);
+
+    if (capacity < trip.registrationCount) {
+      alert(
+        `Capacity cannot be lower than the ${trip.registrationCount} existing registrations.`,
+      );
+      return;
+    }
+
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              registrationCapacity: capacity,
+            }
+          : currentTrip,
+      ),
+    );
+
+    setIsEditingRegistrationSettings(false);
+  };
+
   return (
     <main className="trip-management-page">
       {isEditingTrip && (
@@ -389,14 +468,90 @@ const TripManagement = ({ trips, setTrips }) => {
 
       <h1>{trip?.name || "Trip Management"}</h1>
       <p>{trip?.destination}</p>
-      <p>
-        {formatDateForDisplay(trip?.startDate)} -{" "}
-        {formatDateForDisplay(trip?.endDate)}
-      </p>
+      <div className="trip-summary-date-row">
+        <p>
+          {formatDateForDisplay(trip?.startDate)} -{" "}
+          {formatDateForDisplay(trip?.endDate)}
+        </p>
 
-      <button type="button" onClick={() => setIsEditingTrip(true)}>
-        Edit Trip
+        <button
+          type="button"
+          className="edit-trip-summary-button"
+          onClick={() => setIsEditingTrip(true)}
+        >
+          Edit Trip
+        </button>
+      </div>
+      <div className="registration-controls">
+        <h2>Registration Status</h2>
+
+        <div className="registration-status-row">
+          <strong>Status:</strong>
+
+          <span
+            className={`registration-status registration-status-${registrationStatus
+              .toLowerCase()
+              .replace(" ", "-")}`}
+          >
+            <span className="registration-status-dot"></span>
+            {registrationStatus}
+          </span>
+        </div>
+
+        <p>
+          <strong>Registrations:</strong> {trip?.registrationCount} /{" "}
+          {trip?.registrationCapacity}
+        </p>
+
+        {registrationStatus === "OPEN" && (
+          <button type="button" onClick={handlePauseRegistrations}>
+            Pause Registrations
+          </button>
+        )}
+
+        {registrationStatus === "PAUSED" && (
+          <button type="button" onClick={handleResumeRegistrations}>
+            Resume Registrations
+          </button>
+        )}
+      </div>
+      <button
+        type="button"
+        className="edit-registration-settings-button"
+        onClick={() => setIsEditingRegistrationSettings(true)}
+      >
+        Edit Registration Settings
       </button>
+
+      {isEditingRegistrationSettings && (
+        <div className="registration-settings-edit">
+          <label htmlFor="editRegistrationCapacity">
+            Registration Capacity
+          </label>
+
+          <input
+            id="editRegistrationCapacity"
+            type="number"
+            min={trip?.registrationCount || 0}
+            step="1"
+            value={editRegistrationCapacity}
+            onChange={(event) =>
+              setEditRegistrationCapacity(event.target.value)
+            }
+          />
+
+          <button type="button" onClick={handleSaveRegistrationCapacity}>
+            Save
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsEditingRegistrationSettings(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
       <section>
         <h2>Available Trip Selections</h2>

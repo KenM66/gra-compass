@@ -107,3 +107,122 @@
   opacity: 1;
   cursor: default;
 }
+.registration-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.registration-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.registration-status-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.registration-status-open .registration-status-dot {
+  background-color: green;
+}
+
+.registration-status-paused .registration-status-dot {
+  background-color: #d4a017;
+}
+
+.registration-status-full .registration-status-dot {
+  background-color: red;
+}
+
+.registration-status-not-open .registration-status-dot {
+  background-color: #999;
+}
+.registration-controls {
+  background-color: white;
+  border: 1px solid #2f7d32;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  max-width: 990px;
+}
+.trip-management-page .edit-registration-settings-button {
+  padding: 10px 18px;
+  display: block;
+  margin-top: 0;
+  margin-bottom: 32px;
+  background-color: white;
+  color: #333;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.trip-management-page .edit-registration-settings-button:hover {
+  background-color: #f2f2f2;
+  border-color: #2f7d32;
+}
+.trip-summary-date-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.trip-summary-date-row p {
+  margin: 0;
+}
+
+.trip-management-page .edit-trip-summary-button {
+  padding: 6px 12px;
+  background-color: white;
+  color: #333;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.trip-management-page .edit-trip-summary-button:hover {
+  background-color: #f2f2f2;
+  border-color: #2f7d32;
+}
+.registration-settings-edit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.registration-settings-edit label {
+  font-weight: 600;
+  min-width: 160px;
+}
+
+.registration-settings-edit input {
+  width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.registration-settings-edit button {
+  padding: 8px 14px;
+  background-color: white;
+  color: #333;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.registration-settings-edit button:hover {
+  background-color: #f2f2f2;
+  border-color: #2f7d32;
+}

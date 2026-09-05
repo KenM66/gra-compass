@@ -14,6 +14,10 @@ const CreateTrip = ({ setTrips }) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (endDate < startDate) {
+      alert("End date cannot be before the start date.");
+      return;
+    }
 
     if (!tripName.trim() || !destination.trim() || !startDate || !endDate) {
       alert("Trip name, destination, start date, and end date are required.");
@@ -27,6 +31,7 @@ const CreateTrip = ({ setTrips }) => {
       startDate,
       endDate,
       registrationCount: 0,
+      registrationCapacity: 0,
       imagePreview,
     };
 
