@@ -2,9 +2,9 @@ const registrationsByTrip = {
   1: [
     {
       travelerNumber: 1047,
-      firstName: "Michael",
+      firstName: "Robert",
       lastName: "Henderson",
-      email: "michael@example.com",
+      email: "robert@example.com",
       phone: "216-555-0142",
       dateOfBirth: "June 14, 1987",
 

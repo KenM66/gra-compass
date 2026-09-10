@@ -1,18 +1,62 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "../components/RegistrationDetails.css";
 import registrationsByTrip from "../data/mockRegistrations";
 import { useState } from "react";
 
 const RegistrationDetails = () => {
   const { tripId, id } = useParams();
+  const navigate = useNavigate();
 
   const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
+
+  const [editPersonalInfo, setEditPersonalInfo] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dateOfBirth: "",
+  });
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+
+  const [editAddress, setEditAddress] = useState({
+    street: "",
+    city: "",
+    state: "",
+    zipCode: "",
+  });
+
+  const [savedAddress, setSavedAddress] = useState(null);
+
+  const [isEditingTravelInfo, setIsEditingTravelInfo] = useState(false);
+
+  const [editTravelInfo, setEditTravelInfo] = useState({
+    tsaPrecheck: false,
+    passportNumber: "",
+    passportExpiration: "",
+  });
+
+  const [savedTravelInfo, setSavedTravelInfo] = useState(null);
 
   const registrations = registrationsByTrip[tripId] || [];
 
   const registration = registrations.find(
     (registration) => registration.travelerNumber === Number(id),
   );
+
+  const [hasGuest, setHasGuest] = useState(
+    registration?.bringingGuest ?? false,
+  );
+  const [savedPersonalInfo, setSavedPersonalInfo] = useState(null);
+
+  const [guestInfo, setGuestInfo] = useState(registration?.guest ?? null);
+
+  const handleSavePersonalInfo = () => {
+    setSavedPersonalInfo({
+      ...editPersonalInfo,
+    });
+
+    setIsEditingPersonalInfo(false);
+  };
 
   return (
     <main className="registration-details-page">
@@ -37,7 +81,20 @@ const RegistrationDetails = () => {
 
             <button
               type="button"
-              onClick={() => setIsEditingPersonalInfo(true)}
+              onClick={() => {
+                setEditPersonalInfo({
+                  firstName:
+                    savedPersonalInfo?.firstName ?? registration.firstName,
+                  lastName:
+                    savedPersonalInfo?.lastName ?? registration.lastName,
+                  email: savedPersonalInfo?.email ?? registration.email,
+                  phone: savedPersonalInfo?.phone ?? registration.phone,
+                  dateOfBirth:
+                    savedPersonalInfo?.dateOfBirth ?? registration.dateOfBirth,
+                });
+
+                setIsEditingPersonalInfo(true);
+              }}
             >
               Edit
             </button>
@@ -45,47 +102,264 @@ const RegistrationDetails = () => {
 
           <div className="detail-row">
             <span>First Name</span>
-            <strong>{registration.firstName}</strong>
+
+            {isEditingPersonalInfo ? (
+              <input
+                type="text"
+                value={editPersonalInfo.firstName}
+                onChange={(event) =>
+                  setEditPersonalInfo({
+                    ...editPersonalInfo,
+                    firstName: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>
+                {savedPersonalInfo?.firstName ?? registration.firstName}
+              </strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Last Name</span>
-            <strong>{registration.lastName}</strong>
+
+            {isEditingPersonalInfo ? (
+              <input
+                type="text"
+                value={editPersonalInfo.lastName}
+                onChange={(event) =>
+                  setEditPersonalInfo({
+                    ...editPersonalInfo,
+                    lastName: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>
+                {savedPersonalInfo?.lastName ?? registration.lastName}
+              </strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Email</span>
-            <strong>{registration.email}</strong>
+
+            {isEditingPersonalInfo ? (
+              <input
+                type="email"
+                value={editPersonalInfo.email}
+                onChange={(event) =>
+                  setEditPersonalInfo({
+                    ...editPersonalInfo,
+                    email: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>{savedPersonalInfo?.email ?? registration.email}</strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Phone</span>
-            <strong>{registration.phone}</strong>
+
+            {isEditingPersonalInfo ? (
+              <input
+                type="tel"
+                value={editPersonalInfo.phone}
+                onChange={(event) =>
+                  setEditPersonalInfo({
+                    ...editPersonalInfo,
+                    phone: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>{savedPersonalInfo?.phone ?? registration.phone}</strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Date of Birth</span>
-            <strong>{registration.dateOfBirth}</strong>
+
+            {isEditingPersonalInfo ? (
+              <input
+                type="text"
+                value={editPersonalInfo.dateOfBirth}
+                onChange={(event) =>
+                  setEditPersonalInfo({
+                    ...editPersonalInfo,
+                    dateOfBirth: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>
+                {savedPersonalInfo?.dateOfBirth ?? registration.dateOfBirth}
+              </strong>
+            )}
           </div>
+          {isEditingPersonalInfo && (
+            <div className="personal-info-edit-actions">
+              <button type="button" onClick={handleSavePersonalInfo}>
+                Save
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditPersonalInfo({
+                    firstName:
+                      savedPersonalInfo?.firstName ?? registration.firstName,
+                    lastName:
+                      savedPersonalInfo?.lastName ?? registration.lastName,
+                    email: savedPersonalInfo?.email ?? registration.email,
+                    phone: savedPersonalInfo?.phone ?? registration.phone,
+                    dateOfBirth:
+                      savedPersonalInfo?.dateOfBirth ??
+                      registration.dateOfBirth,
+                  });
+
+                  setIsEditingPersonalInfo(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </section>
 
         <section className="details-section">
-          <h2>Travel Information</h2>
+          <div className="details-section-header">
+            <h2>Travel Information</h2>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEditTravelInfo({
+                  tsaPrecheck:
+                    savedTravelInfo?.tsaPrecheck ?? registration.tsaPrecheck,
+                  passportNumber:
+                    savedTravelInfo?.passportNumber ??
+                    registration.passportNumber,
+                  passportExpiration:
+                    savedTravelInfo?.passportExpiration ??
+                    registration.passportExpiration,
+                });
+
+                setIsEditingTravelInfo(true);
+              }}
+            >
+              Edit
+            </button>
+          </div>
 
           <div className="detail-row">
             <span>TSA PreCheck</span>
-            <strong>{registration.tsaPrecheck ? "Yes" : "No"}</strong>
+
+            {isEditingTravelInfo ? (
+              <button
+                type="button"
+                className={`yes-no-toggle ${
+                  editTravelInfo.tsaPrecheck ? "yes" : "no"
+                }`}
+                onClick={() =>
+                  setEditTravelInfo({
+                    ...editTravelInfo,
+                    tsaPrecheck: !editTravelInfo.tsaPrecheck,
+                  })
+                }
+              >
+                {editTravelInfo.tsaPrecheck ? "Yes" : "No"}
+              </button>
+            ) : (
+              <strong>
+                {(savedTravelInfo?.tsaPrecheck ?? registration.tsaPrecheck)
+                  ? "Yes"
+                  : "No"}
+              </strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Passport Number</span>
-            <strong>{registration.passportNumber}</strong>
+
+            {isEditingTravelInfo ? (
+              <input
+                type="text"
+                value={editTravelInfo.passportNumber}
+                onChange={(event) =>
+                  setEditTravelInfo({
+                    ...editTravelInfo,
+                    passportNumber: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>
+                {savedTravelInfo?.passportNumber ?? registration.passportNumber}
+              </strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Passport Expiration</span>
-            <strong>{registration.passportExpiration}</strong>
+
+            {isEditingTravelInfo ? (
+              <input
+                type="text"
+                value={editTravelInfo.passportExpiration}
+                onChange={(event) =>
+                  setEditTravelInfo({
+                    ...editTravelInfo,
+                    passportExpiration: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>
+                {savedTravelInfo?.passportExpiration ??
+                  registration.passportExpiration}
+              </strong>
+            )}
           </div>
+          {isEditingTravelInfo && (
+            <div className="travel-info-edit-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setSavedTravelInfo({
+                    ...editTravelInfo,
+                  });
+
+                  setIsEditingTravelInfo(false);
+                }}
+              >
+                Save
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditTravelInfo({
+                    tsaPrecheck:
+                      savedTravelInfo?.tsaPrecheck ?? registration.tsaPrecheck,
+                    passportNumber:
+                      savedTravelInfo?.passportNumber ??
+                      registration.passportNumber,
+                    passportExpiration:
+                      savedTravelInfo?.passportExpiration ??
+                      registration.passportExpiration,
+                  });
+
+                  setIsEditingTravelInfo(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </section>
 
         <section className="details-section">
@@ -93,22 +367,74 @@ const RegistrationDetails = () => {
 
           <div className="detail-row">
             <span>Bringing Guest</span>
-            <strong>{registration.bringingGuest ? "Yes" : "No"}</strong>
+
+            <button
+              type="button"
+              className={`guest-toggle ${hasGuest ? "yes" : "no"}`}
+              onClick={() => {
+                if (hasGuest) {
+                  const confirmed = window.confirm(
+                    "Are you sure you want to remove this guest? All guest information for this traveler will be deleted and cannot be undone.",
+                  );
+
+                  if (!confirmed) {
+                    return;
+                  }
+                  setGuestInfo(null);
+                }
+
+                if (!hasGuest) {
+                  setGuestInfo({
+                    firstName: "",
+                    lastName: "",
+                    email: "",
+                    phone: "",
+                    dateOfBirth: "",
+                    passportNumber: "",
+                    passportExpiration: "",
+                    accessibility: "",
+                    dietaryRestrictions: "",
+                  });
+
+                  setHasGuest(true);
+                  return;
+                }
+
+                setHasGuest(false);
+              }}
+            >
+              <span className="guest-toggle-label">
+                {hasGuest ? "Yes" : "No"}
+              </span>
+
+              <span className="guest-toggle-track">
+                <span className="guest-toggle-thumb" />
+              </span>
+            </button>
           </div>
 
-          {registration.bringingGuest && (
+          {hasGuest && guestInfo && (
             <>
               <div className="detail-row">
                 <span>Guest Name</span>
                 <strong>
-                  {registration.guest.firstName} {registration.guest.lastName}
+                  {guestInfo.firstName} {guestInfo.lastName}
                 </strong>
               </div>
 
               <div className="detail-row">
                 <span>Guest Email</span>
-                <strong>{registration.guest.email}</strong>
+                <strong>{guestInfo.email}</strong>
               </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(`/trips/${tripId}/registrations/${id}/guest`)
+                }
+              >
+                View Guest Information
+              </button>
             </>
           )}
         </section>
@@ -132,27 +458,141 @@ const RegistrationDetails = () => {
           </div>
         </section>
         <section className="details-section">
-          <h2>Address</h2>
+          <div className="details-section-header">
+            <h2>Address</h2>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEditAddress({
+                  street: savedAddress?.street ?? registration.address.street,
+                  city: savedAddress?.city ?? registration.address.city,
+                  state: savedAddress?.state ?? registration.address.state,
+                  zipCode:
+                    savedAddress?.zipCode ?? registration.address.zipCode,
+                });
+
+                setIsEditingAddress(true);
+              }}
+            >
+              Edit
+            </button>
+          </div>
 
           <div className="detail-row">
             <span>Street</span>
-            <strong>{registration.address.street}</strong>
+
+            {isEditingAddress ? (
+              <input
+                type="text"
+                value={editAddress.street}
+                onChange={(event) =>
+                  setEditAddress({
+                    ...editAddress,
+                    street: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>
+                {savedAddress?.street ?? registration.address.street}
+              </strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>City</span>
-            <strong>{registration.address.city}</strong>
+
+            {isEditingAddress ? (
+              <input
+                type="text"
+                value={editAddress.city}
+                onChange={(event) =>
+                  setEditAddress({
+                    ...editAddress,
+                    city: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>{savedAddress?.city ?? registration.address.city}</strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>State</span>
-            <strong>{registration.address.state}</strong>
+
+            {isEditingAddress ? (
+              <input
+                type="text"
+                value={editAddress.state}
+                onChange={(event) =>
+                  setEditAddress({
+                    ...editAddress,
+                    state: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>
+                {savedAddress?.state ?? registration.address.state}
+              </strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>ZIP Code</span>
-            <strong>{registration.address.zipCode}</strong>
+
+            {isEditingAddress ? (
+              <input
+                type="text"
+                value={editAddress.zipCode}
+                onChange={(event) =>
+                  setEditAddress({
+                    ...editAddress,
+                    zipCode: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>
+                {savedAddress?.zipCode ?? registration.address.zipCode}
+              </strong>
+            )}
           </div>
+          {isEditingAddress && (
+            <div className="address-edit-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setSavedAddress({
+                    ...editAddress,
+                  });
+
+                  setIsEditingAddress(false);
+                }}
+              >
+                Save
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditAddress({
+                    street: savedAddress?.street ?? registration.address.street,
+                    city: savedAddress?.city ?? registration.address.city,
+                    state: savedAddress?.state ?? registration.address.state,
+                    zipCode:
+                      savedAddress?.zipCode ?? registration.address.zipCode,
+                  });
+
+                  setIsEditingAddress(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </section>
 
         <section className="details-section">

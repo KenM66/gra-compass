@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Registrations from "./pages/Registrations";
 import RegistrationDetails from "./pages/RegistrationDetails";
+import GuestDetails from "./pages/GuestDetails";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import TripManagement from "./pages/TripManagement";
@@ -27,6 +28,11 @@ const App = () => {
         <Route
           path="/trips/:tripId/registrations/:id"
           element={<RegistrationDetails />}
+        />
+
+        <Route
+          path="/trips/:tripId/registrations/:id/guest"
+          element={<GuestDetails />}
         />
 
         <Route path="/reports" element={<Reports />} />
