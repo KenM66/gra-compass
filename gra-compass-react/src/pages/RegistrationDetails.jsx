@@ -1,9 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import "../components/RegistrationDetails.css";
-import registrationsByTrip from "../data/mockRegistrations";
+
 import { useState } from "react";
 
-const RegistrationDetails = () => {
+const RegistrationDetails = ({
+  registrationsByTrip,
+  setRegistrationsByTrip,
+}) => {
   const { tripId, id } = useParams();
   const navigate = useNavigate();
 
@@ -43,12 +46,10 @@ const RegistrationDetails = () => {
     (registration) => registration.travelerNumber === Number(id),
   );
 
-  const [hasGuest, setHasGuest] = useState(
-    registration?.bringingGuest ?? false,
-  );
-  const [savedPersonalInfo, setSavedPersonalInfo] = useState(null);
+  const hasGuest = registration?.bringingGuest ?? false;
+  const guestInfo = registration?.guest ?? null;
 
-  const [guestInfo, setGuestInfo] = useState(registration?.guest ?? null);
+  const [savedPersonalInfo, setSavedPersonalInfo] = useState(null);
 
   const handleSavePersonalInfo = () => {
     setSavedPersonalInfo({
@@ -380,27 +381,47 @@ const RegistrationDetails = () => {
                   if (!confirmed) {
                     return;
                   }
-                  setGuestInfo(null);
-                }
 
-                if (!hasGuest) {
-                  setGuestInfo({
-                    firstName: "",
-                    lastName: "",
-                    email: "",
-                    phone: "",
-                    dateOfBirth: "",
-                    passportNumber: "",
-                    passportExpiration: "",
-                    accessibility: "",
-                    dietaryRestrictions: "",
-                  });
+                  setRegistrationsByTrip((currentRegistrations) => ({
+                    ...currentRegistrations,
+                    [tripId]: currentRegistrations[tripId].map(
+                      (currentRegistration) =>
+                        currentRegistration.travelerNumber === Number(id)
+                          ? {
+                              ...currentRegistration,
+                              bringingGuest: false,
+                              guest: null,
+                            }
+                          : currentRegistration,
+                    ),
+                  }));
 
-                  setHasGuest(true);
                   return;
                 }
 
-                setHasGuest(false);
+                setRegistrationsByTrip((currentRegistrations) => ({
+                  ...currentRegistrations,
+                  [tripId]: currentRegistrations[tripId].map(
+                    (currentRegistration) =>
+                      currentRegistration.travelerNumber === Number(id)
+                        ? {
+                            ...currentRegistration,
+                            bringingGuest: true,
+                            guest: {
+                              firstName: "",
+                              lastName: "",
+                              email: "",
+                              phone: "",
+                              dateOfBirth: "",
+                              passportNumber: "",
+                              passportExpiration: "",
+                              accessibility: "",
+                              dietaryRestrictions: "",
+                            },
+                          }
+                        : currentRegistration,
+                  ),
+                }));
               }}
             >
               <span className="guest-toggle-label">

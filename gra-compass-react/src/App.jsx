@@ -11,9 +11,13 @@ import TripManagement from "./pages/TripManagement";
 import CreateTrip from "./pages/CreateTrip";
 import { useState } from "react";
 import tripsData from "./data/mockTrips";
+import registrationsData from "./data/mockRegistrations";
 
 const App = () => {
   const [trips, setTrips] = useState(tripsData);
+
+  const [registrationsByTrip, setRegistrationsByTrip] =
+    useState(registrationsData);
 
   return (
     <BrowserRouter>
@@ -27,12 +31,22 @@ const App = () => {
 
         <Route
           path="/trips/:tripId/registrations/:id"
-          element={<RegistrationDetails />}
+          element={
+            <RegistrationDetails
+              registrationsByTrip={registrationsByTrip}
+              setRegistrationsByTrip={setRegistrationsByTrip}
+            />
+          }
         />
 
         <Route
           path="/trips/:tripId/registrations/:id/guest"
-          element={<GuestDetails />}
+          element={
+            <GuestDetails
+              registrationsByTrip={registrationsByTrip}
+              setRegistrationsByTrip={setRegistrationsByTrip}
+            />
+          }
         />
 
         <Route path="/reports" element={<Reports />} />

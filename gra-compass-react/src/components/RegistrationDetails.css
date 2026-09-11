@@ -148,6 +148,10 @@
   background-color: white;
   border: 1px solid #2f7d32;
   border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
 .guest-details-header h1 {

@@ -1,9 +1,35 @@
-import { useParams } from "react-router-dom";
-import registrationsByTrip from "../data/mockRegistrations";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+
 import "../components/RegistrationDetails.css";
 
-const GuestDetails = () => {
+const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const { tripId, id } = useParams();
+  const navigate = useNavigate();
+  const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
+
+  const [editPersonalInfo, setEditPersonalInfo] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dateOfBirth: "",
+  });
+
+  const [isEditingTravelInfo, setIsEditingTravelInfo] = useState(false);
+
+  const [editTravelInfo, setEditTravelInfo] = useState({
+    passportNumber: "",
+    passportExpiration: "",
+  });
+
+  const [isEditingAccessibilityDietary, setIsEditingAccessibilityDietary] =
+    useState(false);
+
+  const [editAccessibilityDietary, setEditAccessibilityDietary] = useState({
+    accessibility: "",
+    dietaryRestrictions: "",
+  });
 
   const registrations = registrationsByTrip[tripId] || [];
 
@@ -29,6 +55,92 @@ const GuestDetails = () => {
       </main>
     );
   }
+  const handleSavePersonalInfo = () => {
+    setRegistrationsByTrip((currentRegistrations) => ({
+      ...currentRegistrations,
+      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
+        currentRegistration.travelerNumber === Number(id)
+          ? {
+              ...currentRegistration,
+              guest: {
+                ...currentRegistration.guest,
+                ...editPersonalInfo,
+              },
+            }
+          : currentRegistration,
+      ),
+    }));
+
+    setIsEditingPersonalInfo(false);
+  };
+
+  const handleCancelPersonalInfo = () => {
+    setEditPersonalInfo({
+      firstName: guest.firstName || "",
+      lastName: guest.lastName || "",
+      email: guest.email || "",
+      phone: guest.phone || "",
+      dateOfBirth: guest.dateOfBirth || "",
+    });
+
+    setIsEditingPersonalInfo(false);
+  };
+
+  const handleSaveTravelInfo = () => {
+    setRegistrationsByTrip((currentRegistrations) => ({
+      ...currentRegistrations,
+      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
+        currentRegistration.travelerNumber === Number(id)
+          ? {
+              ...currentRegistration,
+              guest: {
+                ...currentRegistration.guest,
+                ...editTravelInfo,
+              },
+            }
+          : currentRegistration,
+      ),
+    }));
+
+    setIsEditingTravelInfo(false);
+  };
+
+  const handleCancelTravelInfo = () => {
+    setEditTravelInfo({
+      passportNumber: guest.passportNumber || "",
+      passportExpiration: guest.passportExpiration || "",
+    });
+
+    setIsEditingTravelInfo(false);
+  };
+
+  const handleSaveAccessibilityDietary = () => {
+    setRegistrationsByTrip((currentRegistrations) => ({
+      ...currentRegistrations,
+      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
+        currentRegistration.travelerNumber === Number(id)
+          ? {
+              ...currentRegistration,
+              guest: {
+                ...currentRegistration.guest,
+                ...editAccessibilityDietary,
+              },
+            }
+          : currentRegistration,
+      ),
+    }));
+
+    setIsEditingAccessibilityDietary(false);
+  };
+
+  const handleCancelAccessibilityDietary = () => {
+    setEditAccessibilityDietary({
+      accessibility: guest.accessibility || "",
+      dietaryRestrictions: guest.dietaryRestrictions || "",
+    });
+
+    setIsEditingAccessibilityDietary(false);
+  };
 
   return (
     <main className="registration-details-page">
@@ -37,75 +149,280 @@ const GuestDetails = () => {
           <h1>Guest Information</h1>
           <p>Guest of Traveler #{registration.travelerNumber}</p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => navigate(`/trips/${tripId}/registrations/${id}`)}
+        >
+          Back to Traveler
+        </button>
       </div>
 
       <section className="details-section">
         <div className="details-section-header">
           <h2>Personal Information</h2>
 
-          <button type="button">Edit</button>
+          <button
+            type="button"
+            onClick={() => {
+              setEditPersonalInfo({
+                firstName: guest.firstName || "",
+                lastName: guest.lastName || "",
+                email: guest.email || "",
+                phone: guest.phone || "",
+                dateOfBirth: guest.dateOfBirth || "",
+              });
+
+              setIsEditingPersonalInfo(true);
+            }}
+          >
+            Edit
+          </button>
         </div>
 
         <div className="detail-row">
           <span>First Name</span>
-          <strong>{guest.firstName}</strong>
+
+          {isEditingPersonalInfo ? (
+            <input
+              type="text"
+              value={editPersonalInfo.firstName}
+              onChange={(event) =>
+                setEditPersonalInfo({
+                  ...editPersonalInfo,
+                  firstName: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.firstName || "Not Provided"}</strong>
+          )}
         </div>
 
         <div className="detail-row">
           <span>Last Name</span>
-          <strong>{guest.lastName}</strong>
+
+          {isEditingPersonalInfo ? (
+            <input
+              type="text"
+              value={editPersonalInfo.lastName}
+              onChange={(event) =>
+                setEditPersonalInfo({
+                  ...editPersonalInfo,
+                  lastName: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.lastName || "Not Provided"}</strong>
+          )}
         </div>
 
         <div className="detail-row">
           <span>Email</span>
-          <strong>{guest.email}</strong>
+
+          {isEditingPersonalInfo ? (
+            <input
+              type="email"
+              value={editPersonalInfo.email}
+              onChange={(event) =>
+                setEditPersonalInfo({
+                  ...editPersonalInfo,
+                  email: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.email || "Not Provided"}</strong>
+          )}
         </div>
 
         <div className="detail-row">
           <span>Phone</span>
-          <strong>{guest.phone || "Not Provided"}</strong>
+
+          {isEditingPersonalInfo ? (
+            <input
+              type="text"
+              value={editPersonalInfo.phone}
+              onChange={(event) =>
+                setEditPersonalInfo({
+                  ...editPersonalInfo,
+                  phone: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.phone || "Not Provided"}</strong>
+          )}
         </div>
 
         <div className="detail-row">
           <span>Date of Birth</span>
-          <strong>{guest.dateOfBirth || "Not Provided"}</strong>
+
+          {isEditingPersonalInfo ? (
+            <input
+              type="date"
+              value={editPersonalInfo.dateOfBirth}
+              onChange={(event) =>
+                setEditPersonalInfo({
+                  ...editPersonalInfo,
+                  dateOfBirth: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.dateOfBirth || "Not Provided"}</strong>
+          )}
         </div>
+        {isEditingPersonalInfo && (
+          <div className="edit-actions">
+            <button type="button" onClick={handleSavePersonalInfo}>
+              Save
+            </button>
+
+            <button type="button" onClick={handleCancelPersonalInfo}>
+              Cancel
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="details-section">
         <div className="details-section-header">
           <h2>Travel Information</h2>
 
-          <button type="button">Edit</button>
+          <button
+            type="button"
+            onClick={() => {
+              setEditTravelInfo({
+                passportNumber: guest.passportNumber || "",
+                passportExpiration: guest.passportExpiration || "",
+              });
+
+              setIsEditingTravelInfo(true);
+            }}
+          >
+            Edit
+          </button>
         </div>
 
         <div className="detail-row">
           <span>Passport Number</span>
-          <strong>{guest.passportNumber || "Not Provided"}</strong>
+
+          {isEditingTravelInfo ? (
+            <input
+              type="text"
+              value={editTravelInfo.passportNumber}
+              onChange={(event) =>
+                setEditTravelInfo({
+                  ...editTravelInfo,
+                  passportNumber: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.passportNumber || "Not Provided"}</strong>
+          )}
         </div>
 
         <div className="detail-row">
           <span>Passport Expiration</span>
-          <strong>{guest.passportExpiration || "Not Provided"}</strong>
+
+          {isEditingTravelInfo ? (
+            <input
+              type="date"
+              value={editTravelInfo.passportExpiration}
+              onChange={(event) =>
+                setEditTravelInfo({
+                  ...editTravelInfo,
+                  passportExpiration: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.passportExpiration || "Not Provided"}</strong>
+          )}
         </div>
+        {isEditingTravelInfo && (
+          <div className="edit-actions">
+            <button type="button" onClick={handleSaveTravelInfo}>
+              Save
+            </button>
+
+            <button type="button" onClick={handleCancelTravelInfo}>
+              Cancel
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="details-section">
         <div className="details-section-header">
           <h2>Accessibility & Dietary</h2>
 
-          <button type="button">Edit</button>
+          <button
+            type="button"
+            onClick={() => {
+              setEditAccessibilityDietary({
+                accessibility: guest.accessibility || "",
+                dietaryRestrictions: guest.dietaryRestrictions || "",
+              });
+
+              setIsEditingAccessibilityDietary(true);
+            }}
+          >
+            Edit
+          </button>
         </div>
 
         <div className="detail-row">
           <span>Accessibility</span>
-          <strong>{guest.accessibility || "None"}</strong>
+
+          {isEditingAccessibilityDietary ? (
+            <input
+              type="text"
+              value={editAccessibilityDietary.accessibility}
+              onChange={(event) =>
+                setEditAccessibilityDietary({
+                  ...editAccessibilityDietary,
+                  accessibility: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.accessibility || "None"}</strong>
+          )}
         </div>
 
         <div className="detail-row">
           <span>Dietary Restrictions</span>
-          <strong>{guest.dietaryRestrictions || "None"}</strong>
+
+          {isEditingAccessibilityDietary ? (
+            <input
+              type="text"
+              value={editAccessibilityDietary.dietaryRestrictions}
+              onChange={(event) =>
+                setEditAccessibilityDietary({
+                  ...editAccessibilityDietary,
+                  dietaryRestrictions: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.dietaryRestrictions || "None"}</strong>
+          )}
         </div>
+        {isEditingAccessibilityDietary && (
+          <div className="edit-actions">
+            <button type="button" onClick={handleSaveAccessibilityDietary}>
+              Save
+            </button>
+
+            <button type="button" onClick={handleCancelAccessibilityDietary}>
+              Cancel
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );
