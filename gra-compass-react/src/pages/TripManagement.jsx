@@ -35,6 +35,7 @@ const TripManagement = ({ trips, setTrips }) => {
   const [editDestination, setEditDestination] = useState(
     trip?.destination || "",
   );
+  const [selectedSessionIds, setSelectedSessionIds] = useState({});
 
   const formatDateForInput = (dateValue) => {
     if (!dateValue) return "";
@@ -556,87 +557,128 @@ const TripManagement = ({ trips, setTrips }) => {
       <section>
         <h2>Available Trip Selections</h2>
 
-        {selections.map((selection) => (
-          <div key={selection.id}>
-            {editingId === selection.id ? (
-              <>
-                <input
-                  type="text"
-                  value={editType}
-                  onChange={(event) => setEditType(event.target.value)}
-                />
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="Max capacity"
-                  value={editMaxCapacity}
-                  onChange={(event) => setEditMaxCapacity(event.target.value)}
-                />
-                <div className="selection-actions">
-                  <button onClick={() => handleSaveEdit(selection.id)}>
-                    Save
-                  </button>
+        {selections.map((selection) => {
+          const selectedSessionId =
+            selectedSessionIds[selection.id] ?? selection.sessions?.[0]?.id;
 
-                  <button onClick={handleCancelEdit}>Cancel</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p>
-                  <strong>{selection.type}:</strong> {selection.name}
-                </p>
-                <p>
-                  <strong>Capacity:</strong>{" "}
-                  {selection.maxCapacity ?? "No limit"}
-                </p>
-                <p>
-                  <strong>Registered:</strong> {selection.registeredCount ?? 0}
-                </p>
+          const selectedSession = selection.sessions?.find(
+            (session) => session.id === selectedSessionId,
+          );
 
-                <p>
-                  <strong>Remaining:</strong>{" "}
-                  {selection.maxCapacity
-                    ? selection.maxCapacity - (selection.registeredCount ?? 0)
-                    : "No limit"}
-                </p>
+          return (
+            <div key={selection.id} className="selection-card">
+              {editingId === selection.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editType}
+                    onChange={(event) => setEditType(event.target.value)}
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Max capacity"
+                    value={editMaxCapacity}
+                    onChange={(event) => setEditMaxCapacity(event.target.value)}
+                  />
+                  <div className="selection-actions">
+                    <button onClick={() => handleSaveEdit(selection.id)}>
+                      Save
+                    </button>
 
-                {selection.maxCapacity &&
-                  (selection.registeredCount ?? 0) >= selection.maxCapacity && (
-                    <p className="selection-full">FULL</p>
-                  )}
-
-                <div className="selection-actions">
-                  <button
-                    className="edit-button"
-                    onClick={() => handleEditClick(selection)}
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDeleteSelection(selection.id)}
-                  >
-                    Delete
-                  </button>
-                  <button
-                    className={
-                      selection.active ? "deactivate-button" : "activate-button"
-                    }
-                    onClick={() => handleToggleActive(selection.id)}
-                  >
-                    {selection.active ? "Deactivate" : "Activate"}
-                  </button>
+                    <button onClick={handleCancelEdit}>Cancel</button>
+                  </div>
+                </>
+              ) : (
+                <>
                   <p>
-                    <strong>Status:</strong>{" "}
-                    {selection.active ? "Active" : "Inactive"}
+                    <strong>{selection.type}:</strong> {selection.name}
                   </p>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
+                  {selection.sessions?.length > 0 && (
+                    <div className="session-selector">
+                      <label>
+                        <strong>Session</strong>
+                      </label>
+
+                      <select
+                        value={
+                          selectedSessionIds[selection.id] ??
+                          selection.sessions[0].id
+                        }
+                        onChange={(event) =>
+                          setSelectedSessionIds({
+                            ...selectedSessionIds,
+                            [selection.id]: Number(event.target.value),
+                          })
+                        }
+                      >
+                        {selection.sessions.map((session) => (
+                          <option key={session.id} value={session.id}>
+                            {session.date} — {session.time}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <p>
+                    <strong>Capacity:</strong>{" "}
+                    {selectedSession?.maxCapacity ?? "No limit"}
+                  </p>
+
+                  <p>
+                    <strong>Registered:</strong>{" "}
+                    {selectedSession?.registeredCount ?? 0}
+                  </p>
+
+                  <p>
+                    <strong>Remaining:</strong>{" "}
+                    {selectedSession?.maxCapacity
+                      ? selectedSession.maxCapacity -
+                        (selectedSession.registeredCount ?? 0)
+                      : "No limit"}
+                  </p>
+
+                  {selection.maxCapacity &&
+                    (selection.registeredCount ?? 0) >=
+                      selection.maxCapacity && (
+                      <p className="selection-full">FULL</p>
+                    )}
+
+                  <div className="selection-actions">
+                    <button
+                      className="edit-button"
+                      onClick={() => handleEditClick(selection)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="delete-button"
+                      onClick={() => handleDeleteSelection(selection.id)}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className={
+                        selection.active
+                          ? "deactivate-button"
+                          : "activate-button"
+                      }
+                      onClick={() => handleToggleActive(selection.id)}
+                    >
+                      {selection.active ? "Deactivate" : "Activate"}
+                    </button>
+                    <p>
+                      <strong>Status:</strong>{" "}
+                      {selection.active ? "Active" : "Inactive"}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
         <div className="add-selection-form">
           <input
             type="text"

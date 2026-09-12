@@ -28,8 +28,6 @@ const RegistrationDetails = ({
     zipCode: "",
   });
 
-  const [savedAddress, setSavedAddress] = useState(null);
-
   const [isEditingTravelInfo, setIsEditingTravelInfo] = useState(false);
 
   const [editTravelInfo, setEditTravelInfo] = useState({
@@ -38,7 +36,22 @@ const RegistrationDetails = ({
     passportExpiration: "",
   });
 
-  const [savedTravelInfo, setSavedTravelInfo] = useState(null);
+  const [isEditingEmergencyContact, setIsEditingEmergencyContact] =
+    useState(false);
+
+  const [editEmergencyContact, setEditEmergencyContact] = useState({
+    name: "",
+    relationship: "",
+    phone: "",
+  });
+
+  const [isEditingSpecialRequirements, setIsEditingSpecialRequirements] =
+    useState(false);
+
+  const [editSpecialRequirements, setEditSpecialRequirements] = useState({
+    accessibility: "",
+    dietaryRequirements: "",
+  });
 
   const registrations = registrationsByTrip[tripId] || [];
 
@@ -49,14 +62,39 @@ const RegistrationDetails = ({
   const hasGuest = registration?.bringingGuest ?? false;
   const guestInfo = registration?.guest ?? null;
 
-  const [savedPersonalInfo, setSavedPersonalInfo] = useState(null);
-
   const handleSavePersonalInfo = () => {
-    setSavedPersonalInfo({
-      ...editPersonalInfo,
-    });
+    setRegistrationsByTrip((currentRegistrations) => ({
+      ...currentRegistrations,
+      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
+        currentRegistration.travelerNumber === Number(id)
+          ? {
+              ...currentRegistration,
+              ...editPersonalInfo,
+            }
+          : currentRegistration,
+      ),
+    }));
 
     setIsEditingPersonalInfo(false);
+  };
+
+  const handleSaveAddress = () => {
+    setRegistrationsByTrip((currentRegistrations) => ({
+      ...currentRegistrations,
+      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
+        currentRegistration.travelerNumber === Number(id)
+          ? {
+              ...currentRegistration,
+              address: {
+                ...currentRegistration.address,
+                ...editAddress,
+              },
+            }
+          : currentRegistration,
+      ),
+    }));
+
+    setIsEditingAddress(false);
   };
 
   return (
@@ -84,14 +122,11 @@ const RegistrationDetails = ({
               type="button"
               onClick={() => {
                 setEditPersonalInfo({
-                  firstName:
-                    savedPersonalInfo?.firstName ?? registration.firstName,
-                  lastName:
-                    savedPersonalInfo?.lastName ?? registration.lastName,
-                  email: savedPersonalInfo?.email ?? registration.email,
-                  phone: savedPersonalInfo?.phone ?? registration.phone,
-                  dateOfBirth:
-                    savedPersonalInfo?.dateOfBirth ?? registration.dateOfBirth,
+                  firstName: registration.firstName || "",
+                  lastName: registration.lastName || "",
+                  email: registration.email || "",
+                  phone: registration.phone || "",
+                  dateOfBirth: registration.dateOfBirth || "",
                 });
 
                 setIsEditingPersonalInfo(true);
@@ -116,9 +151,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>
-                {savedPersonalInfo?.firstName ?? registration.firstName}
-              </strong>
+              <strong>{registration.firstName || ""}</strong>
             )}
           </div>
 
@@ -137,9 +170,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>
-                {savedPersonalInfo?.lastName ?? registration.lastName}
-              </strong>
+              <strong>{registration.lastName || ""}</strong>
             )}
           </div>
 
@@ -158,7 +189,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>{savedPersonalInfo?.email ?? registration.email}</strong>
+              <strong>{registration.email || ""}</strong>
             )}
           </div>
 
@@ -177,7 +208,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>{savedPersonalInfo?.phone ?? registration.phone}</strong>
+              <strong>{registration.phone || ""}</strong>
             )}
           </div>
 
@@ -196,9 +227,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>
-                {savedPersonalInfo?.dateOfBirth ?? registration.dateOfBirth}
-              </strong>
+              <strong>{registration.dateOfBirth || ""}</strong>
             )}
           </div>
           {isEditingPersonalInfo && (
@@ -211,15 +240,11 @@ const RegistrationDetails = ({
                 type="button"
                 onClick={() => {
                   setEditPersonalInfo({
-                    firstName:
-                      savedPersonalInfo?.firstName ?? registration.firstName,
-                    lastName:
-                      savedPersonalInfo?.lastName ?? registration.lastName,
-                    email: savedPersonalInfo?.email ?? registration.email,
-                    phone: savedPersonalInfo?.phone ?? registration.phone,
-                    dateOfBirth:
-                      savedPersonalInfo?.dateOfBirth ??
-                      registration.dateOfBirth,
+                    firstName: registration.firstName || "",
+                    lastName: registration.lastName || "",
+                    email: registration.email || "",
+                    phone: registration.phone || "",
+                    dateOfBirth: registration.dateOfBirth || "",
                   });
 
                   setIsEditingPersonalInfo(false);
@@ -239,14 +264,9 @@ const RegistrationDetails = ({
               type="button"
               onClick={() => {
                 setEditTravelInfo({
-                  tsaPrecheck:
-                    savedTravelInfo?.tsaPrecheck ?? registration.tsaPrecheck,
-                  passportNumber:
-                    savedTravelInfo?.passportNumber ??
-                    registration.passportNumber,
-                  passportExpiration:
-                    savedTravelInfo?.passportExpiration ??
-                    registration.passportExpiration,
+                  tsaPrecheck: registration.tsaPrecheck ?? false,
+                  passportNumber: registration.passportNumber || "",
+                  passportExpiration: registration.passportExpiration || "",
                 });
 
                 setIsEditingTravelInfo(true);
@@ -275,11 +295,7 @@ const RegistrationDetails = ({
                 {editTravelInfo.tsaPrecheck ? "Yes" : "No"}
               </button>
             ) : (
-              <strong>
-                {(savedTravelInfo?.tsaPrecheck ?? registration.tsaPrecheck)
-                  ? "Yes"
-                  : "No"}
-              </strong>
+              <strong>{registration.tsaPrecheck ? "Yes" : "No"}</strong>
             )}
           </div>
 
@@ -298,9 +314,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>
-                {savedTravelInfo?.passportNumber ?? registration.passportNumber}
-              </strong>
+              <strong>{registration.passportNumber}</strong>
             )}
           </div>
 
@@ -319,10 +333,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>
-                {savedTravelInfo?.passportExpiration ??
-                  registration.passportExpiration}
-              </strong>
+              <strong>{registration.passportExpiration}</strong>
             )}
           </div>
           {isEditingTravelInfo && (
@@ -330,9 +341,18 @@ const RegistrationDetails = ({
               <button
                 type="button"
                 onClick={() => {
-                  setSavedTravelInfo({
-                    ...editTravelInfo,
-                  });
+                  setRegistrationsByTrip((currentRegistrations) => ({
+                    ...currentRegistrations,
+                    [tripId]: currentRegistrations[tripId].map(
+                      (currentRegistration) =>
+                        currentRegistration.travelerNumber === Number(id)
+                          ? {
+                              ...currentRegistration,
+                              ...editTravelInfo,
+                            }
+                          : currentRegistration,
+                    ),
+                  }));
 
                   setIsEditingTravelInfo(false);
                 }}
@@ -344,14 +364,9 @@ const RegistrationDetails = ({
                 type="button"
                 onClick={() => {
                   setEditTravelInfo({
-                    tsaPrecheck:
-                      savedTravelInfo?.tsaPrecheck ?? registration.tsaPrecheck,
-                    passportNumber:
-                      savedTravelInfo?.passportNumber ??
-                      registration.passportNumber,
-                    passportExpiration:
-                      savedTravelInfo?.passportExpiration ??
-                      registration.passportExpiration,
+                    tsaPrecheck: registration.tsaPrecheck ?? false,
+                    passportNumber: registration.passportNumber || "",
+                    passportExpiration: registration.passportExpiration || "",
                   });
 
                   setIsEditingTravelInfo(false);
@@ -461,22 +476,124 @@ const RegistrationDetails = ({
         </section>
 
         <section className="details-section">
-          <h2>Emergency Contact</h2>
+          <div className="details-section-header">
+            <h2>Emergency Contact</h2>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEditEmergencyContact({
+                  name: registration.emergencyContact.name || "",
+                  relationship:
+                    registration.emergencyContact.relationship || "",
+                  phone: registration.emergencyContact.phone || "",
+                });
+
+                setIsEditingEmergencyContact(true);
+              }}
+            >
+              Edit
+            </button>
+          </div>
 
           <div className="detail-row">
             <span>Name</span>
-            <strong>{registration.emergencyContact.name}</strong>
+            {isEditingEmergencyContact ? (
+              <input
+                type="text"
+                value={editEmergencyContact.name}
+                onChange={(event) =>
+                  setEditEmergencyContact({
+                    ...editEmergencyContact,
+                    name: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>{registration.emergencyContact.name}</strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Relationship</span>
-            <strong>{registration.emergencyContact.relationship}</strong>
+            {isEditingEmergencyContact ? (
+              <input
+                type="text"
+                value={editEmergencyContact.relationship}
+                onChange={(event) =>
+                  setEditEmergencyContact({
+                    ...editEmergencyContact,
+                    relationship: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>{registration.emergencyContact.relationship}</strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Phone</span>
-            <strong>{registration.emergencyContact.phone}</strong>
+            {isEditingEmergencyContact ? (
+              <input
+                type="text"
+                value={editEmergencyContact.phone}
+                onChange={(event) =>
+                  setEditEmergencyContact({
+                    ...editEmergencyContact,
+                    phone: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>{registration.emergencyContact.phone}</strong>
+            )}
           </div>
+
+          {isEditingEmergencyContact && (
+            <div className="edit-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setRegistrationsByTrip((currentRegistrations) => ({
+                    ...currentRegistrations,
+                    [tripId]: currentRegistrations[tripId].map(
+                      (currentRegistration) =>
+                        currentRegistration.travelerNumber === Number(id)
+                          ? {
+                              ...currentRegistration,
+                              emergencyContact: {
+                                ...currentRegistration.emergencyContact,
+                                ...editEmergencyContact,
+                              },
+                            }
+                          : currentRegistration,
+                    ),
+                  }));
+
+                  setIsEditingEmergencyContact(false);
+                }}
+              >
+                Save
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditEmergencyContact({
+                    name: registration.emergencyContact.name || "",
+                    relationship:
+                      registration.emergencyContact.relationship || "",
+                    phone: registration.emergencyContact.phone || "",
+                  });
+
+                  setIsEditingEmergencyContact(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </section>
         <section className="details-section">
           <div className="details-section-header">
@@ -486,11 +603,10 @@ const RegistrationDetails = ({
               type="button"
               onClick={() => {
                 setEditAddress({
-                  street: savedAddress?.street ?? registration.address.street,
-                  city: savedAddress?.city ?? registration.address.city,
-                  state: savedAddress?.state ?? registration.address.state,
-                  zipCode:
-                    savedAddress?.zipCode ?? registration.address.zipCode,
+                  street: registration.address.street || "",
+                  city: registration.address.city || "",
+                  state: registration.address.state || "",
+                  zipCode: registration.address.zipCode || "",
                 });
 
                 setIsEditingAddress(true);
@@ -515,9 +631,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>
-                {savedAddress?.street ?? registration.address.street}
-              </strong>
+              <strong>{registration.address.street}</strong>
             )}
           </div>
 
@@ -536,7 +650,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>{savedAddress?.city ?? registration.address.city}</strong>
+              <strong>{registration.address.city}</strong>
             )}
           </div>
 
@@ -555,9 +669,7 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>
-                {savedAddress?.state ?? registration.address.state}
-              </strong>
+              <strong>{registration.address.state}</strong>
             )}
           </div>
 
@@ -576,23 +688,12 @@ const RegistrationDetails = ({
                 }
               />
             ) : (
-              <strong>
-                {savedAddress?.zipCode ?? registration.address.zipCode}
-              </strong>
+              <strong>{registration.address.zipCode}</strong>
             )}
           </div>
           {isEditingAddress && (
             <div className="address-edit-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  setSavedAddress({
-                    ...editAddress,
-                  });
-
-                  setIsEditingAddress(false);
-                }}
-              >
+              <button type="button" onClick={handleSaveAddress}>
                 Save
               </button>
 
@@ -600,11 +701,10 @@ const RegistrationDetails = ({
                 type="button"
                 onClick={() => {
                   setEditAddress({
-                    street: savedAddress?.street ?? registration.address.street,
-                    city: savedAddress?.city ?? registration.address.city,
-                    state: savedAddress?.state ?? registration.address.state,
-                    zipCode:
-                      savedAddress?.zipCode ?? registration.address.zipCode,
+                    street: registration.address.street || "",
+                    city: registration.address.city || "",
+                    state: registration.address.state || "",
+                    zipCode: registration.address.zipCode || "",
                   });
 
                   setIsEditingAddress(false);
@@ -617,17 +717,98 @@ const RegistrationDetails = ({
         </section>
 
         <section className="details-section">
-          <h2>Special Requirements</h2>
+          <div className="details-section-header">
+            <h2>Special Requirements</h2>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEditSpecialRequirements({
+                  accessibility: registration.accessibility || "",
+                  dietaryRequirements: registration.dietaryRequirements || "",
+                });
+
+                setIsEditingSpecialRequirements(true);
+              }}
+            >
+              Edit
+            </button>
+          </div>
 
           <div className="detail-row">
             <span>Accessibility</span>
-            <strong>{registration.accessibility}</strong>
+            {isEditingSpecialRequirements ? (
+              <input
+                type="text"
+                value={editSpecialRequirements.accessibility}
+                onChange={(event) =>
+                  setEditSpecialRequirements({
+                    ...editSpecialRequirements,
+                    accessibility: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>{registration.accessibility}</strong>
+            )}
           </div>
 
           <div className="detail-row">
             <span>Dietary Requirements</span>
-            <strong>{registration.dietaryRequirements}</strong>
+            {isEditingSpecialRequirements ? (
+              <input
+                type="text"
+                value={editSpecialRequirements.dietaryRequirements}
+                onChange={(event) =>
+                  setEditSpecialRequirements({
+                    ...editSpecialRequirements,
+                    dietaryRequirements: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <strong>{registration.dietaryRequirements}</strong>
+            )}
           </div>
+          {isEditingSpecialRequirements && (
+            <div className="edit-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setRegistrationsByTrip((currentRegistrations) => ({
+                    ...currentRegistrations,
+                    [tripId]: currentRegistrations[tripId].map(
+                      (currentRegistration) =>
+                        currentRegistration.travelerNumber === Number(id)
+                          ? {
+                              ...currentRegistration,
+                              ...editSpecialRequirements,
+                            }
+                          : currentRegistration,
+                    ),
+                  }));
+
+                  setIsEditingSpecialRequirements(false);
+                }}
+              >
+                Save
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditSpecialRequirements({
+                    accessibility: registration.accessibility || "",
+                    dietaryRequirements: registration.dietaryRequirements || "",
+                  });
+
+                  setIsEditingSpecialRequirements(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </section>
         <section className="details-section">
           <h2>Trip Selections</h2>

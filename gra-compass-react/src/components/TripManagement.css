@@ -17,6 +17,15 @@
   gap: 10px;
   margin-top: 10px;
 }
+
+.selection-card {
+  margin-bottom: 24px;
+  padding: 24px;
+  background-color: white;
+  border: 1px solid #2f7d32;
+  border-radius: 10px;
+}
+
 .trip-management-page .delete-button {
   background-color: #c62828;
 }

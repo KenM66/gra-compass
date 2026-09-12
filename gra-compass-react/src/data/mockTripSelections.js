@@ -7,6 +7,24 @@ const selectionsByTrip = {
       maxCapacity: 50,
       registeredCount: 37,
       active: true,
+      sessions: [
+        {
+          id: 101,
+          date: "2026-06-14",
+          time: "10:00",
+          maxCapacity: 25,
+          registeredCount: 17,
+          active: true,
+        },
+        {
+          id: 102,
+          date: "2026-06-14",
+          time: "14:00",
+          maxCapacity: 25,
+          registeredCount: 20,
+          active: true,
+        },
+      ],
     },
     {
       id: 2,
