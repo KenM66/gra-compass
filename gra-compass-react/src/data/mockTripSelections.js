@@ -4,9 +4,6 @@ const selectionsByTrip = {
       id: 1,
       type: "Excursion",
       name: "Catamaran & Snorkeling",
-      maxCapacity: 50,
-      registeredCount: 37,
-      active: true,
       sessions: [
         {
           id: 101,
@@ -26,25 +23,95 @@ const selectionsByTrip = {
         },
       ],
     },
+
     {
       id: 2,
-      type: "Spa",
-      name: "Swedish Massage",
-      maxCapacity: 100,
-      registeredCount: 93,
-      active: false,
+      type: "Excursion",
+      name: "Island Jeep Tour",
+      sessions: [
+        {
+          id: 201,
+          date: "2026-06-15",
+          time: "09:00",
+          maxCapacity: 12,
+          registeredCount: 12,
+          active: true,
+        },
+      ],
     },
-  ],
 
-  2: [
     {
       id: 3,
       type: "Excursion",
-      name: "Glacier Cruise",
-      maxCapacity: 200,
-      registeredCount: 133,
+      name: "Sunset Dinner Cruise",
+      sessions: [
+        {
+          id: 301,
+          date: "2026-06-16",
+          time: "18:30",
+          maxCapacity: 40,
+          registeredCount: 28,
+          active: false,
+        },
+        {
+          id: 302,
+          date: "2026-06-17",
+          time: "18:30",
+          maxCapacity: 40,
+          registeredCount: 31,
+          active: true,
+        },
+         {
+      id: 303,
+      date: "2026-06-18",
+      time: "18:30",
+      maxCapacity: 40,
+      registeredCount: 0,
       active: true,
     },
+      ],
+    },
+
+    {
+      id: 4,
+      type: "Spa",
+      name: "Massage Appointment",
+      sessions: [
+        {
+          id: 401,
+          date: "2026-06-15",
+          time: "13:00",
+          maxCapacity: 8,
+          registeredCount: 5,
+          active: true,
+        },
+        {
+          id: 402,
+          date: "2026-06-15",
+          time: "15:00",
+          maxCapacity: 8,
+          registeredCount: 8,
+          active: true,
+        },
+      ],
+    },
+
+    {
+      id: 5,
+      type: "Event",
+      name: "Welcome Reception",
+      sessions: [
+        {
+          id: 501,
+          date: "2026-06-13",
+          time: "19:00",
+          maxCapacity: 100,
+          registeredCount: 73,
+          active: true,
+        },
+      ],
+    },
+   
   ],
 };
 
