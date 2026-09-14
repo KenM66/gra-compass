@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-
 import selectionsByTrip from "../data/mockTripSelections";
-
 import "../components/TripManagement.css";
+import SelectionCard from "../components/SelectionCard";
 
 const TripManagement = ({ trips, setTrips }) => {
   const { tripId } = useParams();
@@ -97,9 +96,9 @@ const TripManagement = ({ trips, setTrips }) => {
       currentTrips.map((currentTrip) =>
         currentTrip.id === Number(tripId)
           ? {
-            ...currentTrip,
-            name: editTripName.trim(),
-          }
+              ...currentTrip,
+              name: editTripName.trim(),
+            }
           : currentTrip,
       ),
     );
@@ -116,9 +115,9 @@ const TripManagement = ({ trips, setTrips }) => {
       currentTrips.map((currentTrip) =>
         currentTrip.id === Number(tripId)
           ? {
-            ...currentTrip,
-            destination: editDestination.trim(),
-          }
+              ...currentTrip,
+              destination: editDestination.trim(),
+            }
           : currentTrip,
       ),
     );
@@ -135,9 +134,9 @@ const TripManagement = ({ trips, setTrips }) => {
       currentTrips.map((currentTrip) =>
         currentTrip.id === Number(tripId)
           ? {
-            ...currentTrip,
-            startDate: editStartDate,
-          }
+              ...currentTrip,
+              startDate: editStartDate,
+            }
           : currentTrip,
       ),
     );
@@ -159,9 +158,9 @@ const TripManagement = ({ trips, setTrips }) => {
       currentTrips.map((currentTrip) =>
         currentTrip.id === Number(tripId)
           ? {
-            ...currentTrip,
-            endDate: editEndDate,
-          }
+              ...currentTrip,
+              endDate: editEndDate,
+            }
           : currentTrip,
       ),
     );
@@ -177,9 +176,9 @@ const TripManagement = ({ trips, setTrips }) => {
       currentTrips.map((currentTrip) =>
         currentTrip.id === Number(tripId)
           ? {
-            ...currentTrip,
-            imagePreview: editImagePreview,
-          }
+              ...currentTrip,
+              imagePreview: editImagePreview,
+            }
           : currentTrip,
       ),
     );
@@ -191,34 +190,18 @@ const TripManagement = ({ trips, setTrips }) => {
 
   const [newType, setNewType] = useState("");
   const [newName, setNewName] = useState("");
-  const [editingId, setEditingId] = useState(null);
+
   const [newMaxCapacity, setNewMaxCapacity] = useState("");
-  const [editMaxCapacity, setEditMaxCapacity] = useState("");
+
   const [newSessionDate, setNewSessionDate] = useState("");
   const [newSessionTime, setNewSessionTime] = useState("");
-  const [addingSessionToId, setAddingSessionToId] = useState(null);
 
-  const [additionalSessionDate, setAdditionalSessionDate] =
-    useState("");
-
-  const [additionalSessionTime, setAdditionalSessionTime] =
-    useState("");
-
-  const [additionalSessionCapacity, setAdditionalSessionCapacity] =
-    useState("");
   const [isEditingRegistrationSettings, setIsEditingRegistrationSettings] =
     useState(false);
 
   const [editRegistrationCapacity, setEditRegistrationCapacity] = useState(
     trip?.registrationCapacity ?? 0,
   );
-
-  const [editSessionDate, setEditSessionDate] = useState("");
-  const [editSessionTime, setEditSessionTime] = useState("");
-
-  const [editingSelectionId, setEditingSelectionId] = useState(null);
-  const [editSelectionType, setEditSelectionType] = useState("");
-  const [editSelectionName, setEditSelectionName] = useState("");
 
   const handleAddSelection = () => {
     if (
@@ -227,7 +210,9 @@ const TripManagement = ({ trips, setTrips }) => {
       !newSessionDate ||
       !newSessionTime
     ) {
-      alert("Selection type, name, session date, and session time are required.");
+      alert(
+        "Selection type, name, session date, and session time are required.",
+      );
       return;
     }
 
@@ -262,12 +247,7 @@ const TripManagement = ({ trips, setTrips }) => {
     setNewSessionDate("");
     setNewSessionTime("");
   };
-  const handleEditClick = (selection, session) => {
-    setEditingId(session.id);
-    setEditSessionDate(session.date || "");
-    setEditSessionTime(session.time || "");
-    setEditMaxCapacity(session.maxCapacity ?? "");
-  };
+
   const handleDeleteSelection = (selectionId, sessionId) => {
     const selection = selections.find(
       (selection) => selection.id === selectionId,
@@ -281,7 +261,7 @@ const TripManagement = ({ trips, setTrips }) => {
       alert(
         `This session cannot be deleted because ${session.registeredCount} people are already registered for it.`,
       );
-      return;
+      return false;
     }
 
     const confirmed = window.confirm(
@@ -289,118 +269,43 @@ const TripManagement = ({ trips, setTrips }) => {
     );
 
     if (!confirmed) {
-      return;
+      return false;
     }
 
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          sessions: selection.sessions.filter(
-            (session) => session.id !== sessionId,
-          ),
-        }
+            ...selection,
+            sessions: selection.sessions.filter(
+              (session) => session.id !== sessionId,
+            ),
+          }
         : selection,
     );
 
     setSelections(updatedSelections);
-    setSelectedSessionIds((currentSelections) => {
-      const remainingSessions =
-        updatedSelections.find(
-          (selection) => selection.id === selectionId
-        )?.sessions || [];
 
-      const nextSessionId = remainingSessions[0]?.id;
+    const remainingSessions =
+      updatedSelections.find((selection) => selection.id === selectionId)
+        ?.sessions || [];
 
-      if (nextSessionId) {
-        return {
-          ...currentSelections,
-          [selectionId]: nextSessionId,
-        };
-      }
-
-      const updatedSelectedSessions = {
-        ...currentSelections,
-      };
-
-      delete updatedSelectedSessions[selectionId];
-
-      return updatedSelectedSessions;
-    });
+    return remainingSessions[0]?.id ?? null;
   };
 
-  const handleSaveEdit = (selectionId, sessionId) => {
-    if (!editSessionDate || !editSessionTime) {
-      alert("Session date and time are required.");
-      return;
-    }
-
-    const selection = selections.find(
-      (selection) => selection.id === selectionId,
-    );
-
-    const currentSession = selection?.sessions.find(
-      (session) => session.id === sessionId,
-    );
-
-    const newCapacity = editMaxCapacity
-      ? Number(editMaxCapacity)
-      : null;
-
-    if (
-      newCapacity !== null &&
-      newCapacity < (currentSession?.registeredCount ?? 0)
-    ) {
-      alert(
-        `Capacity cannot be lower than the ${currentSession?.registeredCount ?? 0} people already registered.`,
-      );
-      return;
-    }
-
-    const updatedSelections = selections.map((selection) =>
-      selection.id === selectionId
-        ? {
-          ...selection,
-          sessions: selection.sessions.map((session) =>
-            session.id === sessionId
-              ? {
-                ...session,
-                date: editSessionDate,
-                time: editSessionTime,
-                maxCapacity: newCapacity,
-              }
-              : session,
-          ),
-        }
-        : selection,
-    );
-
-    setSelections(updatedSelections);
-    setEditingId(null);
-    setEditSessionDate("");
-    setEditSessionTime("");
-    setEditMaxCapacity("");
-  };
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditSessionDate("");
-    setEditSessionTime("");
-    setEditMaxCapacity("");
-  };
   const handleToggleActive = (selectionId, sessionId) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          sessions: selection.sessions.map((session) =>
-            session.id === sessionId
-              ? {
-                ...session,
-                active: !session.active,
-              }
-              : session,
-          ),
-        }
+            ...selection,
+            sessions: selection.sessions.map((session) =>
+              session.id === sessionId
+                ? {
+                    ...session,
+                    active: !session.active,
+                  }
+                : session,
+            ),
+          }
         : selection,
     );
 
@@ -412,9 +317,9 @@ const TripManagement = ({ trips, setTrips }) => {
       currentTrips.map((currentTrip) =>
         currentTrip.id === Number(tripId)
           ? {
-            ...currentTrip,
-            registrationsPaused: true,
-          }
+              ...currentTrip,
+              registrationsPaused: true,
+            }
           : currentTrip,
       ),
     );
@@ -425,9 +330,9 @@ const TripManagement = ({ trips, setTrips }) => {
       currentTrips.map((currentTrip) =>
         currentTrip.id === Number(tripId)
           ? {
-            ...currentTrip,
-            registrationsPaused: false,
-          }
+              ...currentTrip,
+              registrationsPaused: false,
+            }
           : currentTrip,
       ),
     );
@@ -447,34 +352,37 @@ const TripManagement = ({ trips, setTrips }) => {
       currentTrips.map((currentTrip) =>
         currentTrip.id === Number(tripId)
           ? {
-            ...currentTrip,
-            registrationCapacity: capacity,
-          }
+              ...currentTrip,
+              registrationCapacity: capacity,
+            }
           : currentTrip,
       ),
     );
 
     setIsEditingRegistrationSettings(false);
   };
-  const handleAddSession = (selectionId) => {
-    if (!additionalSessionDate || !additionalSessionTime) {
+  const handleAddSession = (
+    selectionId,
+    sessionDate,
+    sessionTime,
+    sessionCapacity,
+  ) => {
+    if (!sessionDate || !sessionTime) {
       alert("Session date and time are required.");
-      return;
+      return false;
     }
 
-    const capacity = additionalSessionCapacity
-      ? Number(additionalSessionCapacity)
-      : null;
+    const capacity = sessionCapacity ? Number(sessionCapacity) : null;
 
     if (capacity !== null && capacity < 1) {
       alert("Max capacity must be at least 1.");
-      return;
+      return false;
     }
 
     const newSession = {
       id: Date.now(),
-      date: additionalSessionDate,
-      time: additionalSessionTime,
+      date: sessionDate,
+      time: sessionTime,
       maxCapacity: capacity,
       registeredCount: 0,
       active: true,
@@ -483,27 +391,23 @@ const TripManagement = ({ trips, setTrips }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          sessions: [...selection.sessions, newSession],
-        }
-        : selection
+            ...selection,
+            sessions: [...selection.sessions, newSession],
+          }
+        : selection,
     );
 
     setSelections(updatedSelections);
 
-    setSelectedSessionIds((currentSelections) => ({
-      ...currentSelections,
-      [selectionId]: newSession.id,
-    }));
-
-    setAddingSessionToId(null);
-    setAdditionalSessionDate("");
-    setAdditionalSessionTime("");
-    setAdditionalSessionCapacity("");
+    return newSession.id;
   };
 
-  const handleSaveSelectionEdit = (selectionId) => {
-    if (!editSelectionType.trim() || !editSelectionName.trim()) {
+  const handleSaveSelectionEdit = (
+    selectionId,
+    selectionType,
+    selectionName,
+  ) => {
+    if (!selectionType.trim() || !selectionName.trim()) {
       alert("Selection type and name are required.");
       return;
     }
@@ -511,18 +415,69 @@ const TripManagement = ({ trips, setTrips }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          type: editSelectionType.trim(),
-          name: editSelectionName.trim(),
-        }
-        : selection
+            ...selection,
+            type: selectionType.trim(),
+            name: selectionName.trim(),
+          }
+        : selection,
+    );
+
+    setSelections(updatedSelections);
+  };
+
+  const handleSaveEdit = (
+    selectionId,
+    sessionId,
+    sessionDate,
+    sessionTime,
+    maxCapacity,
+  ) => {
+    if (!sessionDate || !sessionTime) {
+      alert("Session date and time are required.");
+      return false;
+    }
+
+    const selection = selections.find(
+      (selection) => selection.id === selectionId,
+    );
+
+    const currentSession = selection?.sessions.find(
+      (session) => session.id === sessionId,
+    );
+
+    const newCapacity = maxCapacity ? Number(maxCapacity) : null;
+
+    if (
+      newCapacity !== null &&
+      newCapacity < (currentSession?.registeredCount ?? 0)
+    ) {
+      alert(
+        `Capacity cannot be lower than the ${currentSession?.registeredCount ?? 0} people already registered.`,
+      );
+      return false;
+    }
+
+    const updatedSelections = selections.map((selection) =>
+      selection.id === selectionId
+        ? {
+            ...selection,
+            sessions: selection.sessions.map((session) =>
+              session.id === sessionId
+                ? {
+                    ...session,
+                    date: sessionDate,
+                    time: sessionTime,
+                    maxCapacity: newCapacity,
+                  }
+                : session,
+            ),
+          }
+        : selection,
     );
 
     setSelections(updatedSelections);
 
-    setEditingSelectionId(null);
-    setEditSelectionType("");
-    setEditSelectionName("");
+    return true;
   };
 
   return (
@@ -715,277 +670,19 @@ const TripManagement = ({ trips, setTrips }) => {
       <section>
         <h2>Available Trip Selections</h2>
 
-        {selections.map((selection) => {
-          const selectedSessionId =
-            selectedSessionIds[selection.id] ?? selection.sessions?.[0]?.id;
-
-          const selectedSession = selection.sessions?.find(
-            (session) => session.id === selectedSessionId,
-          );
-
-          return (
-            <div key={selection.id} className="selection-card">
-              {editingId === selectedSession?.id ? (
-                <>
-                  <input
-                    type="date"
-                    value={editSessionDate}
-                    onChange={(event) =>
-                      setEditSessionDate(event.target.value)
-                    }
-                  />
-
-                  <input
-                    type="time"
-                    value={editSessionTime}
-                    onChange={(event) =>
-                      setEditSessionTime(event.target.value)
-                    }
-                  />
-
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="Max capacity"
-                    value={editMaxCapacity}
-                    onChange={(event) =>
-                      setEditMaxCapacity(event.target.value)
-                    }
-                  />
-
-                  <div className="selection-actions">
-                    <button
-                      onClick={() =>
-                        handleSaveEdit(selection.id, selectedSession.id)
-                      }
-                    >
-                      Save
-                    </button>
-
-                    <button onClick={handleCancelEdit}>
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {editingSelectionId === selection.id ? (
-                    <div className="edit-selection-form">
-                      <input
-                        type="text"
-                        value={editSelectionType}
-                        onChange={(event) =>
-                          setEditSelectionType(event.target.value)
-                        }
-                        placeholder="Selection type"
-                      />
-
-                      <input
-                        type="text"
-                        value={editSelectionName}
-                        onChange={(event) =>
-                          setEditSelectionName(event.target.value)
-                        }
-                        placeholder="Selection name"
-                      />
-                      <div className="selection-actions">
-                        <button
-                          onClick={() => handleSaveSelectionEdit(selection.id)}
-                        >
-                          Save
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setEditingSelectionId(null);
-                            setEditSelectionType("");
-                            setEditSelectionName("");
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="details-section-header">
-                      <p>
-                        <strong>{selection.type}:</strong> {selection.name}
-                      </p>
-
-                      <button
-                        className="edit-button"
-                        onClick={() => {
-                          setEditingSelectionId(selection.id);
-                          setEditSelectionType(selection.type);
-                          setEditSelectionName(selection.name);
-                        }}
-                      >
-                        Edit Excursion
-                      </button>
-                    </div>
-                  )}
-                  {selection.sessions?.length > 0 ? (
-                    <div className="session-selector">
-                      <label>
-                        <strong>Session</strong>
-                      </label>
-
-                      <select
-                        value={
-                          selectedSessionIds[selection.id] ??
-                          selection.sessions[0].id
-                        }
-                        onChange={(event) =>
-                          setSelectedSessionIds({
-                            ...selectedSessionIds,
-                            [selection.id]: Number(event.target.value),
-                          })
-                        }
-                      >
-                        {selection.sessions.map((session) => (
-                          <option key={session.id} value={session.id}>
-                            {session.date} — {session.time}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <p>No sessions available.</p>
-                  )}
-                  {selectedSession && (
-                    <>
-                      <p>
-                        <strong>Capacity:</strong>{" "}
-                        {selectedSession.maxCapacity ?? "No limit"}
-                      </p>
-
-                      <p>
-                        <strong>Registered:</strong>{" "}
-                        {selectedSession.registeredCount ?? 0}
-                      </p>
-
-                      <p>
-                        <strong>Remaining:</strong>{" "}
-                        {selectedSession.maxCapacity
-                          ? selectedSession.maxCapacity -
-                          (selectedSession.registeredCount ?? 0)
-                          : "No limit"}
-                      </p>
-
-                      {selectedSession.maxCapacity &&
-                        (selectedSession.registeredCount ?? 0) >=
-                        selectedSession.maxCapacity && (
-                          <p className="selection-full">FULL</p>
-                        )}
-
-                      <div className="selection-actions">
-                        <button
-                          className="edit-button"
-                          onClick={() =>
-                            handleEditClick(selection, selectedSession)
-                          }
-                        >
-                          Edit Session
-                        </button>
-
-                        <button
-                          className="delete-button"
-                          onClick={() =>
-                            handleDeleteSelection(selection.id, selectedSession.id)
-                          }
-                        >
-                          Delete Session
-                        </button>
-
-                        <button
-                          className={
-                            selectedSession.active
-                              ? "deactivate-button"
-                              : "activate-button"
-                          }
-                          onClick={() =>
-                            handleToggleActive(selection.id, selectedSession.id)
-                          }
-                        >
-                          {selectedSession.active ? "Deactivate" : "Activate"}
-                        </button>
-
-                        <p>
-                          <strong>Status:</strong>{" "}
-                          {selectedSession.active ? "Active" : "Inactive"}
-                        </p>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="selection-actions">
-                    <button
-                      className="edit-button"
-                      onClick={() =>
-                        setAddingSessionToId(selection.id)
-                      }
-                    >
-                      Add Session
-                    </button>
-                  </div>
-
-                  {addingSessionToId === selection.id && (
-                    <div className="add-session-form">
-                      <input
-                        type="date"
-                        value={additionalSessionDate}
-                        onChange={(event) =>
-                          setAdditionalSessionDate(event.target.value)
-                        }
-                      />
-
-                      <input
-                        type="time"
-                        value={additionalSessionTime}
-                        onChange={(event) =>
-                          setAdditionalSessionTime(event.target.value)
-                        }
-                      />
-
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        placeholder="Max capacity"
-                        value={additionalSessionCapacity}
-                        onChange={(event) =>
-                          setAdditionalSessionCapacity(event.target.value)
-                        }
-                      />
-
-                      <div className="selection-actions">
-                        <button
-                          onClick={() =>
-                            handleAddSession(selection.id)
-                          }
-                        >
-                          Add Session
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setAddingSessionToId(null);
-                            setAdditionalSessionDate("");
-                            setAdditionalSessionTime("");
-                            setAdditionalSessionCapacity("");
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          );
-        })}
+        {selections.map((selection) => (
+          <SelectionCard
+            key={selection.id}
+            selection={selection}
+            selectedSessionIds={selectedSessionIds}
+            setSelectedSessionIds={setSelectedSessionIds}
+            handleSaveSelectionEdit={handleSaveSelectionEdit}
+            handleDeleteSelection={handleDeleteSelection}
+            handleToggleActive={handleToggleActive}
+            handleAddSession={handleAddSession}
+            handleSaveEdit={handleSaveEdit}
+          />
+        ))}
         <div className="add-selection-form">
           <input
             type="text"
@@ -1003,17 +700,13 @@ const TripManagement = ({ trips, setTrips }) => {
           <input
             type="date"
             value={newSessionDate}
-            onChange={(event) =>
-              setNewSessionDate(event.target.value)
-            }
+            onChange={(event) => setNewSessionDate(event.target.value)}
           />
 
           <input
             type="time"
             value={newSessionTime}
-            onChange={(event) =>
-              setNewSessionTime(event.target.value)
-            }
+            onChange={(event) => setNewSessionTime(event.target.value)}
           />
 
           <input

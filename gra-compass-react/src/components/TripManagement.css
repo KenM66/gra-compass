@@ -21,6 +21,7 @@
 .selection-card {
   margin-bottom: 24px;
   padding: 24px;
+  max-width: 990px;
   background-color: white;
   border: 1px solid #2f7d32;
   border-radius: 10px;
