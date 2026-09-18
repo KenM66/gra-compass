@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import "../components/RegistrationDetails.css";
 
 import { useState } from "react";
@@ -99,6 +99,14 @@ const RegistrationDetails = ({
 
   return (
     <main className="registration-details-page">
+      <button
+        type="button"
+        className="back-to-registrations-button"
+        onClick={() => navigate(`/trips/${tripId}/manage?tab=registrations`)}
+      >
+        ← Back to Registrations
+      </button>
+
       <div className="details-header">
         <div>
           <p className="traveler-number">

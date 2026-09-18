@@ -466,3 +466,43 @@
   color: #555;
   border: 1px solid #777;
 }
+.trip-management-tabs {
+  display: flex;
+  gap: 8px;
+  max-width: 990px;
+  margin: 24px 0;
+  border-bottom: 1px solid #d9e6d9;
+}
+
+.trip-management-tabs button {
+  position: relative;
+  padding: 12px 18px;
+  background-color: transparent;
+  color: #555;
+  border: none;
+  border-radius: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trip-management-tabs button:hover {
+  background-color: #f5f7f5;
+  color: #222;
+}
+
+.trip-management-tabs button.active {
+  background-color: transparent;
+  color: #222;
+}
+
+.trip-management-tabs button.active::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 3px;
+  background-color: #2f7d32;
+  border-radius: 3px 3px 0 0;
+}

@@ -163,3 +163,17 @@
   margin: 8px 0 0;
   color: #666;
 }
+.back-to-registrations-button {
+  margin-bottom: 18px;
+  padding: 8px 0;
+  background: transparent;
+  color: #2f7d32;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.back-to-registrations-button:hover {
+  text-decoration: underline;
+}

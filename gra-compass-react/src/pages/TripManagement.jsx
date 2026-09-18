@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import selectionsByTrip from "../data/mockTripSelections";
 import "../components/TripManagement.css";
 import SelectionCard from "../components/SelectionCard";
 import RegistrationSummary from "../components/RegistrationSummary";
 import RegistrationSettings from "../components/RegistrationSettings";
+import RegistrationList from "../components/RegistrationList";
 
 const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
   const { tripId } = useParams();
@@ -55,6 +56,19 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
   const [selectedSessionIds, setSelectedSessionIds] = useState({});
   const [editingRegistrationSettings, setEditingRegistrationSettings] =
     useState(false);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const activeTab = searchParams.get("tab") || "overview";
+
+  const handleTabChange = (tab) => {
+    if (tab === "overview") {
+      setSearchParams({});
+      return;
+    }
+
+    setSearchParams({ tab });
+  };
 
   const formatDateForInput = (dateValue) => {
     if (!dateValue) return "";
@@ -638,80 +652,114 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
           Edit Trip
         </button>
       </div>
-      {editingRegistrationSettings ? (
-        <RegistrationSettings
-          registrationCapacity={trip?.registrationCapacity}
-          travelerCapacity={trip?.travelerCapacity}
-          registrationCloseDate={trip?.registrationCloseDate}
-          registrationsPaused={trip?.registrationsPaused ?? false}
-          onSave={handleSaveRegistrationSettings}
-          onCancel={() => setEditingRegistrationSettings(false)}
-          onPause={handlePauseRegistrations}
-          onResume={handleResumeRegistrations}
-        />
-      ) : (
-        <RegistrationSummary
-          status={registrationStatus}
-          registrationCount={trip?.registrationCount ?? 0}
-          travelerCount={travelerCount}
-          registrationCloseDate={trip?.registrationCloseDate}
-          onEditSettings={() => setEditingRegistrationSettings(true)}
-        />
-      )}
+      <div className="trip-management-tabs">
+        <button
+          type="button"
+          className={activeTab === "overview" ? "active" : ""}
+          onClick={() => handleTabChange("overview")}
+        >
+          Overview
+        </button>
 
-      <section>
-        <h2>Available Trip Selections</h2>
+        <button
+          type="button"
+          className={activeTab === "registrations" ? "active" : ""}
+          onClick={() => handleTabChange("registrations")}
+        >
+          Registrations
+        </button>
 
-        {selections.map((selection) => (
-          <SelectionCard
-            key={selection.id}
-            selection={selection}
-            selectedSessionIds={selectedSessionIds}
-            setSelectedSessionIds={setSelectedSessionIds}
-            handleSaveSelectionEdit={handleSaveSelectionEdit}
-            handleDeleteSelection={handleDeleteSelection}
-            handleToggleActive={handleToggleActive}
-            handleAddSession={handleAddSession}
-            handleSaveEdit={handleSaveEdit}
+        <button
+          type="button"
+          className={activeTab === "selections" ? "active" : ""}
+          onClick={() => handleTabChange("selections")}
+        >
+          Trip Selections
+        </button>
+      </div>
+      {activeTab === "overview" &&
+        (editingRegistrationSettings ? (
+          <RegistrationSettings
+            registrationCapacity={trip?.registrationCapacity}
+            travelerCapacity={trip?.travelerCapacity}
+            registrationCloseDate={trip?.registrationCloseDate}
+            registrationsPaused={trip?.registrationsPaused ?? false}
+            onSave={handleSaveRegistrationSettings}
+            onCancel={() => setEditingRegistrationSettings(false)}
+            onPause={handlePauseRegistrations}
+            onResume={handleResumeRegistrations}
+          />
+        ) : (
+          <RegistrationSummary
+            status={registrationStatus}
+            registrationCount={trip?.registrationCount ?? 0}
+            travelerCount={travelerCount}
+            registrationCloseDate={trip?.registrationCloseDate}
+            onEditSettings={() => setEditingRegistrationSettings(true)}
           />
         ))}
-        <div className="add-selection-form">
-          <input
-            type="text"
-            placeholder="Selection type"
-            value={newType}
-            onChange={(event) => setNewType(event.target.value)}
-          />
+      {activeTab === "registrations" && (
+        <section className="trip-management-registrations">
+          <h2>Registrations</h2>
 
-          <input
-            type="text"
-            placeholder="Selection name"
-            value={newName}
-            onChange={(event) => setNewName(event.target.value)}
-          />
-          <input
-            type="date"
-            value={newSessionDate}
-            onChange={(event) => setNewSessionDate(event.target.value)}
-          />
+          <RegistrationList tripId={tripId} registrations={tripRegistrations} />
+        </section>
+      )}
+      {activeTab === "selections" && (
+        <section>
+          <h2>Available Trip Selections</h2>
 
-          <input
-            type="time"
-            value={newSessionTime}
-            onChange={(event) => setNewSessionTime(event.target.value)}
-          />
+          {selections.map((selection) => (
+            <SelectionCard
+              key={selection.id}
+              selection={selection}
+              selectedSessionIds={selectedSessionIds}
+              setSelectedSessionIds={setSelectedSessionIds}
+              handleSaveSelectionEdit={handleSaveSelectionEdit}
+              handleDeleteSelection={handleDeleteSelection}
+              handleToggleActive={handleToggleActive}
+              handleAddSession={handleAddSession}
+              handleSaveEdit={handleSaveEdit}
+            />
+          ))}
+          <div className="add-selection-form">
+            <input
+              type="text"
+              placeholder="Selection type"
+              value={newType}
+              onChange={(event) => setNewType(event.target.value)}
+            />
 
-          <input
-            type="number"
-            min="1"
-            placeholder="Max capacity"
-            value={newMaxCapacity}
-            onChange={(event) => setNewMaxCapacity(event.target.value)}
-          />
+            <input
+              type="text"
+              placeholder="Selection name"
+              value={newName}
+              onChange={(event) => setNewName(event.target.value)}
+            />
+            <input
+              type="date"
+              value={newSessionDate}
+              onChange={(event) => setNewSessionDate(event.target.value)}
+            />
 
-          <button onClick={handleAddSelection}>Add Selection</button>
-        </div>
-      </section>
+            <input
+              type="time"
+              value={newSessionTime}
+              onChange={(event) => setNewSessionTime(event.target.value)}
+            />
+
+            <input
+              type="number"
+              min="1"
+              placeholder="Max capacity"
+              value={newMaxCapacity}
+              onChange={(event) => setNewMaxCapacity(event.target.value)}
+            />
+
+            <button onClick={handleAddSelection}>Add Selection</button>
+          </div>
+        </section>
+      )}
     </main>
   );
 };
