@@ -161,6 +161,75 @@
   margin-bottom: 16px;
   max-width: 990px;
 }
+.registration-summary {
+  background-color: white;
+  border: 1px solid #2f7d32;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  max-width: 990px;
+}
+
+.registration-summary h2 {
+  margin-top: 0;
+}
+
+.registration-summary-counts {
+  display: flex;
+  gap: 24px;
+  margin: 20px 0;
+}
+
+.registration-summary-counts > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 18px;
+  text-align: center;
+  border: 1px solid #d9e6d9;
+  border-radius: 8px;
+}
+
+.registration-summary-counts span {
+  font-weight: 600;
+}
+
+.registration-summary-counts strong {
+  margin-top: 8px;
+  font-size: 1.75rem;
+}
+
+.registration-summary-counts small {
+  margin-top: 4px;
+}
+.registration-summary-counts strong {
+  color: #2f7d32;
+}
+
+.registration-summary-counts span {
+  color: #4b5563;
+}
+
+.registration-summary-counts small {
+  color: #6b7280;
+}
+
+.registration-summary-close-date {
+  background-color: #f3f8f3;
+  border: 1px solid #d9e6d9;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.registration-summary-close-date strong {
+  color: #2f7d32;
+}
+
+.registration-summary-close-date {
+  margin-bottom: 0;
+  padding-top: 16px;
+  border-top: 1px solid #d9e6d9;
+}
 .trip-management-page .edit-registration-settings-button {
   padding: 10px 18px;
   display: block;
@@ -235,4 +304,165 @@
 .registration-settings-edit button:hover {
   background-color: #f2f2f2;
   border-color: #2f7d32;
+}
+.registration-summary-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.registration-summary-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.registration-summary-status-open {
+  background-color: #e8f5e9;
+  color: #2f7d32;
+  border: 1px solid #2f7d32;
+}
+
+.registration-summary-status-open .registration-summary-status-dot {
+  background-color: #2f7d32;
+}
+
+.registration-summary-status-paused {
+  background-color: #fff8e1;
+  color: #8a6500;
+  border: 1px solid #c99a00;
+}
+
+.registration-summary-status-paused .registration-summary-status-dot {
+  background-color: #c99a00;
+}
+
+.registration-summary-status-closed {
+  background-color: #fdecec;
+  color: #a12622;
+  border: 1px solid #a12622;
+}
+
+.registration-summary-status-closed .registration-summary-status-dot {
+  background-color: #a12622;
+}
+.registration-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.registration-summary-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.registration-summary-header h2 {
+  margin: 0;
+}
+.registration-settings {
+  max-width: 990px;
+  margin-bottom: 16px;
+  padding: 24px;
+  background-color: white;
+  border: 1px solid #2f7d32;
+  border-radius: 12px;
+}
+
+.registration-settings h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+.registration-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.registration-settings-field label {
+  font-weight: 600;
+}
+
+.registration-settings-field input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: 1px solid #b8cbb8;
+  border-radius: 6px;
+}
+
+.registration-settings-field input:focus {
+  outline: 2px solid #2f7d32;
+  outline-offset: 1px;
+}
+
+.registration-settings-field small {
+  color: #666;
+}
+
+.registration-settings-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f5faf5;
+  border: 1px solid #d9e6d9;
+  border-radius: 8px;
+}
+
+.registration-settings-status button {
+  padding: 9px 16px;
+  font-weight: 600;
+  background-color: white;
+  border: 1px solid #2f7d32;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.registration-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #d9e6d9;
+}
+
+.registration-settings-actions button {
+  padding: 10px 18px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.registration-settings-actions button:first-child {
+  background-color: white;
+  border: 1px solid #777;
+}
+
+.registration-settings-actions button:last-child {
+  background-color: #2f7d32;
+  color: white;
+  border: 1px solid #2f7d32;
+}
+.registration-settings-status button {
+  background-color: #fff;
+  color: #2f7d32;
+  border: 1px solid #2f7d32;
+}
+
+.registration-settings-actions button:first-child {
+  background-color: #fff;
+  color: #555;
+  border: 1px solid #777;
 }

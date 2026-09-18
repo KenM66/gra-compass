@@ -3,22 +3,33 @@ import { useParams } from "react-router-dom";
 import selectionsByTrip from "../data/mockTripSelections";
 import "../components/TripManagement.css";
 import SelectionCard from "../components/SelectionCard";
+import RegistrationSummary from "../components/RegistrationSummary";
+import RegistrationSettings from "../components/RegistrationSettings";
 
-const TripManagement = ({ trips, setTrips }) => {
+const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
   const { tripId } = useParams();
   const trip = trips.find((trip) => trip.id === Number(tripId));
   console.log("Current trip:", trip);
   const getRegistrationStatus = () => {
     if (!trip) {
-      return "OPEN";
+      return "CLOSED";
     }
 
-    if (trip.registrationCapacity === 0) {
-      return "NOT OPEN";
+    const today = new Date();
+    const tripStartDate = new Date(trip.startDate);
+
+    if (today >= tripStartDate) {
+      return "CLOSED";
     }
 
-    if (trip.registrationCount >= trip.registrationCapacity) {
-      return "FULL";
+    if (trip.registrationCloseDate) {
+      const registrationCloseDate = new Date(
+        `${trip.registrationCloseDate}T23:59:59`,
+      );
+
+      if (today > registrationCloseDate) {
+        return "CLOSED";
+      }
     }
 
     if (trip.registrationsPaused) {
@@ -30,11 +41,20 @@ const TripManagement = ({ trips, setTrips }) => {
 
   const registrationStatus = getRegistrationStatus();
 
+  const tripRegistrations = registrationsByTrip[tripId] || [];
+
+  const travelerCount = tripRegistrations.reduce(
+    (total, registration) => total + 1 + (registration.bringingGuest ? 1 : 0),
+    0,
+  );
+
   const [editTripName, setEditTripName] = useState(trip?.name || "");
   const [editDestination, setEditDestination] = useState(
     trip?.destination || "",
   );
   const [selectedSessionIds, setSelectedSessionIds] = useState({});
+  const [editingRegistrationSettings, setEditingRegistrationSettings] =
+    useState(false);
 
   const formatDateForInput = (dateValue) => {
     if (!dateValue) return "";
@@ -124,6 +144,58 @@ const TripManagement = ({ trips, setTrips }) => {
     showSavedFeedback("destination");
   };
 
+  const handleSaveRegistrationSettings = ({
+    registrationCapacity,
+    travelerCapacity,
+    registrationCloseDate,
+  }) => {
+    const newRegistrationCapacity = Number(registrationCapacity);
+    const newTravelerCapacity = Number(travelerCapacity);
+
+    if (newRegistrationCapacity < 1) {
+      alert("Registration capacity must be at least 1.");
+      return;
+    }
+
+    if (newTravelerCapacity < 1) {
+      alert("Traveler capacity must be at least 1.");
+      return;
+    }
+    if (newTravelerCapacity < newRegistrationCapacity) {
+      alert("Traveler capacity cannot be lower than registration capacity.");
+      return;
+    }
+
+    if (newRegistrationCapacity < tripRegistrations.length) {
+      alert(
+        `Registration capacity cannot be lower than the ${tripRegistrations.length} existing registrations.`,
+      );
+      return;
+    }
+
+    if (newTravelerCapacity < travelerCount) {
+      alert(
+        `Traveler capacity cannot be lower than the ${travelerCount} existing travelers.`,
+      );
+      return;
+    }
+
+    setTrips((currentTrips) =>
+      currentTrips.map((currentTrip) =>
+        currentTrip.id === Number(tripId)
+          ? {
+              ...currentTrip,
+              registrationCapacity: newRegistrationCapacity,
+              travelerCapacity: newTravelerCapacity,
+              registrationCloseDate,
+            }
+          : currentTrip,
+      ),
+    );
+
+    setEditingRegistrationSettings(false);
+  };
+
   const handleSaveStartDate = () => {
     if (!editStartDate) {
       alert("Start date is required.");
@@ -195,13 +267,6 @@ const TripManagement = ({ trips, setTrips }) => {
 
   const [newSessionDate, setNewSessionDate] = useState("");
   const [newSessionTime, setNewSessionTime] = useState("");
-
-  const [isEditingRegistrationSettings, setIsEditingRegistrationSettings] =
-    useState(false);
-
-  const [editRegistrationCapacity, setEditRegistrationCapacity] = useState(
-    trip?.registrationCapacity ?? 0,
-  );
 
   const handleAddSelection = () => {
     if (
@@ -338,29 +403,6 @@ const TripManagement = ({ trips, setTrips }) => {
     );
   };
 
-  const handleSaveRegistrationCapacity = () => {
-    const capacity = Number(editRegistrationCapacity);
-
-    if (capacity < trip.registrationCount) {
-      alert(
-        `Capacity cannot be lower than the ${trip.registrationCount} existing registrations.`,
-      );
-      return;
-    }
-
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              registrationCapacity: capacity,
-            }
-          : currentTrip,
-      ),
-    );
-
-    setIsEditingRegistrationSettings(false);
-  };
   const handleAddSession = (
     selectionId,
     sessionDate,
@@ -596,75 +638,25 @@ const TripManagement = ({ trips, setTrips }) => {
           Edit Trip
         </button>
       </div>
-      <div className="registration-controls">
-        <h2>Registration Status</h2>
-
-        <div className="registration-status-row">
-          <strong>Status:</strong>
-
-          <span
-            className={`registration-status registration-status-${registrationStatus
-              .toLowerCase()
-              .replace(" ", "-")}`}
-          >
-            <span className="registration-status-dot"></span>
-            {registrationStatus}
-          </span>
-        </div>
-
-        <p>
-          <strong>Registrations:</strong> {trip?.registrationCount} /{" "}
-          {trip?.registrationCapacity}
-        </p>
-
-        {registrationStatus === "OPEN" && (
-          <button type="button" onClick={handlePauseRegistrations}>
-            Pause Registrations
-          </button>
-        )}
-
-        {registrationStatus === "PAUSED" && (
-          <button type="button" onClick={handleResumeRegistrations}>
-            Resume Registrations
-          </button>
-        )}
-      </div>
-      <button
-        type="button"
-        className="edit-registration-settings-button"
-        onClick={() => setIsEditingRegistrationSettings(true)}
-      >
-        Edit Registration Settings
-      </button>
-
-      {isEditingRegistrationSettings && (
-        <div className="registration-settings-edit">
-          <label htmlFor="editRegistrationCapacity">
-            Registration Capacity
-          </label>
-
-          <input
-            id="editRegistrationCapacity"
-            type="number"
-            min={trip?.registrationCount || 0}
-            step="1"
-            value={editRegistrationCapacity}
-            onChange={(event) =>
-              setEditRegistrationCapacity(event.target.value)
-            }
-          />
-
-          <button type="button" onClick={handleSaveRegistrationCapacity}>
-            Save
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsEditingRegistrationSettings(false)}
-          >
-            Cancel
-          </button>
-        </div>
+      {editingRegistrationSettings ? (
+        <RegistrationSettings
+          registrationCapacity={trip?.registrationCapacity}
+          travelerCapacity={trip?.travelerCapacity}
+          registrationCloseDate={trip?.registrationCloseDate}
+          registrationsPaused={trip?.registrationsPaused ?? false}
+          onSave={handleSaveRegistrationSettings}
+          onCancel={() => setEditingRegistrationSettings(false)}
+          onPause={handlePauseRegistrations}
+          onResume={handleResumeRegistrations}
+        />
+      ) : (
+        <RegistrationSummary
+          status={registrationStatus}
+          registrationCount={trip?.registrationCount ?? 0}
+          travelerCount={travelerCount}
+          registrationCloseDate={trip?.registrationCloseDate}
+          onEditSettings={() => setEditingRegistrationSettings(true)}
+        />
       )}
 
       <section>

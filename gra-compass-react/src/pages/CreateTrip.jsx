@@ -7,7 +7,7 @@ const CreateTrip = ({ setTrips }) => {
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [tripImage, setTripImage] = useState(null);
+
   const [imagePreview, setImagePreview] = useState("");
 
   const navigate = useNavigate();
@@ -32,6 +32,8 @@ const CreateTrip = ({ setTrips }) => {
       endDate,
       registrationCount: 0,
       registrationCapacity: 0,
+      travelerCapacity: 0,
+      registrationCloseDate: "",
       imagePreview,
     };
 
@@ -98,8 +100,6 @@ const CreateTrip = ({ setTrips }) => {
             accept="image/*"
             onChange={(event) => {
               const file = event.target.files[0];
-
-              setTripImage(file);
 
               if (file) {
                 setImagePreview(URL.createObjectURL(file));
