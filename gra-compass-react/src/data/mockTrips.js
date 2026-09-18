@@ -7,6 +7,8 @@ const trips = [
     endDate: "March 14, 2027",
     registrationCount: 2,
     registrationCapacity: 250,
+    travelerCapacity: 300,
+    registrationCloseDate: "",
     registrationsPaused: false,
   },
   {
