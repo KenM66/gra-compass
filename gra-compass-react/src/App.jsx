@@ -53,7 +53,13 @@ const App = () => {
         <Route path="/settings" element={<Settings />} />
         <Route
           path="/trips/:tripId/manage"
-          element={<TripManagement trips={trips} setTrips={setTrips} />}
+          element={
+            <TripManagement
+              trips={trips}
+              setTrips={setTrips}
+              registrationsByTrip={registrationsByTrip}
+            />
+          }
         />
 
         <Route

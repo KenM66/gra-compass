@@ -5,8 +5,10 @@ const trips = [
     destination: "Cancun, Mexico",
     startDate: "March 8, 2027",
     endDate: "March 14, 2027",
-    registrationCount: 184,
+    registrationCount: 2,
     registrationCapacity: 250,
+    travelerCapacity: 300,
+    registrationCloseDate: "",
     registrationsPaused: false,
   },
   {
