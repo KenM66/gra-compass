@@ -221,3 +221,97 @@
   gap: 10px;
   margin-top: 8px;
 }
+
+.selection-edit-content {
+  flex: 1;
+}
+
+.selection-edit-content > strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.selection-session-list {
+  display: grid;
+  gap: 8px;
+}
+
+.selection-session {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background-color: #f8faf8;
+  border: 1px solid #e1e8e1;
+  border-radius: 6px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.selection-session:hover {
+  border-color: #2f7d32;
+}
+
+.selection-session:has(input:checked) {
+  background-color: #f0f7f0;
+  border-color: #2f7d32;
+}
+
+.selection-session:has(input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.selection-session input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #2f7d32;
+}
+
+.selection-session span:last-child {
+  font-size: 0.9rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.selection-save-button,
+.selection-cancel-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.selection-save-button {
+  background-color: #2f7d32;
+  color: white;
+  border: 1px solid #2f7d32;
+}
+
+.selection-save-button:hover {
+  background-color: #256628;
+  border-color: #256628;
+}
+
+.selection-edit-button:hover,
+.selection-edit-button:hover {
+  background-color: #f5f5f5;
+}
+
+.selection-cancel-button {
+  background-color: white;
+  color: #555;
+  border: 1px solid #bbb;
+}
+
+.selection-cancel-button:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+}

@@ -72,9 +72,9 @@ const RegistrationDetails = ({
       [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
         currentRegistration.travelerNumber === Number(id)
           ? {
-            ...currentRegistration,
-            ...editPersonalInfo,
-          }
+              ...currentRegistration,
+              ...editPersonalInfo,
+            }
           : currentRegistration,
       ),
     }));
@@ -88,17 +88,28 @@ const RegistrationDetails = ({
       [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
         currentRegistration.travelerNumber === Number(id)
           ? {
-            ...currentRegistration,
-            address: {
-              ...currentRegistration.address,
-              ...editAddress,
-            },
-          }
+              ...currentRegistration,
+              address: {
+                ...currentRegistration.address,
+                ...editAddress,
+              },
+            }
           : currentRegistration,
       ),
     }));
 
     setIsEditingAddress(false);
+  };
+  const formatSessionDateTime = (date, time) => {
+    const sessionDate = new Date(`${date}T${time}`);
+
+    return sessionDate.toLocaleString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -294,8 +305,9 @@ const RegistrationDetails = ({
             {isEditingTravelInfo ? (
               <button
                 type="button"
-                className={`yes-no-toggle ${editTravelInfo.tsaPrecheck ? "yes" : "no"
-                  }`}
+                className={`yes-no-toggle ${
+                  editTravelInfo.tsaPrecheck ? "yes" : "no"
+                }`}
                 onClick={() =>
                   setEditTravelInfo({
                     ...editTravelInfo,
@@ -358,9 +370,9 @@ const RegistrationDetails = ({
                       (currentRegistration) =>
                         currentRegistration.travelerNumber === Number(id)
                           ? {
-                            ...currentRegistration,
-                            ...editTravelInfo,
-                          }
+                              ...currentRegistration,
+                              ...editTravelInfo,
+                            }
                           : currentRegistration,
                     ),
                   }));
@@ -414,10 +426,10 @@ const RegistrationDetails = ({
                       (currentRegistration) =>
                         currentRegistration.travelerNumber === Number(id)
                           ? {
-                            ...currentRegistration,
-                            bringingGuest: false,
-                            guest: null,
-                          }
+                              ...currentRegistration,
+                              bringingGuest: false,
+                              guest: null,
+                            }
                           : currentRegistration,
                     ),
                   }));
@@ -431,20 +443,20 @@ const RegistrationDetails = ({
                     (currentRegistration) =>
                       currentRegistration.travelerNumber === Number(id)
                         ? {
-                          ...currentRegistration,
-                          bringingGuest: true,
-                          guest: {
-                            firstName: "",
-                            lastName: "",
-                            email: "",
-                            phone: "",
-                            dateOfBirth: "",
-                            passportNumber: "",
-                            passportExpiration: "",
-                            accessibility: "",
-                            dietaryRestrictions: "",
-                          },
-                        }
+                            ...currentRegistration,
+                            bringingGuest: true,
+                            guest: {
+                              firstName: "",
+                              lastName: "",
+                              email: "",
+                              phone: "",
+                              dateOfBirth: "",
+                              passportNumber: "",
+                              passportExpiration: "",
+                              accessibility: "",
+                              dietaryRestrictions: "",
+                            },
+                          }
                         : currentRegistration,
                   ),
                 }));
@@ -572,12 +584,12 @@ const RegistrationDetails = ({
                       (currentRegistration) =>
                         currentRegistration.travelerNumber === Number(id)
                           ? {
-                            ...currentRegistration,
-                            emergencyContact: {
-                              ...currentRegistration.emergencyContact,
-                              ...editEmergencyContact,
-                            },
-                          }
+                              ...currentRegistration,
+                              emergencyContact: {
+                                ...currentRegistration.emergencyContact,
+                                ...editEmergencyContact,
+                              },
+                            }
                           : currentRegistration,
                     ),
                   }));
@@ -792,9 +804,9 @@ const RegistrationDetails = ({
                       (currentRegistration) =>
                         currentRegistration.travelerNumber === Number(id)
                           ? {
-                            ...currentRegistration,
-                            ...editSpecialRequirements,
-                          }
+                              ...currentRegistration,
+                              ...editSpecialRequirements,
+                            }
                           : currentRegistration,
                     ),
                   }));
@@ -822,7 +834,7 @@ const RegistrationDetails = ({
           )}
         </section>
         <section className="details-section">
-          <div className="section-header">
+          <div className="details-section-header">
             <h2>Trip Selections</h2>
 
             {!isEditingSelections && (
@@ -876,40 +888,53 @@ const RegistrationDetails = ({
                     </strong>
 
                     <div className="selection-session-list">
-  {selection.sessions.map((session) => (
-    <label className="selection-session" key={session.id}>
-      <input
-        type="radio"
-        name={`selection-${selection.id}`}
-        checked={editSelections.some(
-          (activity) =>
-            activity.id === selection.id &&
-            activity.sessionId === session.id,
-        )}
-        onChange={() => {
-          setEditSelections((currentSelections) =>
-            currentSelections.map((activity) =>
-              activity.id === selection.id
-                ? {
-                    ...activity,
-                    sessionId: session.id,
-                  }
-                : activity,
-            ),
-          );
-        }}
-      />
+                      {selection.sessions.map((session) => (
+                        <label className="selection-session" key={session.id}>
+                          <input
+                            type="radio"
+                            name={`selection-${selection.id}`}
+                            checked={editSelections.some(
+                              (activity) =>
+                                activity.id === selection.id &&
+                                activity.sessionId === session.id,
+                            )}
+                            disabled={
+                              !registration.activities.some(
+                                (activity) =>
+                                  activity.id === selection.id &&
+                                  activity.sessionId === session.id,
+                              ) &&
+                              (!session.active ||
+                                session.registeredCount >= session.maxCapacity)
+                            }
+                            onChange={() => {
+                              setEditSelections((currentSelections) =>
+                                currentSelections.map((activity) =>
+                                  activity.id === selection.id
+                                    ? {
+                                        ...activity,
+                                        sessionId: session.id,
+                                      }
+                                    : activity,
+                                ),
+                              );
+                            }}
+                          />
 
-      <span>
-        {session.date} at {session.time}
-      </span>
+                          <span>
+                            {formatSessionDateTime(session.date, session.time)}
+                          </span>
 
-      <span>
-        {session.maxCapacity - session.registeredCount} spots left
-      </span>
-    </label>
-  ))}
-</div>
+                          <span>
+                            {!session.active
+                              ? "Unavailable"
+                              : session.registeredCount >= session.maxCapacity
+                                ? "Full"
+                                : `${session.maxCapacity - session.registeredCount} spots left`}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </label>
               ))}
@@ -917,15 +942,26 @@ const RegistrationDetails = ({
                 <button
                   type="button"
                   onClick={() => {
+                    const hasMissingSession = editSelections.some(
+                      (activity) => !activity.sessionId,
+                    );
+
+                    if (hasMissingSession) {
+                      alert("Please select a session for each trip selection.");
+                      return;
+                    }
+
                     setRegistrationsByTrip((currentRegistrations) => ({
                       ...currentRegistrations,
-                      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
-                        currentRegistration.travelerNumber === registration.travelerNumber
-                          ? {
-                            ...currentRegistration,
-                            activities: editSelections,
-                          }
-                          : currentRegistration,
+                      [tripId]: currentRegistrations[tripId].map(
+                        (currentRegistration) =>
+                          currentRegistration.travelerNumber ===
+                          registration.travelerNumber
+                            ? {
+                                ...currentRegistration,
+                                activities: editSelections,
+                              }
+                            : currentRegistration,
                       ),
                     }));
 
