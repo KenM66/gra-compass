@@ -37,17 +37,19 @@ const registrationsByTrip = {
       dietaryRequirements: "Vegetarian",
 
       activities: [
-        {
-          id: 1,
-          type: "Excursion",
-          name: "Catamaran & Snorkeling",
-        },
-        {
-          id: 2,
-          type: "Spa",
-          name: "Swedish Massage",
-        },
-      ],
+  {
+    id: 1,
+    type: "Excursion",
+    name: "Catamaran & Snorkeling",
+    sessionId: 101,
+  },
+  {
+    id: 4,
+    type: "Spa",
+    name: "Massage Appointment",
+    sessionId: 401,
+  },
+],
     },
 
     {

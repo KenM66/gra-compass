@@ -177,3 +177,47 @@
 .back-to-registrations-button:hover {
   text-decoration: underline;
 }
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selection-edit-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.selection-edit-list > label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: #fff;
+  border: 1px solid #d9e6d9;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.selection-edit-list > label:hover {
+  background-color: #f5f9f5;
+  border-color: #2f7d32;
+}
+
+.selection-edit-list input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2f7d32;
+  cursor: pointer;
+}
+
+.selection-edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
