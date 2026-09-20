@@ -6,6 +6,8 @@ import Registrations from "./pages/Registrations";
 import RegistrationDetails from "./pages/RegistrationDetails";
 import GuestDetails from "./pages/GuestDetails";
 import Reports from "./pages/Reports";
+import RegistrationReport from "./pages/RegistrationReport";
+import AccessibilityReport from "./pages/AccessibilityReport";
 import ActivitySessionReport from "./pages/ActivitySessionReport";
 import Settings from "./pages/Settings";
 import TripManagement from "./pages/TripManagement";
@@ -55,6 +57,18 @@ const App = () => {
           path="/reports/activity-sessions"
           element={
             <ActivitySessionReport registrationsByTrip={registrationsByTrip} />
+          }
+        />
+        <Route
+          path="/reports/registrations"
+          element={
+            <RegistrationReport registrationsByTrip={registrationsByTrip} />
+          }
+        />
+        <Route
+          path="/reports/accessibility"
+          element={
+            <AccessibilityReport registrationsByTrip={registrationsByTrip} />
           }
         />
         <Route path="/settings" element={<Settings />} />

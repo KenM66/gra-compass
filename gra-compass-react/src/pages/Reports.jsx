@@ -1,7 +1,9 @@
 import { useState } from "react";
 import trips from "../data/mockTrips";
 import ActivitySessionReportBuilder from "../components/ActivitySessionReportBuilder";
+import RegistrationReportBuilder from "../components/RegistrationReportBuilder";
 import "../components/Reports.css";
+import AccessibilityReportBuilder from "../components/AccessibilityReportBuilder";
 
 const Reports = () => {
   const [selectedTripId, setSelectedTripId] = useState("");
@@ -31,6 +33,8 @@ const Reports = () => {
       {selectedTripId && (
         <div className="reports-builders">
           <ActivitySessionReportBuilder tripId={selectedTripId} />
+          <RegistrationReportBuilder tripId={selectedTripId} />
+          <AccessibilityReportBuilder tripId={selectedTripId} />
         </div>
       )}
     </div>
