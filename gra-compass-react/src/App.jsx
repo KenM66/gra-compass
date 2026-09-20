@@ -6,6 +6,7 @@ import Registrations from "./pages/Registrations";
 import RegistrationDetails from "./pages/RegistrationDetails";
 import GuestDetails from "./pages/GuestDetails";
 import Reports from "./pages/Reports";
+import ActivitySessionReport from "./pages/ActivitySessionReport";
 import Settings from "./pages/Settings";
 import TripManagement from "./pages/TripManagement";
 import CreateTrip from "./pages/CreateTrip";
@@ -50,6 +51,12 @@ const App = () => {
         />
 
         <Route path="/reports" element={<Reports />} />
+        <Route
+          path="/reports/activity-sessions"
+          element={
+            <ActivitySessionReport registrationsByTrip={registrationsByTrip} />
+          }
+        />
         <Route path="/settings" element={<Settings />} />
         <Route
           path="/trips/:tripId/manage"

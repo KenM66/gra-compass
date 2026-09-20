@@ -1,4 +1,4 @@
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "../components/RegistrationDetails.css";
 import selectionsByTrip from "../data/mockTripSelections";
 import { useState } from "react";

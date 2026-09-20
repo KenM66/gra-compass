@@ -1,0 +1,102 @@
+.activity-report-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.activity-report-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.activity-report-page h1 {
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.activity-report-page > h2 {
+  margin-top: 0;
+  margin-bottom: 32px;
+  color: #555;
+  font-weight: 500;
+  text-align: center;
+}
+
+.activity-report-session {
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid #d9e6d9;
+  border-radius: 8px;
+}
+
+.activity-report-session h3 {
+  margin: 0 0 6px;
+  color: #2f7d32;
+}
+
+.activity-report-session h4 {
+  margin-bottom: 8px;
+}
+
+.activity-report-session p {
+  margin: 6px 0;
+}
+
+.activity-report-attendees {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.activity-report-attendees th,
+.activity-report-attendees td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.activity-report-attendees th {
+  background-color: #f5f9f5;
+  font-weight: 600;
+}
+.activity-report-attendees .check-in-column {
+  width: 28px;
+  padding-right: 4px;
+}
+
+.check-in-box {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #555;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.activity-report-attendees th:nth-child(2),
+.activity-report-attendees td:nth-child(2) {
+  width: 110px;
+}
+
+@media print {
+  .navbar,
+  .activity-report-actions {
+    display: none;
+  }
+
+  .activity-report-page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .activity-report-session {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  @page {
+    margin: 0.75in;
+  }
+}
