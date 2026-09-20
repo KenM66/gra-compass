@@ -110,12 +110,6 @@
   cursor: pointer;
 }
 
-.reports-page {
-  max-width: 1200px;
-  margin: 0;
-  padding: 32px 48px;
-}
-
 .reports-builders {
   max-width: 900px;
 }
