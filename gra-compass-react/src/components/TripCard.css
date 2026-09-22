@@ -32,7 +32,8 @@
 }
 
 .trip-card-content button {
-  margin-top: 16px;
+  display: block;
+  margin: 16px auto 0;
   padding: 10px 16px;
   background-color: #2f7d32;
   color: white;

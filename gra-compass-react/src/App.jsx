@@ -99,7 +99,15 @@ const App = () => {
           path="/trips/create"
           element={<CreateTrip setTrips={setTrips} />}
         />
-        <Route path="/" element={<Dashboard trips={trips} />} />
+        <Route
+          path="/"
+          element={
+            <Dashboard
+              trips={trips}
+              registrationsByTrip={registrationsByTrip}
+            />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

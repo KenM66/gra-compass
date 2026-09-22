@@ -7,6 +7,7 @@ const SelectionCard = ({
   handleDeleteSelection,
   handleToggleActive,
   handleAddSession,
+  getSessionRegistrationCount,
 }) => {
   const [editingSelectionId, setEditingSelectionId] = useState(null);
   const [editSelectionType, setEditSelectionType] = useState("");
@@ -41,6 +42,10 @@ const SelectionCard = ({
   const selectedSession = selection.sessions?.find(
     (session) => session.id === selectedSessionId,
   );
+
+  const registeredCount = selectedSession
+    ? getSessionRegistrationCount(selectedSession.id)
+    : 0;
 
   return (
     <div className="selection-card">
@@ -186,21 +191,18 @@ const SelectionCard = ({
               </p>
 
               <p>
-                <strong>Registered:</strong>{" "}
-                {selectedSession.registeredCount ?? 0}
+                <strong>Registered:</strong> {registeredCount}
               </p>
 
               <p>
                 <strong>Remaining:</strong>{" "}
                 {selectedSession.maxCapacity
-                  ? selectedSession.maxCapacity -
-                    (selectedSession.registeredCount ?? 0)
+                  ? selectedSession.maxCapacity - registeredCount
                   : "No limit"}
               </p>
 
               {selectedSession.maxCapacity &&
-                (selectedSession.registeredCount ?? 0) >=
-                  selectedSession.maxCapacity && (
+                registeredCount >= selectedSession.maxCapacity && (
                   <p className="selection-full">FULL</p>
                 )}
               <div className="selection-actions">
