@@ -4,6 +4,8 @@ import ActivitySessionReportBuilder from "../components/ActivitySessionReportBui
 import RegistrationReportBuilder from "../components/RegistrationReportBuilder";
 import "../components/Reports.css";
 import AccessibilityReportBuilder from "../components/AccessibilityReportBuilder";
+import DietaryReportBuilder from "../components/DietaryReportBuilder";
+import FlightBookingReportBuilder from "../components/FlightBookingReportBuilder";
 
 const Reports = () => {
   const [selectedTripId, setSelectedTripId] = useState("");
@@ -35,6 +37,8 @@ const Reports = () => {
           <ActivitySessionReportBuilder tripId={selectedTripId} />
           <RegistrationReportBuilder tripId={selectedTripId} />
           <AccessibilityReportBuilder tripId={selectedTripId} />
+          <DietaryReportBuilder tripId={selectedTripId} />
+          <FlightBookingReportBuilder tripId={selectedTripId} />
         </div>
       )}
     </div>

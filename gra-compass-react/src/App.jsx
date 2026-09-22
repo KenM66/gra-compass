@@ -8,7 +8,9 @@ import GuestDetails from "./pages/GuestDetails";
 import Reports from "./pages/Reports";
 import RegistrationReport from "./pages/RegistrationReport";
 import AccessibilityReport from "./pages/AccessibilityReport";
+import DietaryReport from "./pages/DietaryReport";
 import ActivitySessionReport from "./pages/ActivitySessionReport";
+import FlightBookingReport from "./pages/FlightBookingReport";
 import Settings from "./pages/Settings";
 import TripManagement from "./pages/TripManagement";
 import CreateTrip from "./pages/CreateTrip";
@@ -69,6 +71,16 @@ const App = () => {
           path="/reports/accessibility"
           element={
             <AccessibilityReport registrationsByTrip={registrationsByTrip} />
+          }
+        />
+        <Route
+          path="/reports/dietary"
+          element={<DietaryReport registrationsByTrip={registrationsByTrip} />}
+        />
+        <Route
+          path="/reports/flight-booking"
+          element={
+            <FlightBookingReport registrationsByTrip={registrationsByTrip} />
           }
         />
         <Route path="/settings" element={<Settings />} />

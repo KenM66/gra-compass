@@ -10,7 +10,9 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
 
   const [editPersonalInfo, setEditPersonalInfo] = useState({
     firstName: "",
+    preferredName: "",
     lastName: "",
+    sex: "",
     email: "",
     phone: "",
     dateOfBirth: "",
@@ -19,8 +21,12 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const [isEditingTravelInfo, setIsEditingTravelInfo] = useState(false);
 
   const [editTravelInfo, setEditTravelInfo] = useState({
+    departureAirport: "",
     passportNumber: "",
     passportExpiration: "",
+    passportIssuingCountry: "",
+    nationality: "",
+    citizenship: "",
   });
 
   const [isEditingAccessibilityDietary, setIsEditingAccessibilityDietary] =
@@ -77,7 +83,9 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const handleCancelPersonalInfo = () => {
     setEditPersonalInfo({
       firstName: guest.firstName || "",
+      preferredName: guest.preferredName || "",
       lastName: guest.lastName || "",
+      sex: guest.sex || "",
       email: guest.email || "",
       phone: guest.phone || "",
       dateOfBirth: guest.dateOfBirth || "",
@@ -107,8 +115,12 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
 
   const handleCancelTravelInfo = () => {
     setEditTravelInfo({
+      departureAirport: guest.departureAirport || "",
       passportNumber: guest.passportNumber || "",
       passportExpiration: guest.passportExpiration || "",
+      passportIssuingCountry: guest.passportIssuingCountry || "",
+      nationality: guest.nationality || "",
+      citizenship: guest.citizenship || "",
     });
 
     setIsEditingTravelInfo(false);
@@ -167,7 +179,9 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             onClick={() => {
               setEditPersonalInfo({
                 firstName: guest.firstName || "",
+                preferredName: guest.preferredName || "",
                 lastName: guest.lastName || "",
+                sex: guest.sex || "",
                 email: guest.email || "",
                 phone: guest.phone || "",
                 dateOfBirth: guest.dateOfBirth || "",
@@ -198,6 +212,26 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             <strong>{guest.firstName || "Not Provided"}</strong>
           )}
         </div>
+        {(isEditingPersonalInfo || guest.preferredName) && (
+          <div className="detail-row">
+            <span>Preferred Name (Optional)</span>
+
+            {isEditingPersonalInfo ? (
+              <input
+                type="text"
+                value={editPersonalInfo.preferredName}
+                onChange={(event) =>
+                  setEditPersonalInfo({
+                    ...editPersonalInfo,
+                    preferredName: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <span>{guest.preferredName}</span>
+            )}
+          </div>
+        )}
 
         <div className="detail-row">
           <span>Last Name</span>
@@ -215,6 +249,24 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             />
           ) : (
             <strong>{guest.lastName || "Not Provided"}</strong>
+          )}
+        </div>
+        <div className="detail-row">
+          <span>Sex</span>
+
+          {isEditingPersonalInfo ? (
+            <input
+              type="text"
+              value={editPersonalInfo.sex}
+              onChange={(event) =>
+                setEditPersonalInfo({
+                  ...editPersonalInfo,
+                  sex: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.sex || ""}</strong>
           )}
         </div>
 
@@ -295,8 +347,12 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             type="button"
             onClick={() => {
               setEditTravelInfo({
+                departureAirport: guest.departureAirport || "",
                 passportNumber: guest.passportNumber || "",
                 passportExpiration: guest.passportExpiration || "",
+                passportIssuingCountry: guest.passportIssuingCountry || "",
+                nationality: guest.nationality || "",
+                citizenship: guest.citizenship || "",
               });
 
               setIsEditingTravelInfo(true);
@@ -304,6 +360,25 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
           >
             Edit
           </button>
+        </div>
+        <div className="detail-row">
+          <span>Departure Airport</span>
+
+          {isEditingTravelInfo ? (
+            <input
+              type="text"
+              value={editTravelInfo.departureAirport}
+              onChange={(event) =>
+                setEditTravelInfo({
+                  ...editTravelInfo,
+                  departureAirport: event.target.value.toUpperCase(),
+                })
+              }
+              maxLength={3}
+            />
+          ) : (
+            <strong>{guest.departureAirport || ""}</strong>
+          )}
         </div>
 
         <div className="detail-row">
@@ -341,6 +416,62 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             />
           ) : (
             <strong>{guest.passportExpiration || "Not Provided"}</strong>
+          )}
+        </div>
+        <div className="detail-row">
+          <span>Passport Issuing Country</span>
+
+          {isEditingTravelInfo ? (
+            <input
+              type="text"
+              value={editTravelInfo.passportIssuingCountry}
+              onChange={(event) =>
+                setEditTravelInfo({
+                  ...editTravelInfo,
+                  passportIssuingCountry: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.passportIssuingCountry || ""}</strong>
+          )}
+        </div>
+
+        <div className="detail-row">
+          <span>Nationality</span>
+
+          {isEditingTravelInfo ? (
+            <input
+              type="text"
+              value={editTravelInfo.nationality}
+              onChange={(event) =>
+                setEditTravelInfo({
+                  ...editTravelInfo,
+                  nationality: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.nationality || ""}</strong>
+          )}
+        </div>
+
+        <div className="detail-row">
+          <span>Citizenship</span>
+
+          {isEditingTravelInfo ? (
+            <input
+              type="text"
+              value={editTravelInfo.citizenship}
+              onChange={(event) =>
+                setEditTravelInfo({
+                  ...editTravelInfo,
+                  citizenship: event.target.value,
+                })
+              }
+            />
+          ) : (
+            <strong>{guest.citizenship || ""}</strong>
           )}
         </div>
         {isEditingTravelInfo && (

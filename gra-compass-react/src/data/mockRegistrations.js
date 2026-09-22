@@ -4,12 +4,14 @@ const createGuest = (
   email,
   accessibility = "None",
   dietaryRequirements = "None",
+  flightBooking = {},
 ) => ({
   firstName,
   lastName,
   email,
   accessibility,
   dietaryRequirements,
+  ...flightBooking,
 });
 
 const registrationsByTrip = {
@@ -31,12 +33,26 @@ const registrationsByTrip = {
       passportNumber: "123456789",
       passportExpiration: "August 12, 2030",
       bringingGuest: true,
+      airport: "CLE",
+      sex: "Male",
+      nationality: "American",
+      citizenship: "United States",
       guest: createGuest(
         "Amanda",
         "Henderson",
         "amanda@example.com",
         "Wheelchair-accessible transportation",
         "None",
+        {
+          airport: "CLE",
+          dateOfBirth: "September 22, 1988",
+          sex: "Female",
+          nationality: "American",
+          citizenship: "United States",
+          passportNumber: "987654321",
+          passportExpiration: "May 18, 2031",
+          tsaPrecheck: false,
+        },
       ),
       emergencyContact: {
         name: "Robert Henderson",

@@ -1,0 +1,87 @@
+.flight-booking-report-page {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.flight-booking-report-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.flight-booking-report-page h1,
+.flight-booking-report-page h2,
+.flight-booking-report-count {
+  text-align: center;
+}
+
+.flight-booking-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 24px;
+}
+.flight-booking-report-table th {
+  white-space: nowrap;
+}
+
+.flight-booking-report-table th,
+.flight-booking-report-table td {
+  white-space: nowrap;
+}
+
+.flight-booking-report-table th,
+.flight-booking-report-table td {
+  padding: 12px;
+  border: 1px solid #d9e6d9;
+  text-align: left;
+}
+
+.flight-booking-report-table th {
+  background-color: #f5f9f5;
+  color: #2f7d32;
+}
+
+.flight-booking-report-empty {
+  text-align: center;
+}
+
+@media print {
+  .navbar,
+  .flight-booking-report-actions {
+    display: none !important;
+  }
+
+  .flight-booking-report-page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .flight-booking-report-table {
+    font-size: 8px;
+  }
+
+  .flight-booking-report-table th,
+  .flight-booking-report-table td {
+    padding: 3px;
+  }
+
+  .flight-booking-report-table tr {
+    break-inside: avoid;
+  }
+  .flight-booking-report-table th {
+    white-space: nowrap;
+  }
+
+  @page {
+    size: landscape;
+    margin: 0.35in;
+  }
+  .flight-booking-report-table {
+    width: 98%;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 8px;
+  }
+}
