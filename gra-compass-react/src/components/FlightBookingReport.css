@@ -2,6 +2,7 @@
   max-width: 1500px;
   margin: 0 auto;
   padding: 32px;
+  box-sizing: border-box;
 }
 
 .flight-booking-report-actions {
@@ -27,7 +28,7 @@
 
 .flight-booking-report-table th,
 .flight-booking-report-table td {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .flight-booking-report-table th,
