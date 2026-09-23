@@ -8,6 +8,7 @@ const TripCard = ({
   startDate,
   endDate,
   registrationCount,
+  travelerCount,
   imagePreview,
 }) => {
   const navigate = useNavigate();
@@ -27,10 +28,6 @@ const TripCard = ({
     });
   };
 
-  const handleViewRegistrations = () => {
-    navigate(`/trips/${tripId}/registrations`);
-  };
-
   return (
     <div className="trip-card">
       <div className="trip-card-image">
@@ -46,10 +43,12 @@ const TripCard = ({
         </p>
 
         <p>
-          <strong>{registrationCount}</strong> Registrations
+          <strong>{registrationCount}</strong>{" "}
+          {registrationCount === 1 ? "Registration" : "Registrations"}
+          {" • "}
+          <strong>{travelerCount}</strong>{" "}
+          {travelerCount === 1 ? "Traveler" : "Travelers"}
         </p>
-
-        <button onClick={handleViewRegistrations}>View Registrations</button>
         <button onClick={() => navigate(`/trips/${tripId}/manage`)}>
           Manage Trip
         </button>

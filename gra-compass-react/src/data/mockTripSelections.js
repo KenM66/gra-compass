@@ -10,7 +10,7 @@ const selectionsByTrip = {
           date: "2027-03-09",
           time: "10:00",
           maxCapacity: 25,
-          registeredCount: 17,
+
           active: true,
         },
         {
@@ -18,7 +18,7 @@ const selectionsByTrip = {
           date: "2027-03-09",
           time: "14:00",
           maxCapacity: 25,
-          registeredCount: 20,
+
           active: true,
         },
       ],
@@ -34,7 +34,7 @@ const selectionsByTrip = {
           date: "2027-03-10",
           time: "09:00",
           maxCapacity: 12,
-          registeredCount: 12,
+
           active: true,
         },
       ],
@@ -50,7 +50,7 @@ const selectionsByTrip = {
           date: "2027-03-11",
           time: "18:30",
           maxCapacity: 40,
-          registeredCount: 28,
+
           active: false,
         },
         {
@@ -58,7 +58,7 @@ const selectionsByTrip = {
           date: "2027-03-12",
           time: "18:30",
           maxCapacity: 40,
-          registeredCount: 31,
+
           active: true,
         },
         {
@@ -66,7 +66,7 @@ const selectionsByTrip = {
           date: "2027-03-13",
           time: "18:30",
           maxCapacity: 40,
-          registeredCount: 0,
+
           active: true,
         },
       ],
@@ -82,7 +82,7 @@ const selectionsByTrip = {
           date: "2027-03-10",
           time: "13:00",
           maxCapacity: 8,
-          registeredCount: 5,
+
           active: true,
         },
         {
@@ -90,7 +90,7 @@ const selectionsByTrip = {
           date: "2027-03-10",
           time: "15:00",
           maxCapacity: 8,
-          registeredCount: 8,
+
           active: true,
         },
       ],
@@ -106,7 +106,7 @@ const selectionsByTrip = {
           date: "2027-03-08",
           time: "19:00",
           maxCapacity: 100,
-          registeredCount: 73,
+
           active: true,
         },
       ],

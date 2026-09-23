@@ -3,7 +3,7 @@ import "../components/Dashboard.css";
 
 import { useNavigate } from "react-router-dom";
 
-const Dashboard = ({ trips }) => {
+const Dashboard = ({ trips, registrationsByTrip }) => {
   const navigate = useNavigate();
   return (
     <main className="dashboard">
@@ -23,18 +23,33 @@ const Dashboard = ({ trips }) => {
         <h2>Upcoming Trips</h2>
 
         <div className="trip-list">
-          {trips.map((trip) => (
-            <TripCard
-              key={trip.id}
-              tripId={trip.id}
-              name={trip.name}
-              destination={trip.destination}
-              startDate={trip.startDate}
-              endDate={trip.endDate}
-              registrationCount={trip.registrationCount}
-              imagePreview={trip.imagePreview}
-            />
-          ))}
+          {trips.map((trip) => {
+            const registrations = registrationsByTrip[trip.id] || [];
+
+            const registrationCount = registrations.length;
+
+            const travelerCount = registrations.reduce(
+              (total, registration) =>
+                total +
+                1 +
+                (registration.bringingGuest && registration.guest ? 1 : 0),
+              0,
+            );
+
+            return (
+              <TripCard
+                key={trip.id}
+                tripId={trip.id}
+                name={trip.name}
+                destination={trip.destination}
+                startDate={trip.startDate}
+                endDate={trip.endDate}
+                registrationCount={registrationCount}
+                travelerCount={travelerCount}
+                imagePreview={trip.imagePreview}
+              />
+            );
+          })}
         </div>
       </section>
     </main>

@@ -44,8 +44,16 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
 
   const tripRegistrations = registrationsByTrip[tripId] || [];
 
+  const getSessionRegistrationCount = (sessionId) =>
+    tripRegistrations.filter((registration) =>
+      registration.activities?.some(
+        (activity) => activity.sessionId === sessionId,
+      ),
+    ).length;
+
   const travelerCount = tripRegistrations.reduce(
-    (total, registration) => total + 1 + (registration.bringingGuest ? 1 : 0),
+    (total, registration) =>
+      total + 1 + (registration.bringingGuest && registration.guest ? 1 : 0),
     0,
   );
 
@@ -336,9 +344,13 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
       (session) => session.id === sessionId,
     );
 
-    if ((session?.registeredCount ?? 0) > 0) {
+    const registeredCount = session
+      ? getSessionRegistrationCount(session.id)
+      : 0;
+
+    if (registeredCount > 0) {
       alert(
-        `This session cannot be deleted because ${session.registeredCount} people are already registered for it.`,
+        `This session cannot be deleted because ${registeredCount} people are already registered for it.`,
       );
       return false;
     }
@@ -503,12 +515,13 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
 
     const newCapacity = maxCapacity ? Number(maxCapacity) : null;
 
-    if (
-      newCapacity !== null &&
-      newCapacity < (currentSession?.registeredCount ?? 0)
-    ) {
+    const registeredCount = currentSession
+      ? getSessionRegistrationCount(currentSession.id)
+      : 0;
+
+    if (newCapacity !== null && newCapacity < registeredCount) {
       alert(
-        `Capacity cannot be lower than the ${currentSession?.registeredCount ?? 0} people already registered.`,
+        `Capacity cannot be lower than the ${registeredCount} people already registered.`,
       );
       return false;
     }
@@ -692,7 +705,7 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
         ) : (
           <RegistrationSummary
             status={registrationStatus}
-            registrationCount={trip?.registrationCount ?? 0}
+            registrationCount={tripRegistrations.length}
             travelerCount={travelerCount}
             registrationCloseDate={trip?.registrationCloseDate}
             onEditSettings={() => setEditingRegistrationSettings(true)}
@@ -720,6 +733,7 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
               handleToggleActive={handleToggleActive}
               handleAddSession={handleAddSession}
               handleSaveEdit={handleSaveEdit}
+              getSessionRegistrationCount={getSessionRegistrationCount}
             />
           ))}
           <div className="add-selection-form">

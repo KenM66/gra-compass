@@ -10,6 +10,15 @@ const RegistrationDetails = ({
   const { tripId, id } = useParams();
   const navigate = useNavigate();
 
+  const tripRegistrations = registrationsByTrip[tripId] || [];
+
+  const getSessionRegistrationCount = (sessionId) =>
+    tripRegistrations.filter((registration) =>
+      registration.activities?.some(
+        (activity) => activity.sessionId === sessionId,
+      ),
+    ).length;
+
   const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
 
   const [editPersonalInfo, setEditPersonalInfo] = useState({
@@ -1040,7 +1049,8 @@ const RegistrationDetails = ({
                                   activity.sessionId === session.id,
                               ) &&
                               (!session.active ||
-                                session.registeredCount >= session.maxCapacity)
+                                getSessionRegistrationCount(session.id) >=
+                                  session.maxCapacity)
                             }
                             onChange={() => {
                               setEditSelections((currentSelections) =>
@@ -1063,9 +1073,10 @@ const RegistrationDetails = ({
                           <span>
                             {!session.active
                               ? "Unavailable"
-                              : session.registeredCount >= session.maxCapacity
+                              : getSessionRegistrationCount(session.id) >=
+                                  session.maxCapacity
                                 ? "Full"
-                                : `${session.maxCapacity - session.registeredCount} spots left`}
+                                : `${session.maxCapacity - getSessionRegistrationCount(session.id)} spots left`}
                           </span>
                         </label>
                       ))}
