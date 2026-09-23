@@ -30,3 +30,16 @@
 .navbar-links a:hover {
   color: #2f7d32;
 }
+.navbar-links button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.navbar-links button:hover {
+  color: #2f7d32;
+}

@@ -17,8 +17,14 @@ import CreateTrip from "./pages/CreateTrip";
 import { useState } from "react";
 import tripsData from "./data/mockTrips";
 import registrationsData from "./data/mockRegistrations";
+import Login from "./pages/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    sessionStorage.getItem("isAuthenticated") === "true",
+  );
+
   const [trips, setTrips] = useState(tripsData);
 
   const [registrationsByTrip, setRegistrationsByTrip] =
@@ -26,86 +32,139 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <Navbar />
+      {isAuthenticated && <Navbar setIsAuthenticated={setIsAuthenticated} />}
 
       <Routes>
         <Route
           path="/trips/:tripId/registrations"
-          element={<Registrations />}
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Registrations />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/trips/:tripId/registrations/:id"
           element={
-            <RegistrationDetails
-              registrationsByTrip={registrationsByTrip}
-              setRegistrationsByTrip={setRegistrationsByTrip}
-            />
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <RegistrationDetails
+                registrationsByTrip={registrationsByTrip}
+                setRegistrationsByTrip={setRegistrationsByTrip}
+              />
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/trips/:tripId/registrations/:id/guest"
           element={
-            <GuestDetails
-              registrationsByTrip={registrationsByTrip}
-              setRegistrationsByTrip={setRegistrationsByTrip}
-            />
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <GuestDetails
+                registrationsByTrip={registrationsByTrip}
+                setRegistrationsByTrip={setRegistrationsByTrip}
+              />
+            </ProtectedRoute>
           }
         />
 
-        <Route path="/reports" element={<Reports />} />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/reports/activity-sessions"
           element={
-            <ActivitySessionReport registrationsByTrip={registrationsByTrip} />
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ActivitySessionReport
+                registrationsByTrip={registrationsByTrip}
+              />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/reports/registrations"
           element={
-            <RegistrationReport registrationsByTrip={registrationsByTrip} />
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <RegistrationReport registrationsByTrip={registrationsByTrip} />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/reports/accessibility"
           element={
-            <AccessibilityReport registrationsByTrip={registrationsByTrip} />
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <AccessibilityReport registrationsByTrip={registrationsByTrip} />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/reports/dietary"
-          element={<DietaryReport registrationsByTrip={registrationsByTrip} />}
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <DietaryReport registrationsByTrip={registrationsByTrip} />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/reports/flight-booking"
           element={
-            <FlightBookingReport registrationsByTrip={registrationsByTrip} />
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <FlightBookingReport registrationsByTrip={registrationsByTrip} />
+            </ProtectedRoute>
           }
         />
-        <Route path="/settings" element={<Settings />} />
+        <Route
+          path="/login"
+          element={
+            <Login
+              isAuthenticated={isAuthenticated}
+              setIsAuthenticated={setIsAuthenticated}
+            />
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/trips/:tripId/manage"
           element={
-            <TripManagement
-              trips={trips}
-              setTrips={setTrips}
-              registrationsByTrip={registrationsByTrip}
-            />
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <TripManagement
+                trips={trips}
+                setTrips={setTrips}
+                registrationsByTrip={registrationsByTrip}
+              />
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/trips/create"
-          element={<CreateTrip setTrips={setTrips} />}
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <CreateTrip setTrips={setTrips} />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/"
           element={
-            <Dashboard
-              trips={trips}
-              registrationsByTrip={registrationsByTrip}
-            />
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Dashboard
+                trips={trips}
+                registrationsByTrip={registrationsByTrip}
+              />
+            </ProtectedRoute>
           }
         />
       </Routes>
