@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 import "../components/RegistrationDetails.css";
+import selectionsByTrip from "../data/mockTripSelections";
 
 const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const { tripId, id } = useParams();
@@ -37,6 +38,9 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
     dietaryRestrictions: "",
   });
 
+  const [isEditingSelections, setIsEditingSelections] = useState(false);
+  const [editSelections, setEditSelections] = useState([]);
+
   const registrations = registrationsByTrip[tripId] || [];
 
   const registration = registrations.find(
@@ -44,6 +48,35 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   );
 
   const guest = registration?.guest;
+  const availableSelections = selectionsByTrip[tripId] ?? [];
+  const getSessionRegistrationCount = (sessionId) =>
+    (registrationsByTrip[tripId] ?? []).reduce((count, currentRegistration) => {
+      const primaryCount = (currentRegistration.activities ?? []).some(
+        (activity) => activity.sessionId === sessionId,
+      )
+        ? 1
+        : 0;
+
+      const guestCount = (currentRegistration.guest?.activities ?? []).some(
+        (activity) => activity.sessionId === sessionId,
+      )
+        ? 1
+        : 0;
+
+      return count + primaryCount + guestCount;
+    }, 0);
+
+  const formatSessionDateTime = (date, time) => {
+    const sessionDateTime = new Date(`${date}T${time}`);
+
+    return sessionDateTime.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
 
   if (!registration) {
     return (
@@ -553,6 +586,170 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
               Cancel
             </button>
           </div>
+        )}
+      </section>
+      <section className="details-section">
+        <div className="details-section-header">
+          <h2>Trip Selections</h2>
+
+          {!isEditingSelections && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditSelections(guest.activities ?? []);
+                setIsEditingSelections(true);
+              }}
+            >
+              Edit
+            </button>
+          )}
+        </div>
+
+        {isEditingSelections ? (
+          <div className="selection-edit-list">
+            {availableSelections.map((selection) => (
+              <label key={selection.id}>
+                <input
+                  type="checkbox"
+                  checked={editSelections.some(
+                    (activity) => activity.id === selection.id,
+                  )}
+                  onChange={() => {
+                    setEditSelections((currentSelections) => {
+                      const isSelected = currentSelections.some(
+                        (activity) => activity.id === selection.id,
+                      );
+
+                      if (isSelected) {
+                        return currentSelections.filter(
+                          (activity) => activity.id !== selection.id,
+                        );
+                      }
+
+                      return [
+                        ...currentSelections,
+                        {
+                          id: selection.id,
+                          type: selection.type,
+                          name: selection.name,
+                        },
+                      ];
+                    });
+                  }}
+                />
+
+                <div className="selection-edit-content">
+                  <strong>
+                    {selection.type}: {selection.name}
+                  </strong>
+
+                  <div className="selection-session-list">
+                    {selection.sessions.map((session) => (
+                      <label className="selection-session" key={session.id}>
+                        <input
+                          type="radio"
+                          name={`selection-${selection.id}`}
+                          checked={editSelections.some(
+                            (activity) =>
+                              activity.id === selection.id &&
+                              activity.sessionId === session.id,
+                          )}
+                          disabled={
+                            !(guest.activities ?? []).some(
+                              (activity) =>
+                                activity.id === selection.id &&
+                                activity.sessionId === session.id,
+                            ) &&
+                            (!session.active ||
+                              getSessionRegistrationCount(session.id) >=
+                                session.maxCapacity)
+                          }
+                          onChange={() => {
+                            setEditSelections((currentSelections) =>
+                              currentSelections.map((activity) =>
+                                activity.id === selection.id
+                                  ? {
+                                      ...activity,
+                                      sessionId: session.id,
+                                    }
+                                  : activity,
+                              ),
+                            );
+                          }}
+                        />
+
+                        <span>
+                          {formatSessionDateTime(session.date, session.time)}
+                        </span>
+                        <span>
+                          {!session.active
+                            ? "Unavailable"
+                            : getSessionRegistrationCount(session.id) >=
+                                session.maxCapacity
+                              ? "Full"
+                              : `${session.maxCapacity - getSessionRegistrationCount(session.id)} spots left`}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </label>
+            ))}
+            <div className="selection-edit-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  const hasMissingSession = editSelections.some(
+                    (activity) => !activity.sessionId,
+                  );
+
+                  if (hasMissingSession) {
+                    alert("Please select a session for each trip selection.");
+                    return;
+                  }
+                  setRegistrationsByTrip((currentRegistrations) => ({
+                    ...currentRegistrations,
+                    [tripId]: currentRegistrations[tripId].map(
+                      (currentRegistration) =>
+                        currentRegistration.travelerNumber ===
+                        registration.travelerNumber
+                          ? {
+                              ...currentRegistration,
+                              guest: {
+                                ...currentRegistration.guest,
+                                activities: editSelections,
+                              },
+                            }
+                          : currentRegistration,
+                    ),
+                  }));
+
+                  setIsEditingSelections(false);
+                }}
+              >
+                Save
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditSelections([]);
+                  setIsEditingSelections(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (guest.activities ?? []).length > 0 ? (
+          (guest.activities ?? []).map((activity) => (
+            <div className="detail-row" key={activity.id}>
+              <span>{activity.type}</span>
+              <strong>{activity.name}</strong>
+            </div>
+          ))
+        ) : (
+          <p>No trip selections.</p>
         )}
       </section>
     </main>

@@ -36,11 +36,30 @@ const ActivitySessionReport = ({ registrationsByTrip }) => {
     trip && sessionIds.length > 0 && reportSessions.length > 0;
 
   const getSessionAttendees = (sessionId) => {
-    return tripRegistrations.filter((registration) =>
-      registration.activities?.some(
+    return tripRegistrations.flatMap((registration) => {
+      const attendees = [];
+
+      const primaryIsAttending = (registration.activities ?? []).some(
         (activity) => activity.sessionId === sessionId,
-      ),
-    );
+      );
+
+      if (primaryIsAttending) {
+        attendees.push(registration);
+      }
+
+      const guestIsAttending = (registration.guest?.activities ?? []).some(
+        (activity) => activity.sessionId === sessionId,
+      );
+
+      if (guestIsAttending) {
+        attendees.push({
+          ...registration.guest,
+          travelerNumber: `${registration.travelerNumber}(G)`,
+        });
+      }
+
+      return attendees;
+    });
   };
 
   return (

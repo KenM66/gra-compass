@@ -4,6 +4,7 @@ const createGuest = (
   email,
   accessibility = "None",
   dietaryRequirements = "None",
+
   flightBooking = {},
 ) => ({
   firstName,
@@ -12,6 +13,7 @@ const createGuest = (
   accessibility,
   dietaryRequirements,
   ...flightBooking,
+  activities: [],
 });
 
 const registrationsByTrip = {
@@ -52,6 +54,7 @@ const registrationsByTrip = {
           passportNumber: "987654321",
           passportExpiration: "May 18, 2031",
           tsaPrecheck: false,
+          activities: [],
         },
       ),
       emergencyContact: {
@@ -134,6 +137,7 @@ const registrationsByTrip = {
         firstName: "Nicole",
         lastName: "Carter",
         email: "nicole.carter@example.com",
+        activities: [],
       },
       emergencyContact: {
         name: "Karen Carter",
@@ -196,6 +200,7 @@ const registrationsByTrip = {
         firstName: "Tanya",
         lastName: "Bennett",
         email: "tanya.bennett@example.com",
+        activities: [],
       },
       emergencyContact: {
         name: "Diane Bennett",
@@ -258,6 +263,7 @@ const registrationsByTrip = {
         firstName: "Elena",
         lastName: "Morales",
         email: "elena.morales@example.com",
+        activities: [],
       },
       emergencyContact: {
         name: "Rosa Morales",
