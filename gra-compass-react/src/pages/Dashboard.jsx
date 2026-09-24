@@ -1,10 +1,23 @@
 import TripCard from "../components/TripCard";
 import "../styles/Dashboard.css";
+import { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = ({ trips, registrationsByTrip }) => {
   const navigate = useNavigate();
+  const [showArchivedTrips, setShowArchivedTrips] = useState(false);
+
+  const visibleTrips = trips.filter((trip) => {
+    if (showArchivedTrips) {
+      return true;
+    }
+
+    const tripEndDate = new Date(trip.endDate);
+    tripEndDate.setHours(23, 59, 59, 999);
+    return tripEndDate >= new Date();
+  });
+
   return (
     <main className="dashboard">
       <div className="dashboard-header">
@@ -20,10 +33,21 @@ const Dashboard = ({ trips, registrationsByTrip }) => {
       </div>
 
       <section className="trips-section">
-        <h2>Upcoming Trips</h2>
+        <div className="trips-section-header">
+          <h2>Upcoming Trips</h2>
+
+          <label className="archived-trips-toggle">
+            <input
+              type="checkbox"
+              checked={showArchivedTrips}
+              onChange={(event) => setShowArchivedTrips(event.target.checked)}
+            />
+            Show archived trips
+          </label>
+        </div>
 
         <div className="trip-list">
-          {trips.map((trip) => {
+          {visibleTrips.map((trip) => {
             const registrations = registrationsByTrip[trip.id] || [];
 
             const registrationCount = registrations.length;

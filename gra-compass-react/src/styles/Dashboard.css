@@ -43,3 +43,27 @@
 .create-trip-button:hover {
   background-color: #256628;
 }
+.trips-section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.trips-section-header h2 {
+  margin: 0;
+}
+.archived-trips-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.archived-trips-toggle input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
