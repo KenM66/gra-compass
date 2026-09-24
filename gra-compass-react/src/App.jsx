@@ -19,6 +19,7 @@ import tripsData from "./data/mockTrips";
 import registrationsData from "./data/mockRegistrations";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
+import EmailAddressReport from "./pages/EmailAddressReport";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -115,6 +116,14 @@ const App = () => {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <FlightBookingReport registrationsByTrip={registrationsByTrip} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/email-addresses"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <EmailAddressReport registrationsByTrip={registrationsByTrip} />
             </ProtectedRoute>
           }
         />

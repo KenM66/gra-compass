@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import selectionsByTrip from "../data/mockTripSelections";
-import "../components/TripManagement.css";
+import "../styles/TripManagement.css";
 import SelectionCard from "../components/SelectionCard";
 import RegistrationSummary from "../components/RegistrationSummary";
 import RegistrationSettings from "../components/RegistrationSettings";

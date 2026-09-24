@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-import "../components/RegistrationDetails.css";
+import "../styles/RegistrationDetails.css";
 import selectionsByTrip from "../data/mockTripSelections";
 
 const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {

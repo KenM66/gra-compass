@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import RegistrationList from "../components/RegistrationList";
-import "../components/Registrations.css";
+import "../styles/Registrations.css";
 import registrationsByTrip from "../data/mockRegistrations";
 import trips from "../data/mockTrips";
 

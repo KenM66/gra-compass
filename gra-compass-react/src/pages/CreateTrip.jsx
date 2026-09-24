@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../components/CreateTrip.css";
+import "../styles/CreateTrip.css";
 import { useNavigate } from "react-router-dom";
 
 const CreateTrip = ({ setTrips }) => {

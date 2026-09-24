@@ -2,10 +2,11 @@ import { useState } from "react";
 import trips from "../data/mockTrips";
 import ActivitySessionReportBuilder from "../components/ActivitySessionReportBuilder";
 import RegistrationReportBuilder from "../components/RegistrationReportBuilder";
-import "../components/Reports.css";
+import "../styles/Reports.css";
 import AccessibilityReportBuilder from "../components/AccessibilityReportBuilder";
 import DietaryReportBuilder from "../components/DietaryReportBuilder";
 import FlightBookingReportBuilder from "../components/FlightBookingReportBuilder";
+import EmailAddressReportBuilder from "../components/EmailAddressReportBuilder";
 
 const Reports = () => {
   const [selectedTripId, setSelectedTripId] = useState("");
@@ -39,6 +40,7 @@ const Reports = () => {
           <AccessibilityReportBuilder tripId={selectedTripId} />
           <DietaryReportBuilder tripId={selectedTripId} />
           <FlightBookingReportBuilder tripId={selectedTripId} />
+          <EmailAddressReportBuilder tripId={selectedTripId} />
         </div>
       )}
     </div>

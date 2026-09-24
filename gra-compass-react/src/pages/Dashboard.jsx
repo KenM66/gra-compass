@@ -1,5 +1,5 @@
 import TripCard from "../components/TripCard";
-import "../components/Dashboard.css";
+import "../styles/Dashboard.css";
 
 import { useNavigate } from "react-router-dom";
 

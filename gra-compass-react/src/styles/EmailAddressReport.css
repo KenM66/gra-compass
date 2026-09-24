@@ -1,0 +1,32 @@
+.email-address-report {
+  max-width: 800px;
+  margin: 60px auto 0;
+  padding: 24px;
+}
+.email-address-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.email-address-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #ccc;
+  background: #f5f5f5;
+}
+
+.email-address-card-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.email-address-card-content {
+  padding: 20px;
+}
+
+.email-address-card-content p {
+  margin: 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}

@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import trips from "../data/mockTrips";
 import selectionsByTrip from "../data/mockTripSelections";
-import "../components/ActivitySessionReport.css";
+import "../styles/ActivitySessionReport.css";
 
 const ActivitySessionReport = ({ registrationsByTrip }) => {
   const navigate = useNavigate();

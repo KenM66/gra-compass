@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import trips from "../data/mockTrips";
-import "../components/AccessibilityReport.css";
+import "../styles/AccessibilityReport.css";
 
 const AccessibilityReport = ({ registrationsByTrip }) => {
   const navigate = useNavigate();

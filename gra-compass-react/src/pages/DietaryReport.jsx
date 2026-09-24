@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import trips from "../data/mockTrips";
-import "../components/DietaryReport.css";
+import "../styles/DietaryReport.css";
 
 const DietaryReport = ({ registrationsByTrip }) => {
   const navigate = useNavigate();

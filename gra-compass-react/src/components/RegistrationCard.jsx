@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import "./RegistrationCard.css";
+import "../styles/RegistrationCard.css";
 
 const RegistrationCard = ({
   tripId,
