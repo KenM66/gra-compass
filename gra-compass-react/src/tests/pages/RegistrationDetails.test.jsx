@@ -445,4 +445,270 @@ describe("RegistrationDetails", () => {
 
     expect(fullSession).toBeDisabled();
   });
+  test("allows the traveler to keep their current session when it is full", async () => {
+    const user = userEvent.setup();
+
+    const fullSessionRegistrations = Array.from({ length: 24 }, (_, index) => ({
+      ...registration,
+      travelerNumber: 2000 + index,
+      activities: [
+        {
+          id: 1,
+          type: "Excursion",
+          name: "Catamaran & Snorkeling",
+          sessionId: 101,
+        },
+      ],
+    }));
+
+    const testRegistrationsByTrip = {
+      1: [registration, ...fullSessionRegistrations],
+    };
+
+    renderRegistrationDetails(testRegistrationsByTrip);
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[5]);
+
+    const currentSession = screen.getByRole("radio", {
+      name: /Tuesday, March 9.*10:00 AM/i,
+    });
+
+    expect(currentSession).toBeChecked();
+    expect(currentSession).not.toBeDisabled();
+  });
+  test("allows the traveler to switch from their current full session", async () => {
+    const user = userEvent.setup();
+
+    const fullSessionRegistrations = Array.from({ length: 24 }, (_, index) => ({
+      ...registration,
+      travelerNumber: 2000 + index,
+      activities: [
+        {
+          id: 1,
+          type: "Excursion",
+          name: "Catamaran & Snorkeling",
+          sessionId: 101,
+        },
+      ],
+    }));
+
+    const testRegistrationsByTrip = {
+      1: [registration, ...fullSessionRegistrations],
+    };
+
+    const { setRegistrationsByTrip } = renderRegistrationDetails(
+      testRegistrationsByTrip,
+    );
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[5]);
+
+    const afternoonSession = screen.getByRole("radio", {
+      name: /Tuesday, March 9.*2:00 PM/i,
+    });
+
+    await user.click(afternoonSession);
+
+    expect(afternoonSession).toBeChecked();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Save",
+      }),
+    );
+
+    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+
+    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    const updatedRegistrations = updateRegistrations(testRegistrationsByTrip);
+
+    expect(updatedRegistrations[1][0].activities).toContainEqual({
+      id: 1,
+      type: "Excursion",
+      name: "Catamaran & Snorkeling",
+      sessionId: 102,
+    });
+  });
+  test("removes an existing trip selection", async () => {
+    const user = userEvent.setup();
+
+    const { setRegistrationsByTrip } = renderRegistrationDetails();
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[5]);
+
+    const catamaranCheckbox = screen.getByRole("checkbox", {
+      name: /Catamaran & Snorkeling/i,
+    });
+
+    expect(catamaranCheckbox).toBeChecked();
+
+    await user.click(catamaranCheckbox);
+
+    expect(catamaranCheckbox).not.toBeChecked();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Save",
+      }),
+    );
+
+    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+
+    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+
+    expect(updatedRegistrations[1][0].activities).not.toContainEqual(
+      expect.objectContaining({
+        id: 1,
+      }),
+    );
+
+    expect(updatedRegistrations[1][0].activities).toContainEqual({
+      id: 4,
+      type: "Spa",
+      name: "Massage Appointment",
+      sessionId: 401,
+    });
+  });
+  test("allows emergency contact information to be edited and saved", async () => {
+    const user = userEvent.setup();
+
+    const { setRegistrationsByTrip } = renderRegistrationDetails();
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[2]);
+
+    const nameInput = screen.getByDisplayValue("Robert Henderson");
+    const relationshipInput = screen.getByDisplayValue("Father");
+    const phoneInput = screen.getByDisplayValue("216-555-0198");
+
+    await user.clear(nameInput);
+    await user.type(nameInput, "Susan Henderson");
+
+    await user.clear(relationshipInput);
+    await user.type(relationshipInput, "Mother");
+
+    await user.clear(phoneInput);
+    await user.type(phoneInput, "216-555-9999");
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Save",
+      }),
+    );
+
+    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+
+    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+
+    expect(updatedRegistrations[1][0].emergencyContact).toEqual({
+      name: "Susan Henderson",
+      relationship: "Mother",
+      phone: "216-555-9999",
+    });
+
+    expect(updatedRegistrations[1][0].travelerNumber).toBe(1047);
+  });
+  test("allows address information to be edited and saved", async () => {
+    const user = userEvent.setup();
+
+    const { setRegistrationsByTrip } = renderRegistrationDetails();
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[3]);
+
+    const streetInput = screen.getByDisplayValue("123 Main Street");
+    const cityInput = screen.getByDisplayValue("Cleveland");
+    const stateInput = screen.getByDisplayValue("OH");
+    const zipInput = screen.getByDisplayValue("44113");
+
+    await user.clear(streetInput);
+    await user.type(streetInput, "456 Euclid Avenue");
+
+    await user.clear(cityInput);
+    await user.type(cityInput, "Cleveland");
+
+    await user.clear(stateInput);
+    await user.type(stateInput, "OH");
+
+    await user.clear(zipInput);
+    await user.type(zipInput, "44114");
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Save",
+      }),
+    );
+
+    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+
+    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+
+    expect(updatedRegistrations[1][0].address).toEqual({
+      street: "456 Euclid Avenue",
+      city: "Cleveland",
+      state: "OH",
+      zipCode: "44114",
+    });
+
+    expect(updatedRegistrations[1][0].travelerNumber).toBe(1047);
+  });
+  test("allows special requirements to be edited and saved", async () => {
+    const user = userEvent.setup();
+
+    const { setRegistrationsByTrip } = renderRegistrationDetails();
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[4]);
+
+    const accessibilityInput = screen.getByDisplayValue("None");
+    const dietaryInput = screen.getByDisplayValue("Vegetarian");
+
+    await user.clear(accessibilityInput);
+    await user.type(accessibilityInput, "Wheelchair accessible transportation");
+
+    await user.clear(dietaryInput);
+    await user.type(dietaryInput, "Gluten-free");
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Save",
+      }),
+    );
+
+    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+
+    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+
+    expect(updatedRegistrations[1][0].accessibility).toBe(
+      "Wheelchair accessible transportation",
+    );
+
+    expect(updatedRegistrations[1][0].dietaryRequirements).toBe("Gluten-free");
+
+    expect(updatedRegistrations[1][0].travelerNumber).toBe(1047);
+  });
 });
