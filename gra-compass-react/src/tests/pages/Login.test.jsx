@@ -82,4 +82,42 @@ describe("Login", () => {
     await user.click(screen.getByRole("button", { name: /login/i }));
     expect(setIsAuthenticated).toHaveBeenCalledWith(true);
   });
+  test("accepts email with leading and trailing spaces", async () => {
+    const user = userEvent.setup();
+    const setIsAuthenticated = vi.fn();
+    render(
+      <MemoryRouter>
+        <Login setIsAuthenticated={setIsAuthenticated} />
+      </MemoryRouter>,
+    );
+    await user.type(screen.getByLabelText(/email/i), "  admin@gra.com  ");
+    await user.type(screen.getByLabelText(/password/i), "password");
+    await user.click(screen.getByRole("button", { name: /login/i }));
+    expect(setIsAuthenticated).toHaveBeenCalledWith(true);
+  });
+  test("rejects password with incorrect capitalization", async () => {
+    const user = userEvent.setup();
+    const setIsAuthenticated = vi.fn();
+    render(
+      <MemoryRouter>
+        <Login setIsAuthenticated={setIsAuthenticated} />
+      </MemoryRouter>,
+    );
+    await user.type(screen.getByLabelText(/email/i), "admin@gra.com");
+    await user.type(screen.getByLabelText(/password/i), "Password");
+    await user.click(screen.getByRole("button", { name: /login/i }));
+    expect(setIsAuthenticated).not.toHaveBeenCalled();
+    expect(screen.getByText("Invalid email or password.")).toBeInTheDocument();
+  });
+  test("does not log in when required fields are empty", async () => {
+    const user = userEvent.setup();
+    const setIsAuthenticated = vi.fn();
+    render(
+      <MemoryRouter>
+        <Login setIsAuthenticated={setIsAuthenticated} />
+      </MemoryRouter>,
+    );
+    await user.click(screen.getByRole("button", { name: /login/i }));
+    expect(setIsAuthenticated).not.toHaveBeenCalled();
+  });
 });

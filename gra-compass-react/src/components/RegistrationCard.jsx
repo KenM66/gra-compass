@@ -13,11 +13,18 @@ const RegistrationCard = ({
   const handleClick = () => {
     navigate(`/trips/${tripId}/registrations/${travelerNumber}`);
   };
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleClick();
+    }
+  };
 
   return (
     <div
       className="registration-card"
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
     >

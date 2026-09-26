@@ -13,8 +13,9 @@ const Dashboard = ({ trips, registrationsByTrip }) => {
       return true;
     }
 
-    const tripEndDate = new Date(trip.endDate);
-    tripEndDate.setHours(23, 59, 59, 999);
+    const [year, month, day] = trip.endDate.split("-").map(Number);
+    const tripEndDate = new Date(year, month - 1, day, 23, 59, 59, 999);
+
     return tripEndDate >= new Date();
   });
 
