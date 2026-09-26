@@ -118,15 +118,17 @@ const SelectionCard = ({
               <div className="selection-actions">
                 <button
                   onClick={() => {
-                    handleSaveSelectionEdit(
+                    const saved = handleSaveSelectionEdit(
                       selection.id,
                       editSelectionType,
                       editSelectionName,
                     );
 
-                    setEditingSelectionId(null);
-                    setEditSelectionType("");
-                    setEditSelectionName("");
+                    if (saved) {
+                      setEditingSelectionId(null);
+                      setEditSelectionType("");
+                      setEditSelectionName("");
+                    }
                   }}
                 >
                   Save

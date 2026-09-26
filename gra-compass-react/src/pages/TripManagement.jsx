@@ -477,7 +477,7 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
   ) => {
     if (!selectionType.trim() || !selectionName.trim()) {
       alert("Selection type and name are required.");
-      return;
+      return false;
     }
 
     const updatedSelections = selections.map((selection) =>
@@ -491,6 +491,7 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
     );
 
     setSelections(updatedSelections);
+    return true;
   };
 
   const handleSaveEdit = (
