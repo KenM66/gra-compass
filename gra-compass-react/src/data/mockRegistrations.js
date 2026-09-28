@@ -41,7 +41,7 @@ const registrationsByTrip = {
       citizenship: "United States",
       guest: createGuest(
         "Amanda",
-        "Henderson",
+        "Stuart",
         "amanda@example.com",
         "Wheelchair-accessible transportation",
         "None",

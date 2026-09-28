@@ -44,6 +44,11 @@ describe("Reports", () => {
     await user.selectOptions(tripSelect, tripOptions[1]);
 
     expect(container.querySelector(".reports-builders")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /Mailing Labels/,
+      }),
+    ).toBeInTheDocument();
   });
   test("hides report builders when the trip selection is cleared", async () => {
     const user = userEvent.setup();

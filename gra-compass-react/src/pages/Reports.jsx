@@ -7,6 +7,7 @@ import AccessibilityReportBuilder from "../components/AccessibilityReportBuilder
 import DietaryReportBuilder from "../components/DietaryReportBuilder";
 import FlightBookingReportBuilder from "../components/FlightBookingReportBuilder";
 import EmailAddressReportBuilder from "../components/EmailAddressReportBuilder";
+import MailingLabelReportBuilder from "../components/MailingLabelReportBuilder";
 
 const Reports = () => {
   const [selectedTripId, setSelectedTripId] = useState("");
@@ -41,6 +42,7 @@ const Reports = () => {
           <DietaryReportBuilder tripId={selectedTripId} />
           <FlightBookingReportBuilder tripId={selectedTripId} />
           <EmailAddressReportBuilder tripId={selectedTripId} />
+          <MailingLabelReportBuilder tripId={selectedTripId} />
         </div>
       )}
     </div>

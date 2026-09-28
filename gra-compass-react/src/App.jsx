@@ -20,6 +20,7 @@ import registrationsData from "./data/mockRegistrations";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmailAddressReport from "./pages/EmailAddressReport";
+import MailingLabelReport from "./pages/MailingLabelReport";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -124,6 +125,14 @@ const App = () => {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <EmailAddressReport registrationsByTrip={registrationsByTrip} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/mailing-labels"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <MailingLabelReport registrationsByTrip={registrationsByTrip} />
             </ProtectedRoute>
           }
         />
