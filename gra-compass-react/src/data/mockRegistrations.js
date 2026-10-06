@@ -1,1381 +1,2245 @@
-const createGuest = (
-  firstName,
-  lastName,
-  email,
-  accessibility = "None",
-  dietaryRequirements = "None",
-
-  flightBooking = {},
-) => ({
-  firstName,
-  lastName,
-  email,
-  accessibility,
-  dietaryRequirements,
-  ...flightBooking,
-  activities: [],
-});
-
 const registrationsByTrip = {
-  1: [
+  "1": [
     {
-      travelerNumber: 1047,
-      firstName: "Robert",
-      lastName: "Henderson",
-      email: "robert@example.com",
-      phone: "216-555-0142",
-      dateOfBirth: "June 14, 1987",
-      address: {
-        street: "123 Main Street",
-        city: "Cleveland",
-        state: "OH",
-        zipCode: "44113",
+      "travelerNumber": 1047,
+      "firstName": "Robert",
+      "lastName": "Henderson",
+      "email": "robert@example.com",
+      "phone": "216-555-0142",
+      "dateOfBirth": "June 14, 1987",
+      "address": {
+        "street": "123 Main Street",
+        "city": "Cleveland",
+        "state": "OH",
+        "zipCode": "44113"
       },
-      tsaPrecheck: true,
-      passportNumber: "123456789",
-      passportExpiration: "August 12, 2030",
-      bringingGuest: true,
-      airport: "CLE",
-      sex: "Male",
-      nationality: "American",
-      citizenship: "United States",
-      guest: createGuest(
-        "Amanda",
-        "Stuart",
-        "amanda@example.com",
-        "Wheelchair-accessible transportation",
-        "None",
-        {
-          airport: "CLE",
-          dateOfBirth: "September 22, 1988",
-          sex: "Female",
-          nationality: "American",
-          citizenship: "United States",
-          passportNumber: "987654321",
-          passportExpiration: "May 18, 2031",
-          tsaPrecheck: false,
-          activities: [],
-        },
-      ),
-      emergencyContact: {
-        name: "Robert Henderson",
-        relationship: "Father",
-        phone: "216-555-0198",
+      "tsaPrecheck": true,
+      "passportNumber": "123456789",
+      "passportExpiration": "August 12, 2030",
+      "bringingGuest": true,
+      "airport": "CLE",
+      "sex": "Male",
+      "nationality": "American",
+      "citizenship": "United States",
+      "guest": {
+        "firstName": "Amanda",
+        "lastName": "Stuart",
+        "email": "amanda@example.com",
+        "accessibility": "Wheelchair-accessible transportation",
+        "dietaryRequirements": "None",
+        "airport": "CLE",
+        "dateOfBirth": "September 22, 1988",
+        "sex": "Female",
+        "nationality": "American",
+        "citizenship": "United States",
+        "passportNumber": "987654321",
+        "passportExpiration": "May 18, 2031",
+        "tsaPrecheck": false,
+        "activities": [
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 102
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 302
+          }
+        ]
       },
-      accessibility: "None",
-      dietaryRequirements: "Vegetarian",
-      activities: [
+      "emergencyContact": {
+        "name": "Robert Henderson",
+        "relationship": "Father",
+        "phone": "216-555-0198"
+      },
+      "accessibility": "None",
+      "dietaryRequirements": "Vegetarian",
+      "activities": [
         {
-          id: 1,
-          type: "Excursion",
-          name: "Catamaran & Snorkeling",
-          sessionId: 101,
+          "id": 2,
+          "type": "Excursion",
+          "name": "Island Jeep Tour",
+          "sessionId": 201
         },
         {
-          id: 4,
-          type: "Spa",
-          name: "Massage Appointment",
-          sessionId: 401,
-        },
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        }
       ],
+      "role": "Attendee",
+      "preferredName": "Rob"
     },
     {
-      travelerNumber: 1048,
-      firstName: "Amanda",
-      lastName: "Reynolds",
-      email: "amanda@example.com",
-      phone: "440-555-0185",
-      dateOfBirth: "September 3, 1991",
-      address: {
-        street: "456 Lake Avenue",
-        city: "Lakewood",
-        state: "OH",
-        zipCode: "44107",
+      "travelerNumber": 1048,
+      "firstName": "Amanda",
+      "lastName": "Reynolds",
+      "email": "amanda@example.com",
+      "phone": "440-555-0185",
+      "dateOfBirth": "September 3, 1991",
+      "address": {
+        "street": "456 Lake Avenue",
+        "city": "Lakewood",
+        "state": "OH",
+        "zipCode": "44107"
       },
-      tsaPrecheck: false,
-      airport: "CLE",
-      sex: "Female",
-      passportNumber: "987654321",
-      passportExpiration: "May 20, 2029",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Susan Reynolds",
-        relationship: "Mother",
-        phone: "440-555-0150",
+      "tsaPrecheck": false,
+      "airport": "CLE",
+      "sex": "Female",
+      "passportNumber": "987654321",
+      "passportExpiration": "May 20, 2029",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Susan Reynolds",
+        "relationship": "Mother",
+        "phone": "440-555-0150"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
         {
-          id: 3,
-          type: "Excursion",
-          name: "Cancun City Tour",
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
         },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 303
+        }
       ],
+      "role": "Sales Representative"
     },
     {
-      travelerNumber: 1049,
-      firstName: "Daniel",
-      lastName: "Carter",
-      email: "daniel.carter@example.com",
-      phone: "330-555-0101",
-      dateOfBirth: "February 18, 1985",
-      address: {
-        street: "81 Oak Street",
-        city: "Akron",
-        state: "OH",
-        zipCode: "44308",
+      "travelerNumber": 1049,
+      "firstName": "Daniel",
+      "lastName": "Carter",
+      "email": "daniel.carter@example.com",
+      "phone": "330-555-0101",
+      "dateOfBirth": "February 18, 1985",
+      "address": {
+        "street": "81 Oak Street",
+        "city": "Akron",
+        "state": "OH",
+        "zipCode": "44308"
       },
-      tsaPrecheck: true,
-      airport: "CLE",
-      sex: "Male",
-      passportNumber: "C10001049",
-      passportExpiration: "July 17, 2031",
-      bringingGuest: true,
-      guest: {
-        firstName: "Nicole",
-        lastName: "Carter",
-        email: "nicole.carter@example.com",
-        activities: [],
+      "tsaPrecheck": true,
+      "airport": "CLE",
+      "sex": "Male",
+      "passportNumber": "C10001049",
+      "passportExpiration": "July 17, 2031",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Nicole",
+        "lastName": "Carter",
+        "email": "nicole.carter@example.com",
+        "activities": [
+          {
+            "id": 2,
+            "type": "Excursion",
+            "name": "Island Jeep Tour",
+            "sessionId": 201
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 302
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Karen Carter",
-        relationship: "Mother",
-        phone: "330-555-0201",
+      "emergencyContact": {
+        "name": "Karen Carter",
+        "relationship": "Mother",
+        "phone": "330-555-0201"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Sales Manager",
+      "preferredName": "Dan"
     },
     {
-      travelerNumber: 1050,
-      firstName: "Jennifer",
-      lastName: "Walsh",
-      email: "jennifer.walsh@example.com",
-      phone: "216-555-0102",
-      dateOfBirth: "November 7, 1990",
-      address: {
-        street: "220 West Boulevard",
-        city: "Cleveland",
-        state: "OH",
-        zipCode: "44111",
+      "travelerNumber": 1050,
+      "firstName": "Jennifer",
+      "lastName": "Walsh",
+      "email": "jennifer.walsh@example.com",
+      "phone": "216-555-0102",
+      "dateOfBirth": "November 7, 1990",
+      "address": {
+        "street": "220 West Boulevard",
+        "city": "Cleveland",
+        "state": "OH",
+        "zipCode": "44111"
       },
-      tsaPrecheck: false,
-      airport: "CLE",
-      sex: "Female",
-      passportNumber: "C10001050",
-      passportExpiration: "January 9, 2032",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Patrick Walsh",
-        relationship: "Brother",
-        phone: "216-555-0202",
+      "tsaPrecheck": false,
+      "airport": "CLE",
+      "sex": "Female",
+      "passportNumber": "C10001050",
+      "passportExpiration": "January 9, 2032",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Patrick Walsh",
+        "relationship": "Brother",
+        "phone": "216-555-0202"
       },
-      accessibility: "None",
-      dietaryRequirements: "Gluten-free",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "Gluten-free",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Regional Manager",
+      "preferredName": "Jen"
     },
     {
-      travelerNumber: 1051,
-      firstName: "Marcus",
-      lastName: "Bennett",
-      email: "marcus.bennett@example.com",
-      phone: "440-555-0103",
-      dateOfBirth: "April 22, 1979",
-      address: {
-        street: "714 Center Ridge Road",
-        city: "Rocky River",
-        state: "OH",
-        zipCode: "44116",
+      "travelerNumber": 1051,
+      "firstName": "Marcus",
+      "lastName": "Bennett",
+      "email": "marcus.bennett@example.com",
+      "phone": "440-555-0103",
+      "dateOfBirth": "April 22, 1979",
+      "address": {
+        "street": "714 Center Ridge Road",
+        "city": "Rocky River",
+        "state": "OH",
+        "zipCode": "44116"
       },
-      tsaPrecheck: true,
-      airport: "CLE",
-      sex: "Male",
-      passportNumber: "C10001051",
-      passportExpiration: "September 4, 2030",
-      bringingGuest: true,
-      guest: {
-        firstName: "Tanya",
-        lastName: "Bennett",
-        email: "tanya.bennett@example.com",
-        activities: [],
+      "tsaPrecheck": true,
+      "airport": "CLE",
+      "sex": "Male",
+      "passportNumber": "C10001051",
+      "passportExpiration": "September 4, 2030",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Tanya",
+        "lastName": "Bennett",
+        "email": "tanya.bennett@example.com",
+        "activities": [
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 102
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 302
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Diane Bennett",
-        relationship: "Sister",
-        phone: "440-555-0203",
+      "emergencyContact": {
+        "name": "Diane Bennett",
+        "relationship": "Sister",
+        "phone": "440-555-0203"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 303
+        }
+      ],
+      "role": "Director"
     },
     {
-      travelerNumber: 1052,
-      firstName: "Stephanie",
-      lastName: "Collins",
-      email: "stephanie.collins@example.com",
-      phone: "440-555-0104",
-      dateOfBirth: "August 30, 1988",
-      address: {
-        street: "52 Detroit Road",
-        city: "Westlake",
-        state: "OH",
-        zipCode: "44145",
+      "travelerNumber": 1052,
+      "firstName": "Stephanie",
+      "lastName": "Collins",
+      "email": "stephanie.collins@example.com",
+      "phone": "440-555-0104",
+      "dateOfBirth": "August 30, 1988",
+      "address": {
+        "street": "52 Detroit Road",
+        "city": "Westlake",
+        "state": "OH",
+        "zipCode": "44145"
       },
-      tsaPrecheck: false,
-      airport: "CLE",
-      sex: "Female",
-      passportNumber: "C10001052",
-      passportExpiration: "March 21, 2029",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Brian Collins",
-        relationship: "Spouse",
-        phone: "440-555-0204",
+      "tsaPrecheck": false,
+      "airport": "CLE",
+      "sex": "Female",
+      "passportNumber": "C10001052",
+      "passportExpiration": "March 21, 2029",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Brian Collins",
+        "relationship": "Spouse",
+        "phone": "440-555-0204"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 2,
+          "type": "Excursion",
+          "name": "Island Jeep Tour",
+          "sessionId": 201
+        },
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        }
+      ],
+      "role": "Executive",
+      "preferredName": "Steph"
     },
     {
-      travelerNumber: 1053,
-      firstName: "Kevin",
-      lastName: "Morales",
-      email: "kevin.morales@example.com",
-      phone: "216-555-0105",
-      dateOfBirth: "December 11, 1993",
-      address: {
-        street: "1906 Clark Avenue",
-        city: "Cleveland",
-        state: "OH",
-        zipCode: "44109",
+      "travelerNumber": 1053,
+      "firstName": "Kevin",
+      "lastName": "Morales",
+      "email": "kevin.morales@example.com",
+      "phone": "216-555-0105",
+      "dateOfBirth": "December 11, 1993",
+      "address": {
+        "street": "1906 Clark Avenue",
+        "city": "Cleveland",
+        "state": "OH",
+        "zipCode": "44109"
       },
-      tsaPrecheck: false,
-      airport: "CAK",
-      sex: "Male",
-      passportNumber: "C10001053",
-      passportExpiration: "June 15, 2033",
-      bringingGuest: true,
-      guest: {
-        firstName: "Elena",
-        lastName: "Morales",
-        email: "elena.morales@example.com",
-        activities: [],
+      "tsaPrecheck": false,
+      "airport": "CAK",
+      "sex": "Male",
+      "passportNumber": "C10001053",
+      "passportExpiration": "June 15, 2033",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Elena",
+        "lastName": "Morales",
+        "email": "elena.morales@example.com",
+        "activities": [
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 101
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 303
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Rosa Morales",
-        relationship: "Mother",
-        phone: "216-555-0205",
+      "emergencyContact": {
+        "name": "Rosa Morales",
+        "relationship": "Mother",
+        "phone": "216-555-0205"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Event Staff"
     },
     {
-      travelerNumber: 1054,
-      firstName: "Rachel",
-      lastName: "Donovan",
-      email: "rachel.donovan@example.com",
-      phone: "440-555-0106",
-      dateOfBirth: "March 5, 1982",
-      address: {
-        street: "403 Lear Road",
-        city: "Avon Lake",
-        state: "OH",
-        zipCode: "44012",
+      "travelerNumber": 1054,
+      "firstName": "Rachel",
+      "lastName": "Donovan",
+      "email": "rachel.donovan@example.com",
+      "phone": "440-555-0106",
+      "dateOfBirth": "March 5, 1982",
+      "address": {
+        "street": "403 Lear Road",
+        "city": "Avon Lake",
+        "state": "OH",
+        "zipCode": "44012"
       },
-      tsaPrecheck: true,
-      airport: "DTW",
-      sex: "Female",
-      passportNumber: "C10001054",
-      passportExpiration: "November 28, 2031",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Sean Donovan",
-        relationship: "Brother",
-        phone: "440-555-0206",
+      "tsaPrecheck": true,
+      "airport": "DTW",
+      "sex": "Female",
+      "passportNumber": "C10001054",
+      "passportExpiration": "November 28, 2031",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Sean Donovan",
+        "relationship": "Brother",
+        "phone": "440-555-0206"
       },
-      accessibility: "Wheelchair-accessible transportation",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "Wheelchair-accessible transportation",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Attendee"
     },
     {
-      travelerNumber: 1055,
-      firstName: "Christopher",
-      lastName: "Nguyen",
-      email: "christopher.nguyen@example.com",
-      phone: "216-555-0107",
-      dateOfBirth: "July 19, 1986",
-      address: {
-        street: "971 Superior Avenue",
-        city: "Cleveland",
-        state: "OH",
-        zipCode: "44114",
+      "travelerNumber": 1055,
+      "firstName": "Christopher",
+      "lastName": "Nguyen",
+      "email": "christopher.nguyen@example.com",
+      "phone": "216-555-0107",
+      "dateOfBirth": "July 19, 1986",
+      "address": {
+        "street": "971 Superior Avenue",
+        "city": "Cleveland",
+        "state": "OH",
+        "zipCode": "44114"
       },
-      tsaPrecheck: true,
-      airport: "ORD",
-      sex: "Male",
-      passportNumber: "C10001055",
-      passportExpiration: "February 6, 2032",
-      bringingGuest: true,
-      guest: {
-        firstName: "Lisa",
-        lastName: "Nguyen",
-        email: "lisa.nguyen@example.com",
+      "tsaPrecheck": true,
+      "airport": "ORD",
+      "sex": "Male",
+      "passportNumber": "C10001055",
+      "passportExpiration": "February 6, 2032",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Lisa",
+        "lastName": "Nguyen",
+        "email": "lisa.nguyen@example.com",
+        "activities": [
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 102
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 302
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Thomas Nguyen",
-        relationship: "Father",
-        phone: "216-555-0207",
+      "emergencyContact": {
+        "name": "Thomas Nguyen",
+        "relationship": "Father",
+        "phone": "216-555-0207"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 2,
+          "type": "Excursion",
+          "name": "Island Jeep Tour",
+          "sessionId": 201
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Sales Representative",
+      "preferredName": "Chris"
     },
     {
-      travelerNumber: 1056,
-      firstName: "Heather",
-      lastName: "Sullivan",
-      email: "heather.sullivan@example.com",
-      phone: "330-555-0108",
-      dateOfBirth: "January 27, 1995",
-      address: {
-        street: "144 Market Street",
-        city: "Medina",
-        state: "OH",
-        zipCode: "44256",
+      "travelerNumber": 1056,
+      "firstName": "Heather",
+      "lastName": "Sullivan",
+      "email": "heather.sullivan@example.com",
+      "phone": "330-555-0108",
+      "dateOfBirth": "January 27, 1995",
+      "address": {
+        "street": "144 Market Street",
+        "city": "Medina",
+        "state": "OH",
+        "zipCode": "44256"
       },
-      tsaPrecheck: false,
-      passportNumber: "C10001056",
-      passportExpiration: "August 18, 2030",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Laura Sullivan",
-        relationship: "Mother",
-        phone: "330-555-0208",
+      "tsaPrecheck": false,
+      "passportNumber": "C10001056",
+      "passportExpiration": "August 18, 2030",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Laura Sullivan",
+        "relationship": "Mother",
+        "phone": "330-555-0208"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 303
+        }
+      ],
+      "role": "Sales Manager"
     },
     {
-      travelerNumber: 1057,
-      firstName: "Andre",
-      lastName: "Thompson",
-      email: "andre.thompson@example.com",
-      phone: "216-555-0109",
-      dateOfBirth: "May 16, 1981",
-      address: {
-        street: "631 Euclid Avenue",
-        city: "Cleveland",
-        state: "OH",
-        zipCode: "44114",
+      "travelerNumber": 1057,
+      "firstName": "Andre",
+      "lastName": "Thompson",
+      "email": "andre.thompson@example.com",
+      "phone": "216-555-0109",
+      "dateOfBirth": "May 16, 1981",
+      "address": {
+        "street": "631 Euclid Avenue",
+        "city": "Cleveland",
+        "state": "OH",
+        "zipCode": "44114"
       },
-      tsaPrecheck: true,
-      passportNumber: "C10001057",
-      passportExpiration: "April 10, 2034",
-      bringingGuest: true,
-      guest: {
-        firstName: "Monica",
-        lastName: "Thompson",
-        email: "monica.thompson@example.com",
+      "tsaPrecheck": true,
+      "passportNumber": "C10001057",
+      "passportExpiration": "April 10, 2034",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Monica",
+        "lastName": "Thompson",
+        "email": "monica.thompson@example.com",
+        "activities": [
+          {
+            "id": 2,
+            "type": "Excursion",
+            "name": "Island Jeep Tour",
+            "sessionId": 201
+          },
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 101
+          }
+        ]
       },
-      emergencyContact: {
-        name: "James Thompson",
-        relationship: "Brother",
-        phone: "216-555-0209",
+      "emergencyContact": {
+        "name": "James Thompson",
+        "relationship": "Brother",
+        "phone": "216-555-0209"
       },
-      accessibility: "None",
-      dietaryRequirements: "Peanut allergy",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "Peanut allergy",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Regional Manager"
     },
     {
-      travelerNumber: 1058,
-      firstName: "Melissa",
-      lastName: "Grant",
-      email: "melissa.grant@example.com",
-      phone: "440-555-0110",
-      dateOfBirth: "October 2, 1989",
-      address: {
-        street: "89 Broad Street",
-        city: "Elyria",
-        state: "OH",
-        zipCode: "44035",
+      "travelerNumber": 1058,
+      "firstName": "Melissa",
+      "lastName": "Grant",
+      "email": "melissa.grant@example.com",
+      "phone": "440-555-0110",
+      "dateOfBirth": "October 2, 1989",
+      "address": {
+        "street": "89 Broad Street",
+        "city": "Elyria",
+        "state": "OH",
+        "zipCode": "44035"
       },
-      tsaPrecheck: false,
-      passportNumber: "C10001058",
-      passportExpiration: "December 19, 2030",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Edward Grant",
-        relationship: "Father",
-        phone: "440-555-0210",
+      "tsaPrecheck": false,
+      "passportNumber": "C10001058",
+      "passportExpiration": "December 19, 2030",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Edward Grant",
+        "relationship": "Father",
+        "phone": "440-555-0210"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Director"
     },
     {
-      travelerNumber: 1059,
-      firstName: "Jason",
-      lastName: "Parker",
-      email: "jason.parker@example.com",
-      phone: "440-555-0111",
-      dateOfBirth: "June 8, 1977",
-      address: {
-        street: "338 Lorain Road",
-        city: "North Olmsted",
-        state: "OH",
-        zipCode: "44070",
+      "travelerNumber": 1059,
+      "firstName": "Jason",
+      "lastName": "Parker",
+      "email": "jason.parker@example.com",
+      "phone": "440-555-0111",
+      "dateOfBirth": "June 8, 1977",
+      "address": {
+        "street": "338 Lorain Road",
+        "city": "North Olmsted",
+        "state": "OH",
+        "zipCode": "44070"
       },
-      tsaPrecheck: true,
-      passportNumber: "C10001059",
-      passportExpiration: "May 3, 2032",
-      bringingGuest: true,
-      guest: {
-        firstName: "Erin",
-        lastName: "Parker",
-        email: "erin.parker@example.com",
+      "tsaPrecheck": true,
+      "passportNumber": "C10001059",
+      "passportExpiration": "May 3, 2032",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Erin",
+        "lastName": "Parker",
+        "email": "erin.parker@example.com",
+        "activities": [
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 102
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 302
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Carol Parker",
-        relationship: "Mother",
-        phone: "440-555-0211",
+      "emergencyContact": {
+        "name": "Carol Parker",
+        "relationship": "Mother",
+        "phone": "440-555-0211"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 303
+        }
+      ],
+      "role": "Executive"
     },
     {
-      travelerNumber: 1060,
-      firstName: "Brittany",
-      lastName: "Foster",
-      email: "brittany.foster@example.com",
-      phone: "216-555-0112",
-      dateOfBirth: "February 14, 1992",
-      address: {
-        street: "2609 Pearl Road",
-        city: "Cleveland",
-        state: "OH",
-        zipCode: "44109",
+      "travelerNumber": 1060,
+      "firstName": "Brittany",
+      "lastName": "Foster",
+      "email": "brittany.foster@example.com",
+      "phone": "216-555-0112",
+      "dateOfBirth": "February 14, 1992",
+      "address": {
+        "street": "2609 Pearl Road",
+        "city": "Cleveland",
+        "state": "OH",
+        "zipCode": "44109"
       },
-      tsaPrecheck: false,
-      passportNumber: "C10001060",
-      passportExpiration: "October 23, 2031",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Denise Foster",
-        relationship: "Mother",
-        phone: "216-555-0212",
+      "tsaPrecheck": false,
+      "passportNumber": "C10001060",
+      "passportExpiration": "October 23, 2031",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Denise Foster",
+        "relationship": "Mother",
+        "phone": "216-555-0212"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 2,
+          "type": "Excursion",
+          "name": "Island Jeep Tour",
+          "sessionId": 201
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Event Staff",
+      "preferredName": "Britt"
     },
     {
-      travelerNumber: 1061,
-      firstName: "Eric",
-      lastName: "Lawson",
-      email: "eric.lawson@example.com",
-      phone: "330-555-0113",
-      dateOfBirth: "September 25, 1983",
-      address: {
-        street: "725 Main Street",
-        city: "Cuyahoga Falls",
-        state: "OH",
-        zipCode: "44221",
+      "travelerNumber": 1061,
+      "firstName": "Eric",
+      "lastName": "Lawson",
+      "email": "eric.lawson@example.com",
+      "phone": "330-555-0113",
+      "dateOfBirth": "September 25, 1983",
+      "address": {
+        "street": "725 Main Street",
+        "city": "Cuyahoga Falls",
+        "state": "OH",
+        "zipCode": "44221"
       },
-      tsaPrecheck: true,
-      passportNumber: "C10001061",
-      passportExpiration: "January 30, 2033",
-      bringingGuest: true,
-      guest: {
-        firstName: "Dana",
-        lastName: "Lawson",
-        email: "dana.lawson@example.com",
+      "tsaPrecheck": true,
+      "passportNumber": "C10001061",
+      "passportExpiration": "January 30, 2033",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Dana",
+        "lastName": "Lawson",
+        "email": "dana.lawson@example.com",
+        "activities": [
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 101
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 303
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Mark Lawson",
-        relationship: "Brother",
-        phone: "330-555-0213",
+      "emergencyContact": {
+        "name": "Mark Lawson",
+        "relationship": "Brother",
+        "phone": "330-555-0213"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Attendee"
     },
     {
-      travelerNumber: 1062,
-      firstName: "Courtney",
-      lastName: "Price",
-      email: "courtney.price@example.com",
-      phone: "440-555-0114",
-      dateOfBirth: "April 4, 1996",
-      address: {
-        street: "118 Liberty Avenue",
-        city: "Vermilion",
-        state: "OH",
-        zipCode: "44089",
+      "travelerNumber": 1062,
+      "firstName": "Courtney",
+      "lastName": "Price",
+      "email": "courtney.price@example.com",
+      "phone": "440-555-0114",
+      "dateOfBirth": "April 4, 1996",
+      "address": {
+        "street": "118 Liberty Avenue",
+        "city": "Vermilion",
+        "state": "OH",
+        "zipCode": "44089"
       },
-      tsaPrecheck: false,
-      passportNumber: "C10001062",
-      passportExpiration: "July 11, 2032",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Janet Price",
-        relationship: "Mother",
-        phone: "440-555-0214",
+      "tsaPrecheck": false,
+      "passportNumber": "C10001062",
+      "passportExpiration": "July 11, 2032",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Janet Price",
+        "relationship": "Mother",
+        "phone": "440-555-0214"
       },
-      accessibility: "None",
-      dietaryRequirements: "Vegan",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "Vegan",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Sales Representative"
     },
     {
-      travelerNumber: 1063,
-      firstName: "Brandon",
-      lastName: "Ellis",
-      email: "brandon.ellis@example.com",
-      phone: "216-555-0115",
-      dateOfBirth: "August 12, 1980",
-      address: {
-        street: "5479 Ridge Road",
-        city: "Parma",
-        state: "OH",
-        zipCode: "44129",
+      "travelerNumber": 1063,
+      "firstName": "Brandon",
+      "lastName": "Ellis",
+      "email": "brandon.ellis@example.com",
+      "phone": "216-555-0115",
+      "dateOfBirth": "August 12, 1980",
+      "address": {
+        "street": "5479 Ridge Road",
+        "city": "Parma",
+        "state": "OH",
+        "zipCode": "44129"
       },
-      tsaPrecheck: true,
-
-      bringingGuest: true,
-      guest: {
-        firstName: "Kelsey",
-        lastName: "Ellis",
-        email: "kelsey.ellis@example.com",
+      "tsaPrecheck": true,
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Kelsey",
+        "lastName": "Ellis",
+        "email": "kelsey.ellis@example.com",
+        "activities": [
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 102
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 302
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Nancy Ellis",
-        relationship: "Mother",
-        phone: "216-555-0215",
+      "emergencyContact": {
+        "name": "Nancy Ellis",
+        "relationship": "Mother",
+        "phone": "216-555-0215"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 2,
+          "type": "Excursion",
+          "name": "Island Jeep Tour",
+          "sessionId": 201
+        },
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        }
+      ],
+      "role": "Sales Manager"
     },
     {
-      travelerNumber: 1064,
-      firstName: "Natalie",
-      lastName: "Brooks",
-      email: "natalie.brooks@example.com",
-      phone: "440-555-0116",
-      dateOfBirth: "December 20, 1987",
-      address: {
-        street: "901 Center Street",
-        city: "Berea",
-        state: "OH",
-        zipCode: "44017",
+      "travelerNumber": 1064,
+      "firstName": "Natalie",
+      "lastName": "Brooks",
+      "email": "natalie.brooks@example.com",
+      "phone": "440-555-0116",
+      "dateOfBirth": "December 20, 1987",
+      "address": {
+        "street": "901 Center Street",
+        "city": "Berea",
+        "state": "OH",
+        "zipCode": "44017"
       },
-      tsaPrecheck: false,
-      passportNumber: "C10001064",
-      passportExpiration: "September 16, 2033",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "William Brooks",
-        relationship: "Father",
-        phone: "440-555-0216",
+      "tsaPrecheck": false,
+      "passportNumber": "C10001064",
+      "passportExpiration": "September 16, 2033",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "William Brooks",
+        "relationship": "Father",
+        "phone": "440-555-0216"
       },
-      accessibility: "Hearing assistance requested",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "Hearing assistance requested",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 303
+        }
+      ],
+      "role": "Regional Manager"
     },
     {
-      travelerNumber: 1065,
-      firstName: "Trevor",
-      lastName: "Mason",
-      email: "trevor.mason@example.com",
-      phone: "216-555-0117",
-      dateOfBirth: "March 29, 1990",
-      address: {
-        street: "1642 Mayfield Road",
-        city: "Cleveland Heights",
-        state: "OH",
-        zipCode: "44118",
+      "travelerNumber": 1065,
+      "firstName": "Trevor",
+      "lastName": "Mason",
+      "email": "trevor.mason@example.com",
+      "phone": "216-555-0117",
+      "dateOfBirth": "March 29, 1990",
+      "address": {
+        "street": "1642 Mayfield Road",
+        "city": "Cleveland Heights",
+        "state": "OH",
+        "zipCode": "44118"
       },
-      tsaPrecheck: true,
-      passportNumber: "C10001065",
-      passportExpiration: "November 2, 2031",
-      bringingGuest: true,
-      guest: {
-        firstName: "Ashley",
-        lastName: "Mason",
-        email: "ashley.mason@example.com",
+      "tsaPrecheck": true,
+      "passportNumber": "C10001065",
+      "passportExpiration": "November 2, 2031",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Ashley",
+        "lastName": "Mason",
+        "email": "ashley.mason@example.com",
+        "activities": [
+          {
+            "id": 2,
+            "type": "Excursion",
+            "name": "Island Jeep Tour",
+            "sessionId": 201
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 302
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Deborah Mason",
-        relationship: "Mother",
-        phone: "216-555-0217",
+      "emergencyContact": {
+        "name": "Deborah Mason",
+        "relationship": "Mother",
+        "phone": "216-555-0217"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Director"
     },
     {
-      travelerNumber: 1066,
-      firstName: "Kimberly",
-      lastName: "Owens",
-      email: "kimberly.owens@example.com",
-      phone: "330-555-0118",
-      dateOfBirth: "July 6, 1984",
-      address: {
-        street: "742 Portage Trail",
-        city: "Cuyahoga Falls",
-        state: "OH",
-        zipCode: "44221",
+      "travelerNumber": 1066,
+      "firstName": "Kimberly",
+      "lastName": "Owens",
+      "email": "kimberly.owens@example.com",
+      "phone": "330-555-0118",
+      "dateOfBirth": "July 6, 1984",
+      "address": {
+        "street": "742 Portage Trail",
+        "city": "Cuyahoga Falls",
+        "state": "OH",
+        "zipCode": "44221"
       },
-      tsaPrecheck: false,
-
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Gary Owens",
-        relationship: "Father",
-        phone: "330-555-0218",
+      "tsaPrecheck": false,
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Gary Owens",
+        "relationship": "Father",
+        "phone": "330-555-0218"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 102
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 302
+        }
+      ],
+      "role": "Executive",
+      "preferredName": "Kim"
     },
     {
-      travelerNumber: 1067,
-      firstName: "Derrick",
-      lastName: "Hughes",
-      email: "derrick.hughes@example.com",
-      phone: "216-555-0119",
-      dateOfBirth: "January 13, 1978",
-      address: {
-        street: "3033 Lee Road",
-        city: "Shaker Heights",
-        state: "OH",
-        zipCode: "44120",
+      "travelerNumber": 1067,
+      "firstName": "Derrick",
+      "lastName": "Hughes",
+      "email": "derrick.hughes@example.com",
+      "phone": "216-555-0119",
+      "dateOfBirth": "January 13, 1978",
+      "address": {
+        "street": "3033 Lee Road",
+        "city": "Shaker Heights",
+        "state": "OH",
+        "zipCode": "44120"
       },
-      tsaPrecheck: true,
-      passportNumber: "C10001067",
-      passportExpiration: "June 8, 2030",
-      bringingGuest: true,
-      guest: {
-        firstName: "Vanessa",
-        lastName: "Hughes",
-        email: "vanessa.hughes@example.com",
+      "tsaPrecheck": true,
+      "passportNumber": "C10001067",
+      "passportExpiration": "June 8, 2030",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Vanessa",
+        "lastName": "Hughes",
+        "email": "vanessa.hughes@example.com",
+        "activities": [
+          {
+            "id": 1,
+            "type": "Excursion",
+            "name": "Catamaran & Snorkeling",
+            "sessionId": 102
+          },
+          {
+            "id": 3,
+            "type": "Excursion",
+            "name": "Sunset Dinner Cruise",
+            "sessionId": 302
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Angela Hughes",
-        relationship: "Sister",
-        phone: "216-555-0219",
+      "emergencyContact": {
+        "name": "Angela Hughes",
+        "relationship": "Sister",
+        "phone": "216-555-0219"
       },
-      accessibility: "None",
-      dietaryRequirements: "Shellfish allergy",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "Shellfish allergy",
+      "activities": [
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        },
+        {
+          "id": 3,
+          "type": "Excursion",
+          "name": "Sunset Dinner Cruise",
+          "sessionId": 303
+        }
+      ],
+      "role": "Event Staff"
     },
     {
-      travelerNumber: 1068,
-      firstName: "Lauren",
-      lastName: "Mitchell",
-      email: "lauren.mitchell@example.com",
-      phone: "440-555-0120",
-      dateOfBirth: "May 24, 1994",
-      address: {
-        street: "585 Main Street",
-        city: "Chardon",
-        state: "OH",
-        zipCode: "44024",
+      "travelerNumber": 1068,
+      "firstName": "Lauren",
+      "lastName": "Mitchell",
+      "email": "lauren.mitchell@example.com",
+      "phone": "440-555-0120",
+      "dateOfBirth": "May 24, 1994",
+      "address": {
+        "street": "585 Main Street",
+        "city": "Chardon",
+        "state": "OH",
+        "zipCode": "44024"
       },
-      tsaPrecheck: false,
-      passportNumber: "C10001068",
-      passportExpiration: "August 14, 2032",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Scott Mitchell",
-        relationship: "Father",
-        phone: "440-555-0220",
+      "tsaPrecheck": false,
+      "passportNumber": "C10001068",
+      "passportExpiration": "August 14, 2032",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Scott Mitchell",
+        "relationship": "Father",
+        "phone": "440-555-0220"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
-    },
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 2,
+          "type": "Excursion",
+          "name": "Island Jeep Tour",
+          "sessionId": 201
+        },
+        {
+          "id": 1,
+          "type": "Excursion",
+          "name": "Catamaran & Snorkeling",
+          "sessionId": 101
+        }
+      ],
+      "role": "Attendee"
+    }
   ],
-
-  2: [
+  "2": [
     {
-      travelerNumber: 2051,
-      firstName: "Robert",
-      lastName: "Jenkins",
-      email: "robert@example.com",
-      phone: "907-555-0101",
-      dateOfBirth: "January 9, 1984",
-      address: {
-        street: "789 Pine Street",
-        city: "Anchorage",
-        state: "AK",
-        zipCode: "99501",
+      "travelerNumber": 2051,
+      "firstName": "Robert",
+      "lastName": "Jenkins",
+      "email": "robert@example.com",
+      "phone": "907-555-0101",
+      "dateOfBirth": "January 9, 1984",
+      "address": {
+        "street": "789 Pine Street",
+        "city": "Anchorage",
+        "state": "AK",
+        "zipCode": "99501"
       },
-      tsaPrecheck: true,
-      passportNumber: "555666777",
-      passportExpiration: "October 2, 2031",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Linda Jenkins",
-        relationship: "Sister",
-        phone: "907-555-0188",
+      "tsaPrecheck": true,
+      "passportNumber": "555666777",
+      "passportExpiration": "October 2, 2031",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Linda Jenkins",
+        "relationship": "Sister",
+        "phone": "907-555-0188"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 702
+        }
+      ],
+      "role": "Sales Representative",
+      "preferredName": "Rob"
     },
     {
-      travelerNumber: 2052,
-      firstName: "Adam",
-      lastName: "Fletcher",
-      email: "adam.fletcher@example.com",
-      phone: "206-555-0101",
-      dateOfBirth: "March 12, 1986",
-      address: {
-        street: "412 Cedar Street",
-        city: "Seattle",
-        state: "WA",
-        zipCode: "98101",
+      "travelerNumber": 2052,
+      "firstName": "Adam",
+      "lastName": "Fletcher",
+      "email": "adam.fletcher@example.com",
+      "phone": "206-555-0101",
+      "dateOfBirth": "March 12, 1986",
+      "address": {
+        "street": "412 Cedar Street",
+        "city": "Seattle",
+        "state": "WA",
+        "zipCode": "98101"
       },
-      tsaPrecheck: true,
-      airport: "SEA",
-      sex: "Male",
-      passportNumber: "A20002052",
-      passportExpiration: "May 17, 2032",
-      nationality: "Canadian",
-      citizenship: "United States",
-      bringingGuest: true,
-      guest: {
-        firstName: "Megan",
-        lastName: "Fletcher",
-        email: "megan.fletcher@example.com",
+      "tsaPrecheck": true,
+      "airport": "SEA",
+      "sex": "Male",
+      "passportNumber": "A20002052",
+      "passportExpiration": "May 17, 2032",
+      "nationality": "Canadian",
+      "citizenship": "United States",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Megan",
+        "lastName": "Fletcher",
+        "email": "megan.fletcher@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 701
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 802
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Janice Fletcher",
-        relationship: "Mother",
-        phone: "206-555-0201",
+      "emergencyContact": {
+        "name": "Janice Fletcher",
+        "relationship": "Mother",
+        "phone": "206-555-0201"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 801
+        }
+      ],
+      "role": "Sales Manager"
     },
     {
-      travelerNumber: 2053,
-      firstName: "Samantha",
-      lastName: "Pierce",
-      email: "samantha.pierce@example.com",
-      phone: "503-555-0102",
-      dateOfBirth: "October 21, 1991",
-      address: {
-        street: "89 Hawthorne Boulevard",
-        city: "Portland",
-        state: "OR",
-        zipCode: "97214",
+      "travelerNumber": 2053,
+      "firstName": "Samantha",
+      "lastName": "Pierce",
+      "email": "samantha.pierce@example.com",
+      "phone": "503-555-0102",
+      "dateOfBirth": "October 21, 1991",
+      "address": {
+        "street": "89 Hawthorne Boulevard",
+        "city": "Portland",
+        "state": "OR",
+        "zipCode": "97214"
       },
-      tsaPrecheck: false,
-      passportNumber: "A20002053",
-      airport: "PDX",
-      sex: "Female",
-      nationality: "Mexican",
-      citizenship: "United States",
-      passportExpiration: "January 8, 2031",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Daniel Pierce",
-        relationship: "Brother",
-        phone: "503-555-0202",
+      "tsaPrecheck": false,
+      "passportNumber": "A20002053",
+      "airport": "PDX",
+      "sex": "Female",
+      "nationality": "Mexican",
+      "citizenship": "United States",
+      "passportExpiration": "January 8, 2031",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Daniel Pierce",
+        "relationship": "Brother",
+        "phone": "503-555-0202"
       },
-      accessibility: "None",
-      dietaryRequirements: "Vegetarian",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "Vegetarian",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 701
+        }
+      ],
+      "role": "Regional Manager",
+      "preferredName": "Sam"
     },
     {
-      travelerNumber: 2054,
-      firstName: "Jonathan",
-      lastName: "Reed",
-      email: "jonathan.reed@example.com",
-      phone: "303-555-0103",
-      dateOfBirth: "July 8, 1979",
-      address: {
-        street: "615 Grant Street",
-        city: "Denver",
-        state: "CO",
-        zipCode: "80203",
+      "travelerNumber": 2054,
+      "firstName": "Jonathan",
+      "lastName": "Reed",
+      "email": "jonathan.reed@example.com",
+      "phone": "303-555-0103",
+      "dateOfBirth": "July 8, 1979",
+      "address": {
+        "street": "615 Grant Street",
+        "city": "Denver",
+        "state": "CO",
+        "zipCode": "80203"
       },
-      tsaPrecheck: true,
-      airport: "DEN",
-      sex: "Male",
-      nationality: "German",
-      citizenship: "United States",
-      passportNumber: "A20002054",
-      passportExpiration: "September 26, 2033",
-      bringingGuest: true,
-      guest: {
-        firstName: "Caroline",
-        lastName: "Reed",
-        email: "caroline.reed@example.com",
+      "tsaPrecheck": true,
+      "airport": "DEN",
+      "sex": "Male",
+      "nationality": "German",
+      "citizenship": "United States",
+      "passportNumber": "A20002054",
+      "passportExpiration": "September 26, 2033",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Caroline",
+        "lastName": "Reed",
+        "email": "caroline.reed@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 702
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 801
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Barbara Reed",
-        relationship: "Mother",
-        phone: "303-555-0203",
+      "emergencyContact": {
+        "name": "Barbara Reed",
+        "relationship": "Mother",
+        "phone": "303-555-0203"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 802
+        }
+      ],
+      "role": "Director",
+      "preferredName": "Jon"
     },
     {
-      travelerNumber: 2055,
-      firstName: "Alicia",
-      lastName: "Morgan",
-      email: "alicia.morgan@example.com",
-      phone: "415-555-0104",
-      dateOfBirth: "February 3, 1988",
-      address: {
-        street: "1220 Market Street",
-        city: "San Francisco",
-        state: "CA",
-        zipCode: "94102",
+      "travelerNumber": 2055,
+      "firstName": "Alicia",
+      "lastName": "Morgan",
+      "email": "alicia.morgan@example.com",
+      "phone": "415-555-0104",
+      "dateOfBirth": "February 3, 1988",
+      "address": {
+        "street": "1220 Market Street",
+        "city": "San Francisco",
+        "state": "CA",
+        "zipCode": "94102"
       },
-      tsaPrecheck: true,
-      airport: "SFO",
-      sex: "Female",
-      nationality: "Filipino",
-      citizenship: "United States",
-      passportNumber: "A20002055",
-      passportExpiration: "April 13, 2030",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Keith Morgan",
-        relationship: "Father",
-        phone: "415-555-0204",
+      "tsaPrecheck": true,
+      "airport": "SFO",
+      "sex": "Female",
+      "nationality": "Filipino",
+      "citizenship": "United States",
+      "passportNumber": "A20002055",
+      "passportExpiration": "April 13, 2030",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Keith Morgan",
+        "relationship": "Father",
+        "phone": "415-555-0204"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 702
+        }
+      ],
+      "role": "Executive"
     },
     {
-      travelerNumber: 2056,
-      firstName: "Nathan",
-      lastName: "Coleman",
-      email: "nathan.coleman@example.com",
-      phone: "612-555-0105",
-      dateOfBirth: "November 16, 1983",
-      address: {
-        street: "703 Nicollet Avenue",
-        city: "Minneapolis",
-        state: "MN",
-        zipCode: "55402",
+      "travelerNumber": 2056,
+      "firstName": "Nathan",
+      "lastName": "Coleman",
+      "email": "nathan.coleman@example.com",
+      "phone": "612-555-0105",
+      "dateOfBirth": "November 16, 1983",
+      "address": {
+        "street": "703 Nicollet Avenue",
+        "city": "Minneapolis",
+        "state": "MN",
+        "zipCode": "55402"
       },
-      tsaPrecheck: false,
-      airport: "MSP",
-      sex: "Male",
-      nationality: "Korean",
-      citizenship: "United States",
-      passportNumber: "A20002056",
-      passportExpiration: "December 1, 2032",
-      bringingGuest: true,
-      guest: {
-        firstName: "Rebecca",
-        lastName: "Coleman",
-        email: "rebecca.coleman@example.com",
+      "tsaPrecheck": false,
+      "airport": "MSP",
+      "sex": "Male",
+      "nationality": "Korean",
+      "citizenship": "United States",
+      "passportNumber": "A20002056",
+      "passportExpiration": "December 1, 2032",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Rebecca",
+        "lastName": "Coleman",
+        "email": "rebecca.coleman@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 701
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 802
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Susan Coleman",
-        relationship: "Mother",
-        phone: "612-555-0205",
+      "emergencyContact": {
+        "name": "Susan Coleman",
+        "relationship": "Mother",
+        "phone": "612-555-0205"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 801
+        }
+      ],
+      "role": "Event Staff",
+      "preferredName": "Nate"
     },
     {
-      travelerNumber: 2057,
-      firstName: "Emily",
-      lastName: "Hart",
-      email: "emily.hart@example.com",
-      phone: "312-555-0106",
-      dateOfBirth: "June 27, 1994",
-      address: {
-        street: "480 North State Street",
-        city: "Chicago",
-        state: "IL",
-        zipCode: "60654",
+      "travelerNumber": 2057,
+      "firstName": "Emily",
+      "lastName": "Hart",
+      "email": "emily.hart@example.com",
+      "phone": "312-555-0106",
+      "dateOfBirth": "June 27, 1994",
+      "address": {
+        "street": "480 North State Street",
+        "city": "Chicago",
+        "state": "IL",
+        "zipCode": "60654"
       },
-      tsaPrecheck: false,
-      airport: "ORD",
-      sex: "Female",
-      nationality: "Italian",
-      citizenship: "United States",
-      passportNumber: "A20002057",
-      passportExpiration: "July 29, 2031",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Patricia Hart",
-        relationship: "Mother",
-        phone: "312-555-0206",
+      "tsaPrecheck": false,
+      "airport": "ORD",
+      "sex": "Female",
+      "nationality": "Italian",
+      "citizenship": "United States",
+      "passportNumber": "A20002057",
+      "passportExpiration": "July 29, 2031",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Patricia Hart",
+        "relationship": "Mother",
+        "phone": "312-555-0206"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 701
+        }
+      ],
+      "role": "Attendee"
     },
     {
-      travelerNumber: 2058,
-      firstName: "Calvin",
-      lastName: "Ross",
-      email: "calvin.ross@example.com",
-      phone: "214-555-0107",
-      dateOfBirth: "April 15, 1980",
-      address: {
-        street: "901 Elm Street",
-        city: "Dallas",
-        state: "TX",
-        zipCode: "75202",
+      "travelerNumber": 2058,
+      "firstName": "Calvin",
+      "lastName": "Ross",
+      "email": "calvin.ross@example.com",
+      "phone": "214-555-0107",
+      "dateOfBirth": "April 15, 1980",
+      "address": {
+        "street": "901 Elm Street",
+        "city": "Dallas",
+        "state": "TX",
+        "zipCode": "75202"
       },
-      tsaPrecheck: true,
-      airport: "DFW",
-      sex: "Male",
-      nationality: "Jamaican",
-      citizenship: "United States",
-      passportNumber: "A20002058",
-      passportExpiration: "February 18, 2034",
-      bringingGuest: true,
-      guest: {
-        firstName: "Joy",
-        lastName: "Ross",
-        email: "joy.ross@example.com",
+      "tsaPrecheck": true,
+      "airport": "DFW",
+      "sex": "Male",
+      "nationality": "Jamaican",
+      "citizenship": "United States",
+      "passportNumber": "A20002058",
+      "passportExpiration": "February 18, 2034",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Joy",
+        "lastName": "Ross",
+        "email": "joy.ross@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 702
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 801
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Helen Ross",
-        relationship: "Mother",
-        phone: "214-555-0207",
+      "emergencyContact": {
+        "name": "Helen Ross",
+        "relationship": "Mother",
+        "phone": "214-555-0207"
       },
-      accessibility: "Mobility assistance for long walking distances",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "Mobility assistance for long walking distances",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 802
+        }
+      ],
+      "role": "Sales Representative"
     },
     {
-      travelerNumber: 2059,
-      firstName: "Diana",
-      lastName: "Vasquez",
-      email: "diana.vasquez@example.com",
-      phone: "602-555-0108",
-      dateOfBirth: "September 10, 1987",
-      address: {
-        street: "315 Central Avenue",
-        city: "Phoenix",
-        state: "AZ",
-        zipCode: "85004",
+      "travelerNumber": 2059,
+      "firstName": "Diana",
+      "lastName": "Vasquez",
+      "email": "diana.vasquez@example.com",
+      "phone": "602-555-0108",
+      "dateOfBirth": "September 10, 1987",
+      "address": {
+        "street": "315 Central Avenue",
+        "city": "Phoenix",
+        "state": "AZ",
+        "zipCode": "85004"
       },
-      tsaPrecheck: false,
-      airport: "PHX",
-      sex: "Female",
-      nationality: "Colombian",
-      citizenship: "United States",
-      passportNumber: "A20002059",
-      passportExpiration: "October 7, 2030",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Maria Vasquez",
-        relationship: "Mother",
-        phone: "602-555-0208",
+      "tsaPrecheck": false,
+      "airport": "PHX",
+      "sex": "Female",
+      "nationality": "Colombian",
+      "citizenship": "United States",
+      "passportNumber": "A20002059",
+      "passportExpiration": "October 7, 2030",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Maria Vasquez",
+        "relationship": "Mother",
+        "phone": "602-555-0208"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 702
+        }
+      ],
+      "role": "Sales Manager"
     },
     {
-      travelerNumber: 2060,
-      firstName: "Patrick",
-      lastName: "Stone",
-      email: "patrick.stone@example.com",
-      phone: "617-555-0109",
-      dateOfBirth: "January 31, 1976",
-      address: {
-        street: "78 Beacon Street",
-        city: "Boston",
-        state: "MA",
-        zipCode: "02108",
+      "travelerNumber": 2060,
+      "firstName": "Patrick",
+      "lastName": "Stone",
+      "email": "patrick.stone@example.com",
+      "phone": "617-555-0109",
+      "dateOfBirth": "January 31, 1976",
+      "address": {
+        "street": "78 Beacon Street",
+        "city": "Boston",
+        "state": "MA",
+        "zipCode": "02108"
       },
-      tsaPrecheck: true,
-      airport: "BOS",
-      sex: "Male",
-      nationality: "Irish",
-      citizenship: "United States",
-      passportNumber: "A20002060",
-      passportExpiration: "June 12, 2033",
-      bringingGuest: true,
-      guest: {
-        firstName: "Christine",
-        lastName: "Stone",
-        email: "christine.stone@example.com",
+      "tsaPrecheck": true,
+      "airport": "BOS",
+      "sex": "Male",
+      "nationality": "Irish",
+      "citizenship": "United States",
+      "passportNumber": "A20002060",
+      "passportExpiration": "June 12, 2033",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Christine",
+        "lastName": "Stone",
+        "email": "christine.stone@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 701
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 802
+          }
+        ]
       },
-      emergencyContact: {
-        name: "George Stone",
-        relationship: "Brother",
-        phone: "617-555-0209",
+      "emergencyContact": {
+        "name": "George Stone",
+        "relationship": "Brother",
+        "phone": "617-555-0209"
       },
-      accessibility: "None",
-      dietaryRequirements: "Tree nut allergy",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "Tree nut allergy",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 801
+        }
+      ],
+      "role": "Regional Manager",
+      "preferredName": "Pat"
     },
     {
-      travelerNumber: 2061,
-      firstName: "Jasmine",
-      lastName: "Turner",
-      email: "jasmine.turner@example.com",
-      phone: "404-555-0110",
-      dateOfBirth: "May 19, 1992",
-      address: {
-        street: "541 Peachtree Street",
-        city: "Atlanta",
-        state: "GA",
-        zipCode: "30308",
+      "travelerNumber": 2061,
+      "firstName": "Jasmine",
+      "lastName": "Turner",
+      "email": "jasmine.turner@example.com",
+      "phone": "404-555-0110",
+      "dateOfBirth": "May 19, 1992",
+      "address": {
+        "street": "541 Peachtree Street",
+        "city": "Atlanta",
+        "state": "GA",
+        "zipCode": "30308"
       },
-      tsaPrecheck: false,
-      airport: "ATL",
-      sex: "Female",
-      nationality: "Nigerian",
-      citizenship: "United States",
-      passportNumber: "A20002061",
-      passportExpiration: "March 5, 2032",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Monique Turner",
-        relationship: "Sister",
-        phone: "404-555-0210",
+      "tsaPrecheck": false,
+      "airport": "ATL",
+      "sex": "Female",
+      "nationality": "Nigerian",
+      "citizenship": "United States",
+      "passportNumber": "A20002061",
+      "passportExpiration": "March 5, 2032",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Monique Turner",
+        "relationship": "Sister",
+        "phone": "404-555-0210"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 701
+        }
+      ],
+      "role": "Director"
     },
     {
-      travelerNumber: 2062,
-      firstName: "Gregory",
-      lastName: "Chambers",
-      email: "gregory.chambers@example.com",
-      phone: "704-555-0111",
-      dateOfBirth: "August 23, 1982",
-      address: {
-        street: "820 Trade Street",
-        city: "Charlotte",
-        state: "NC",
-        zipCode: "28202",
+      "travelerNumber": 2062,
+      "firstName": "Gregory",
+      "lastName": "Chambers",
+      "email": "gregory.chambers@example.com",
+      "phone": "704-555-0111",
+      "dateOfBirth": "August 23, 1982",
+      "address": {
+        "street": "820 Trade Street",
+        "city": "Charlotte",
+        "state": "NC",
+        "zipCode": "28202"
       },
-      tsaPrecheck: true,
-      airport: "CLT",
-      sex: "Male",
-      nationality: "British",
-      citizenship: "United States",
-      passportNumber: "A20002062",
-      passportExpiration: "November 14, 2031",
-      bringingGuest: true,
-      guest: {
-        firstName: "Olivia",
-        lastName: "Chambers",
-        email: "olivia.chambers@example.com",
+      "tsaPrecheck": true,
+      "airport": "CLT",
+      "sex": "Male",
+      "nationality": "British",
+      "citizenship": "United States",
+      "passportNumber": "A20002062",
+      "passportExpiration": "November 14, 2031",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Olivia",
+        "lastName": "Chambers",
+        "email": "olivia.chambers@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 702
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 801
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Sharon Chambers",
-        relationship: "Mother",
-        phone: "704-555-0211",
+      "emergencyContact": {
+        "name": "Sharon Chambers",
+        "relationship": "Mother",
+        "phone": "704-555-0211"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 802
+        }
+      ],
+      "role": "Executive",
+      "preferredName": "Greg"
     },
     {
-      travelerNumber: 2063,
-      firstName: "Vanessa",
-      lastName: "Keller",
-      email: "vanessa.keller@example.com",
-      phone: "313-555-0112",
-      dateOfBirth: "December 6, 1989",
-      address: {
-        street: "191 Woodward Avenue",
-        city: "Detroit",
-        state: "MI",
-        zipCode: "48226",
+      "travelerNumber": 2063,
+      "firstName": "Vanessa",
+      "lastName": "Keller",
+      "email": "vanessa.keller@example.com",
+      "phone": "313-555-0112",
+      "dateOfBirth": "December 6, 1989",
+      "address": {
+        "street": "191 Woodward Avenue",
+        "city": "Detroit",
+        "state": "MI",
+        "zipCode": "48226"
       },
-      tsaPrecheck: false,
-      airport: "DTW",
-      sex: "Female",
-      nationality: "Polish",
-      citizenship: "United States",
-      passportNumber: "A20002063",
-      passportExpiration: "August 9, 2030",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Richard Keller",
-        relationship: "Father",
-        phone: "313-555-0212",
+      "tsaPrecheck": false,
+      "airport": "DTW",
+      "sex": "Female",
+      "nationality": "Polish",
+      "citizenship": "United States",
+      "passportNumber": "A20002063",
+      "passportExpiration": "August 9, 2030",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Richard Keller",
+        "relationship": "Father",
+        "phone": "313-555-0212"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 702
+        }
+      ],
+      "role": "Event Staff"
     },
     {
-      travelerNumber: 2064,
-      firstName: "Ethan",
-      lastName: "Murray",
-      email: "ethan.murray@example.com",
-      phone: "801-555-0113",
-      dateOfBirth: "March 17, 1985",
-      address: {
-        street: "267 State Street",
-        city: "Salt Lake City",
-        state: "UT",
-        zipCode: "84111",
+      "travelerNumber": 2064,
+      "firstName": "Ethan",
+      "lastName": "Murray",
+      "email": "ethan.murray@example.com",
+      "phone": "801-555-0113",
+      "dateOfBirth": "March 17, 1985",
+      "address": {
+        "street": "267 State Street",
+        "city": "Salt Lake City",
+        "state": "UT",
+        "zipCode": "84111"
       },
-      tsaPrecheck: true,
-      airport: "SLC",
-      sex: "Male",
-      nationality: "Japanese",
-      citizenship: "United States",
-      passportNumber: "A20002064",
-      passportExpiration: "January 22, 2034",
-      bringingGuest: true,
-      guest: {
-        firstName: "Claire",
-        lastName: "Murray",
-        email: "claire.murray@example.com",
+      "tsaPrecheck": true,
+      "airport": "SLC",
+      "sex": "Male",
+      "nationality": "Japanese",
+      "citizenship": "United States",
+      "passportNumber": "A20002064",
+      "passportExpiration": "January 22, 2034",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Claire",
+        "lastName": "Murray",
+        "email": "claire.murray@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 701
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 802
+          }
+        ]
       },
-      emergencyContact: {
-        name: "David Murray",
-        relationship: "Father",
-        phone: "801-555-0213",
+      "emergencyContact": {
+        "name": "David Murray",
+        "relationship": "Father",
+        "phone": "801-555-0213"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 801
+        }
+      ],
+      "role": "Attendee"
     },
     {
-      travelerNumber: 2065,
-      firstName: "Monica",
-      lastName: "Bishop",
-      email: "monica.bishop@example.com",
-      phone: "314-555-0114",
-      dateOfBirth: "July 2, 1990",
-      address: {
-        street: "610 Olive Street",
-        city: "St. Louis",
-        state: "MO",
-        zipCode: "63101",
+      "travelerNumber": 2065,
+      "firstName": "Monica",
+      "lastName": "Bishop",
+      "email": "monica.bishop@example.com",
+      "phone": "314-555-0114",
+      "dateOfBirth": "July 2, 1990",
+      "address": {
+        "street": "610 Olive Street",
+        "city": "St. Louis",
+        "state": "MO",
+        "zipCode": "63101"
       },
-      tsaPrecheck: false,
-      airport: "STL",
-      sex: "Female",
-      nationality: "Greek",
-      citizenship: "United States",
-      passportNumber: "A20002065",
-      passportExpiration: "May 30, 2031",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Teresa Bishop",
-        relationship: "Mother",
-        phone: "314-555-0214",
+      "tsaPrecheck": false,
+      "airport": "STL",
+      "sex": "Female",
+      "nationality": "Greek",
+      "citizenship": "United States",
+      "passportNumber": "A20002065",
+      "passportExpiration": "May 30, 2031",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Teresa Bishop",
+        "relationship": "Mother",
+        "phone": "314-555-0214"
       },
-      accessibility: "None",
-      dietaryRequirements: "Gluten-free",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "Gluten-free",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 701
+        }
+      ],
+      "role": "Sales Representative"
     },
     {
-      travelerNumber: 2066,
-      firstName: "Aaron",
-      lastName: "Simmons",
-      email: "aaron.simmons@example.com",
-      phone: "615-555-0115",
-      dateOfBirth: "October 14, 1981",
-      address: {
-        street: "455 Broadway",
-        city: "Nashville",
-        state: "TN",
-        zipCode: "37203",
+      "travelerNumber": 2066,
+      "firstName": "Aaron",
+      "lastName": "Simmons",
+      "email": "aaron.simmons@example.com",
+      "phone": "615-555-0115",
+      "dateOfBirth": "October 14, 1981",
+      "address": {
+        "street": "455 Broadway",
+        "city": "Nashville",
+        "state": "TN",
+        "zipCode": "37203"
       },
-      tsaPrecheck: true,
-      passportNumber: "A20002066",
-      passportExpiration: "September 3, 2032",
-      bringingGuest: true,
-      guest: {
-        firstName: "Bethany",
-        lastName: "Simmons",
-        email: "bethany.simmons@example.com",
+      "tsaPrecheck": true,
+      "passportNumber": "A20002066",
+      "passportExpiration": "September 3, 2032",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Bethany",
+        "lastName": "Simmons",
+        "email": "bethany.simmons@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 702
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 801
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Charles Simmons",
-        relationship: "Father",
-        phone: "615-555-0215",
+      "emergencyContact": {
+        "name": "Charles Simmons",
+        "relationship": "Father",
+        "phone": "615-555-0215"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 802
+        }
+      ],
+      "role": "Sales Manager"
     },
     {
-      travelerNumber: 2067,
-      firstName: "Lindsay",
-      lastName: "Ramirez",
-      email: "lindsay.ramirez@example.com",
-      phone: "505-555-0116",
-      dateOfBirth: "February 26, 1993",
-      address: {
-        street: "301 Central Avenue",
-        city: "Albuquerque",
-        state: "NM",
-        zipCode: "87102",
+      "travelerNumber": 2067,
+      "firstName": "Lindsay",
+      "lastName": "Ramirez",
+      "email": "lindsay.ramirez@example.com",
+      "phone": "505-555-0116",
+      "dateOfBirth": "February 26, 1993",
+      "address": {
+        "street": "301 Central Avenue",
+        "city": "Albuquerque",
+        "state": "NM",
+        "zipCode": "87102"
       },
-      tsaPrecheck: false,
-      passportNumber: "A20002067",
-      passportExpiration: "December 20, 2033",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Elena Ramirez",
-        relationship: "Mother",
-        phone: "505-555-0216",
+      "tsaPrecheck": false,
+      "passportNumber": "A20002067",
+      "passportExpiration": "December 20, 2033",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Elena Ramirez",
+        "relationship": "Mother",
+        "phone": "505-555-0216"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 702
+        }
+      ],
+      "role": "Regional Manager"
     },
     {
-      travelerNumber: 2068,
-      firstName: "Wesley",
-      lastName: "Franklin",
-      email: "wesley.franklin@example.com",
-      phone: "816-555-0117",
-      dateOfBirth: "June 11, 1978",
-      address: {
-        street: "700 Main Street",
-        city: "Kansas City",
-        state: "MO",
-        zipCode: "64105",
+      "travelerNumber": 2068,
+      "firstName": "Wesley",
+      "lastName": "Franklin",
+      "email": "wesley.franklin@example.com",
+      "phone": "816-555-0117",
+      "dateOfBirth": "June 11, 1978",
+      "address": {
+        "street": "700 Main Street",
+        "city": "Kansas City",
+        "state": "MO",
+        "zipCode": "64105"
       },
-      tsaPrecheck: true,
-      passportNumber: "A20002068",
-      passportExpiration: "April 16, 2030",
-      bringingGuest: true,
-      guest: {
-        firstName: "Andrea",
-        lastName: "Franklin",
-        email: "andrea.franklin@example.com",
+      "tsaPrecheck": true,
+      "passportNumber": "A20002068",
+      "passportExpiration": "April 16, 2030",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Andrea",
+        "lastName": "Franklin",
+        "email": "andrea.franklin@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 701
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 802
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Janet Franklin",
-        relationship: "Sister",
-        phone: "816-555-0217",
+      "emergencyContact": {
+        "name": "Janet Franklin",
+        "relationship": "Sister",
+        "phone": "816-555-0217"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 801
+        }
+      ],
+      "role": "Director"
     },
     {
-      travelerNumber: 2069,
-      firstName: "Cassandra",
-      lastName: "Fields",
-      email: "cassandra.fields@example.com",
-      phone: "414-555-0118",
-      dateOfBirth: "April 9, 1986",
-      address: {
-        street: "225 Wisconsin Avenue",
-        city: "Milwaukee",
-        state: "WI",
-        zipCode: "53203",
+      "travelerNumber": 2069,
+      "firstName": "Cassandra",
+      "lastName": "Fields",
+      "email": "cassandra.fields@example.com",
+      "phone": "414-555-0118",
+      "dateOfBirth": "April 9, 1986",
+      "address": {
+        "street": "225 Wisconsin Avenue",
+        "city": "Milwaukee",
+        "state": "WI",
+        "zipCode": "53203"
       },
-      tsaPrecheck: false,
-      passportNumber: "A20002069",
-      passportExpiration: "July 25, 2031",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Lorraine Fields",
-        relationship: "Mother",
-        phone: "414-555-0218",
+      "tsaPrecheck": false,
+      "passportNumber": "A20002069",
+      "passportExpiration": "July 25, 2031",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Lorraine Fields",
+        "relationship": "Mother",
+        "phone": "414-555-0218"
       },
-      accessibility: "Visual assistance requested",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "Visual assistance requested",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 602
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 701
+        }
+      ],
+      "role": "Executive",
+      "preferredName": "Cass"
     },
     {
-      travelerNumber: 2070,
-      firstName: "Jeremy",
-      lastName: "Dawson",
-      email: "jeremy.dawson@example.com",
-      phone: "702-555-0119",
-      dateOfBirth: "November 28, 1984",
-      address: {
-        street: "390 Fremont Street",
-        city: "Las Vegas",
-        state: "NV",
-        zipCode: "89101",
+      "travelerNumber": 2070,
+      "firstName": "Jeremy",
+      "lastName": "Dawson",
+      "email": "jeremy.dawson@example.com",
+      "phone": "702-555-0119",
+      "dateOfBirth": "November 28, 1984",
+      "address": {
+        "street": "390 Fremont Street",
+        "city": "Las Vegas",
+        "state": "NV",
+        "zipCode": "89101"
       },
-      tsaPrecheck: true,
-      passportNumber: "A20002070",
-      passportExpiration: "February 11, 2032",
-      bringingGuest: true,
-      guest: {
-        firstName: "Hannah",
-        lastName: "Dawson",
-        email: "hannah.dawson@example.com",
+      "tsaPrecheck": true,
+      "passportNumber": "A20002070",
+      "passportExpiration": "February 11, 2032",
+      "bringingGuest": true,
+      "guest": {
+        "firstName": "Hannah",
+        "lastName": "Dawson",
+        "email": "hannah.dawson@example.com",
+        "activities": [
+          {
+            "id": 7,
+            "type": "Excursion",
+            "name": "Alaskan Scenic Railway",
+            "sessionId": 702
+          },
+          {
+            "id": 8,
+            "type": "Excursion",
+            "name": "Denali Wilderness Tour",
+            "sessionId": 801
+          }
+        ]
       },
-      emergencyContact: {
-        name: "Paul Dawson",
-        relationship: "Brother",
-        phone: "702-555-0219",
+      "emergencyContact": {
+        "name": "Paul Dawson",
+        "relationship": "Brother",
+        "phone": "702-555-0219"
       },
-      accessibility: "None",
-      dietaryRequirements: "None",
-      activities: [],
+      "accessibility": "None",
+      "dietaryRequirements": "None",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 8,
+          "type": "Excursion",
+          "name": "Denali Wilderness Tour",
+          "sessionId": 802
+        }
+      ],
+      "role": "Event Staff"
     },
     {
-      travelerNumber: 2071,
-      firstName: "Erica",
-      lastName: "Sanders",
-      email: "erica.sanders@example.com",
-      phone: "509-555-0120",
-      dateOfBirth: "August 5, 1995",
-      address: {
-        street: "811 Riverside Avenue",
-        city: "Spokane",
-        state: "WA",
-        zipCode: "99201",
+      "travelerNumber": 2071,
+      "firstName": "Erica",
+      "lastName": "Sanders",
+      "email": "erica.sanders@example.com",
+      "phone": "509-555-0120",
+      "dateOfBirth": "August 5, 1995",
+      "address": {
+        "street": "811 Riverside Avenue",
+        "city": "Spokane",
+        "state": "WA",
+        "zipCode": "99201"
       },
-      tsaPrecheck: false,
-      passportNumber: "A20002071",
-      passportExpiration: "October 27, 2033",
-      bringingGuest: false,
-      guest: null,
-      emergencyContact: {
-        name: "Denise Sanders",
-        relationship: "Mother",
-        phone: "509-555-0220",
+      "tsaPrecheck": false,
+      "passportNumber": "A20002071",
+      "passportExpiration": "October 27, 2033",
+      "bringingGuest": false,
+      "guest": null,
+      "emergencyContact": {
+        "name": "Denise Sanders",
+        "relationship": "Mother",
+        "phone": "509-555-0220"
       },
-      accessibility: "None",
-      dietaryRequirements: "Vegan",
-      activities: [],
-    },
-  ],
+      "accessibility": "None",
+      "dietaryRequirements": "Vegan",
+      "activities": [
+        {
+          "id": 6,
+          "type": "Excursion",
+          "name": "Glacier Wildlife Cruise",
+          "sessionId": 601
+        },
+        {
+          "id": 7,
+          "type": "Excursion",
+          "name": "Alaskan Scenic Railway",
+          "sessionId": 702
+        }
+      ],
+      "role": "Attendee"
+    }
+  ]
 };
 
 export default registrationsByTrip;

@@ -120,14 +120,14 @@ const selectionsByTrip = {
       sessions: [
         {
           id: 601,
-          date: "2027-06-15",
+          date: "2027-06-22",
           time: "09:00",
           maxCapacity: 30,
           active: true,
         },
         {
           id: 602,
-          date: "2027-06-15",
+          date: "2027-06-22",
           time: "13:00",
           maxCapacity: 30,
           active: true,
@@ -141,14 +141,14 @@ const selectionsByTrip = {
       sessions: [
         {
           id: 701,
-          date: "2027-06-16",
+          date: "2027-06-23",
           time: "08:30",
           maxCapacity: 40,
           active: true,
         },
         {
           id: 702,
-          date: "2027-06-16",
+          date: "2027-06-23",
           time: "13:30",
           maxCapacity: 40,
           active: true,
@@ -162,14 +162,14 @@ const selectionsByTrip = {
       sessions: [
         {
           id: 801,
-          date: "2027-06-17",
+          date: "2027-06-24",
           time: "08:00",
           maxCapacity: 24,
           active: true,
         },
         {
           id: 802,
-          date: "2027-06-17",
+          date: "2027-06-24",
           time: "13:00",
           maxCapacity: 24,
           active: true,
@@ -183,14 +183,14 @@ const selectionsByTrip = {
       sessions: [
         {
           id: 901,
-          date: "2027-06-16",
+          date: "2027-06-23",
           time: "11:00",
           maxCapacity: 8,
           active: true,
         },
         {
           id: 902,
-          date: "2027-06-16",
+          date: "2027-06-23",
           time: "14:00",
           maxCapacity: 8,
           active: true,
@@ -204,7 +204,7 @@ const selectionsByTrip = {
       sessions: [
         {
           id: 1001,
-          date: "2027-06-14",
+          date: "2027-06-21",
           time: "18:30",
           maxCapacity: 100,
           active: true,
