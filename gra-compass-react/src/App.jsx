@@ -21,6 +21,7 @@ import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmailAddressReport from "./pages/EmailAddressReport";
 import MailingLabelReport from "./pages/MailingLabelReport";
+import NameTagReport from "./pages/NameTagReport";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -133,6 +134,14 @@ const App = () => {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <MailingLabelReport registrationsByTrip={registrationsByTrip} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/name-tags"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <NameTagReport registrationsByTrip={registrationsByTrip} />
             </ProtectedRoute>
           }
         />

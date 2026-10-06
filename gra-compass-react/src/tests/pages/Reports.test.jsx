@@ -49,6 +49,11 @@ describe("Reports", () => {
         name: /Mailing Labels/,
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /Name Tag List/,
+      }),
+    ).toBeInTheDocument();
   });
   test("hides report builders when the trip selection is cleared", async () => {
     const user = userEvent.setup();
