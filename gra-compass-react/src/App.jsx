@@ -22,6 +22,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import EmailAddressReport from "./pages/EmailAddressReport";
 import MailingLabelReport from "./pages/MailingLabelReport";
 import NameTagReport from "./pages/NameTagReport";
+import ExcursionListReport from "./pages/ExcursionListReport";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -142,6 +143,14 @@ const App = () => {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <NameTagReport registrationsByTrip={registrationsByTrip} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/excursion-list"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ExcursionListReport registrationsByTrip={registrationsByTrip} />
             </ProtectedRoute>
           }
         />

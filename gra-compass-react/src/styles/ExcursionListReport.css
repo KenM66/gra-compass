@@ -1,0 +1,68 @@
+.excursion-list-report {
+    padding: 2rem;
+}
+
+.excursion-list-report h1 {
+    margin-bottom: 1.5rem;
+}
+
+.excursion-list-grid {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.excursion-list-grid th,
+.excursion-list-grid td {
+    border: 1px solid #d1d5db;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.excursion-list-grid th:nth-child(1),
+.excursion-list-grid td:nth-child(1) {
+    width: 20%;
+}
+
+.excursion-list-grid th:nth-child(2),
+.excursion-list-grid td:nth-child(2) {
+    width: 20%;
+}
+
+.excursion-list-grid th:nth-child(3),
+.excursion-list-grid td:nth-child(3) {
+    width: 20%;
+}
+
+.excursion-list-grid th:nth-child(4),
+.excursion-list-grid td:nth-child(4) {
+    width: 40%;
+}
+
+.excursion-list-grid th {
+    font-weight: 600;
+}
+
+.excursion-list-grid tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.excursion-list-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+@media print {
+    .excursion-list-actions {
+        display: none;
+    }
+
+    .excursion-list-report {
+        padding: 0;
+    }
+
+    .excursion-list-grid tbody tr:hover {
+        background-color: transparent;
+    }
+}
