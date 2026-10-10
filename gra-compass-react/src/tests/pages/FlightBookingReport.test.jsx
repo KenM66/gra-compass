@@ -278,6 +278,53 @@ describe("FlightBookingReport", () => {
       }),
     ).not.toBeInTheDocument();
   });
+  test("does not group a primary traveler with a guest who does not require flight booking", () => {
+    const registrationsByTrip = {
+      1: [
+        {
+          travelerNumber: "1001",
+          firstName: "Alex",
+          lastName: "Traveler",
+          bringingGuest: true,
+          airport: "CLE",
+          tsaPrecheck: true,
+          guest: {
+            firstName: "Jamie",
+            lastName: "Guest",
+            airport: "",
+            tsaPrecheck: false,
+          },
+        },
+      ],
+    };
+
+    renderFlightBookingReport({
+      registrationsByTrip,
+    });
+
+    expect(
+      screen.getByText("1 traveler requiring flight booking"),
+    ).toBeInTheDocument();
+
+    const alexCell = screen.getByRole("cell", {
+      name: "Alex",
+    });
+    const alexRow = alexCell.closest("tr");
+
+    expect(
+      within(alexRow).getByRole("cell", {
+        name: "CLE",
+      }),
+    ).toBeInTheDocument();
+
+    expect(alexRow).not.toHaveClass("flight-booking-primary-with-guest");
+
+    expect(
+      screen.queryByRole("cell", {
+        name: "Jamie",
+      }),
+    ).not.toBeInTheDocument();
+  });
   test("displays both primary traveler and guest when both require flight booking", () => {
     const registrationsByTrip = {
       1: [
