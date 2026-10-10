@@ -18,7 +18,7 @@ const registration = {
     email: "amanda@example.com",
     phone: "216-555-0123",
     dateOfBirth: "1988-09-22",
-    departureAirport: "CLE",
+    airport: "CLE",
     passportNumber: "987654321",
     passportExpiration: "2031-05-18",
     passportIssuingCountry: "United States",
@@ -232,10 +232,10 @@ describe("GuestDetails", () => {
     const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
     const updatedRegistrations = updateRegistrations(registrationsByTrip);
 
-    expect(updatedRegistrations[1][0].guest.departureAirport).toBe("JFK");
+    expect(updatedRegistrations[1][0].guest.airport).toBe("JFK");
     expect(updatedRegistrations[1][0].guest.passportNumber).toBe("ABC123456");
 
-    expect(updatedRegistrations[1][0].departureAirport).toBeUndefined();
+    expect(updatedRegistrations[1][0].guest.departureAirport).toBeUndefined();
     expect(updatedRegistrations[1][0].firstName).toBe("Robert");
   });
   test("saves updated guest accessibility and dietary information", async () => {
