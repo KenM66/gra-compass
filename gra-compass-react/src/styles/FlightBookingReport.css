@@ -42,6 +42,13 @@
   background-color: #f5f9f5;
   color: #2f7d32;
 }
+.flight-booking-report-table .flight-booking-primary-with-guest td {
+  border-bottom: none;
+}
+
+.flight-booking-report-table .flight-booking-guest-row td {
+  border-top: none;
+}
 
 .flight-booking-report-empty {
   text-align: center;

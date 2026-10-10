@@ -21,13 +21,14 @@ const FlightBookingReport = ({ registrationsByTrip }) => {
       airport: registration.airport,
       dateOfBirth: registration.dateOfBirth,
       sex: registration.sex,
-      nationality: registration.nationality,
-      citizenship: registration.citizenship,
       passportNumber: registration.passportNumber,
       passportExpiration: registration.passportExpiration,
       tsaPrecheck: registration.tsaPrecheck,
-      accessibility: registration.accessibility,
-      dietaryRequirements: registration.dietaryRequirements,
+      address: registration.address?.street || "",
+      city: registration.address?.city || "",
+      state: registration.address?.state || "",
+      zipCode: registration.address?.zipCode || "",
+      hasGuest: Boolean(registration.bringingGuest && registration.guest),
     };
 
     if (!registration.bringingGuest || !registration.guest) {
@@ -43,13 +44,13 @@ const FlightBookingReport = ({ registrationsByTrip }) => {
       airport: registration.guest.airport,
       dateOfBirth: registration.guest.dateOfBirth,
       sex: registration.guest.sex,
-      nationality: registration.guest.nationality,
-      citizenship: registration.guest.citizenship,
       passportNumber: registration.guest.passportNumber,
       passportExpiration: registration.guest.passportExpiration,
       tsaPrecheck: registration.guest.tsaPrecheck,
-      accessibility: registration.guest.accessibility,
-      dietaryRequirements: registration.guest.dietaryRequirements,
+      address: registration.guest.address?.street || "",
+      city: registration.guest.address?.city || "",
+      state: registration.guest.address?.state || "",
+      zipCode: registration.guest.address?.zipCode || "",
     };
 
     return [primaryTraveler, guest];
@@ -107,32 +108,41 @@ const FlightBookingReport = ({ registrationsByTrip }) => {
                 <th>Last Name</th>
                 <th>DOB</th>
                 <th>Sex</th>
-                <th>Nationality</th>
-                <th>Citizenship</th>
                 <th>Passport Number</th>
                 <th>Passport Expiration</th>
                 <th>TSA PreCheck</th>
-                <th>Accommodations</th>
-                <th>Dietary</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>State</th>
+                <th>ZIP</th>
               </tr>
             </thead>
 
             <tbody>
               {flightBookingTravelers.map((traveler) => (
-                <tr key={traveler.key}>
+                <tr
+                  key={traveler.key}
+                  className={
+                    traveler.travelerType === "Guest"
+                      ? "flight-booking-guest-row"
+                      : traveler.hasGuest
+                        ? "flight-booking-primary-with-guest"
+                        : ""
+                  }
+                >
                   <td>{traveler.airport}</td>
                   <td>{traveler.travelerType}</td>
                   <td>{traveler.firstName}</td>
                   <td>{traveler.lastName}</td>
                   <td>{traveler.dateOfBirth}</td>
                   <td>{traveler.sex}</td>
-                  <td>{traveler.nationality}</td>
-                  <td>{traveler.citizenship}</td>
                   <td>{traveler.passportNumber || "N/A"}</td>
                   <td>{traveler.passportExpiration || "N/A"}</td>
                   <td>{traveler.tsaPrecheck ? "Yes" : "No"}</td>
-                  <td>{traveler.accessibility || "None"}</td>
-                  <td>{traveler.dietaryRequirements || "None"}</td>
+                  <td>{traveler.address}</td>
+                  <td>{traveler.city}</td>
+                  <td>{traveler.state}</td>
+                  <td>{traveler.zipCode}</td>
                 </tr>
               ))}
             </tbody>

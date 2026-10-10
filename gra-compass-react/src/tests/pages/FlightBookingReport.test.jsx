@@ -67,13 +67,15 @@ describe("FlightBookingReport", () => {
           airport: "CLE",
           dateOfBirth: "1985-06-15",
           sex: "Male",
-          nationality: "American",
-          citizenship: "United States",
           passportNumber: "",
           passportExpiration: "",
           tsaPrecheck: true,
-          accessibility: "Wheelchair assistance",
-          dietaryRequirements: "Gluten-free",
+          address: {
+            street: "123 Main Street",
+            city: "Cleveland",
+            state: "OH",
+            zipCode: "44113",
+          },
         },
       ],
     };
@@ -124,16 +126,27 @@ describe("FlightBookingReport", () => {
 
     expect(
       screen.getByRole("cell", {
-        name: "Wheelchair assistance",
+        name: "123 Main Street",
       }),
     ).toBeInTheDocument();
 
     expect(
       screen.getByRole("cell", {
-        name: "Gluten-free",
+        name: "Cleveland",
       }),
     ).toBeInTheDocument();
 
+    expect(
+      screen.getByRole("cell", {
+        name: "OH",
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("cell", {
+        name: "44113",
+      }),
+    ).toBeInTheDocument();
     expect(
       screen.getAllByRole("cell", {
         name: "N/A",
@@ -145,6 +158,29 @@ describe("FlightBookingReport", () => {
         name: "Print / Save as PDF",
       }),
     ).toBeEnabled();
+    expect(
+      screen.queryByRole("columnheader", {
+        name: "Nationality",
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("columnheader", {
+        name: "Citizenship",
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("columnheader", {
+        name: "Accommodations",
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("columnheader", {
+        name: "Dietary",
+      }),
+    ).not.toBeInTheDocument();
   });
   test("displays a guest requiring flight booking", () => {
     const registrationsByTrip = {
@@ -161,13 +197,15 @@ describe("FlightBookingReport", () => {
             airport: "ORD",
             dateOfBirth: "1990-08-20",
             sex: "Female",
-            nationality: "American",
-            citizenship: "United States",
             passportNumber: "P12345678",
             passportExpiration: "2030-08-20",
             tsaPrecheck: false,
-            accessibility: "None",
-            dietaryRequirements: "Vegetarian",
+            address: {
+              street: "456 Oak Avenue",
+              city: "Chicago",
+              state: "IL",
+              zipCode: "60601",
+            },
           },
         },
       ],
@@ -210,10 +248,27 @@ describe("FlightBookingReport", () => {
         name: "No",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("cell", {
+        name: "456 Oak Avenue",
+      }),
+    ).toBeInTheDocument();
 
     expect(
       screen.getByRole("cell", {
-        name: "Vegetarian",
+        name: "Chicago",
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("cell", {
+        name: "IL",
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("cell", {
+        name: "60601",
       }),
     ).toBeInTheDocument();
 
@@ -278,6 +333,10 @@ describe("FlightBookingReport", () => {
       name: "Jamie",
     });
     const jamieRow = jamieCell.closest("tr");
+    expect(alexRow).toHaveClass("flight-booking-primary-with-guest");
+    expect(jamieRow).toHaveClass("flight-booking-guest-row");
+
+    expect(alexRow.nextElementSibling).toBe(jamieRow);
 
     expect(
       within(jamieRow).getByRole("cell", {
