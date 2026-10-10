@@ -22,7 +22,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const [isEditingTravelInfo, setIsEditingTravelInfo] = useState(false);
 
   const [editTravelInfo, setEditTravelInfo] = useState({
-    departureAirport: "",
+    airport: "",
     passportNumber: "",
     passportExpiration: "",
     passportIssuingCountry: "",
@@ -148,7 +148,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
 
   const handleCancelTravelInfo = () => {
     setEditTravelInfo({
-      departureAirport: guest.departureAirport || "",
+      airport: guest.departureAirport || "",
       passportNumber: guest.passportNumber || "",
       passportExpiration: guest.passportExpiration || "",
       passportIssuingCountry: guest.passportIssuingCountry || "",
@@ -380,7 +380,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             type="button"
             onClick={() => {
               setEditTravelInfo({
-                departureAirport: guest.departureAirport || "",
+                airport: guest.airport || "",
                 passportNumber: guest.passportNumber || "",
                 passportExpiration: guest.passportExpiration || "",
                 passportIssuingCountry: guest.passportIssuingCountry || "",
@@ -400,17 +400,17 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
           {isEditingTravelInfo ? (
             <input
               type="text"
-              value={editTravelInfo.departureAirport}
+              value={editTravelInfo.airport}
               onChange={(event) =>
                 setEditTravelInfo({
                   ...editTravelInfo,
-                  departureAirport: event.target.value.toUpperCase(),
+                  airport: event.target.value.toUpperCase(),
                 })
               }
               maxLength={3}
             />
           ) : (
-            <strong>{guest.departureAirport || ""}</strong>
+            <strong>{guest.airport || ""}</strong>
           )}
         </div>
 

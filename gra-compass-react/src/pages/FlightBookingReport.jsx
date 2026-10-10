@@ -28,7 +28,11 @@ const FlightBookingReport = ({ registrationsByTrip }) => {
       city: registration.address?.city || "",
       state: registration.address?.state || "",
       zipCode: registration.address?.zipCode || "",
-      hasGuest: Boolean(registration.bringingGuest && registration.guest),
+      hasGuest: Boolean(
+        registration.bringingGuest &&
+        registration.guest &&
+        registration.guest.airport,
+      ),
     };
 
     if (!registration.bringingGuest || !registration.guest) {
