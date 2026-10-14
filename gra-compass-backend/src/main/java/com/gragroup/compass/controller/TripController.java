@@ -1,3 +1,4 @@
+
 package com.gragroup.compass.controller;
 
 import com.gragroup.compass.model.Trip;
@@ -6,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+ 
 
 @RestController
 @RequestMapping("/api/trips")
