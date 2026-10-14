@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import com.gragroup.compass.dto.CreateTripRequest;
+import com.gragroup.compass.dto.UpdateTripRequest;
 
 @Service
 public class TripService {
@@ -24,15 +26,32 @@ public class TripService {
         return tripRepository.findById(id);
     }
 
-    public Trip createTrip(Trip trip) {
-        trip.setId(null);
+    public Trip createTrip(CreateTripRequest request) {
+        Trip trip = new Trip();
+
+        trip.setName(request.getName());
+        trip.setDestination(request.getDestination());
+        trip.setStartDate(request.getStartDate());
+        trip.setEndDate(request.getEndDate());
+        trip.setRegistrationCapacity(request.getRegistrationCapacity());
+        trip.setTravelerCapacity(request.getTravelerCapacity());
+        trip.setRegistrationCloseDate(request.getRegistrationCloseDate());
+
         trip.setRegistrationCount(0);
         trip.setRegistrationsPaused(false);
 
         return tripRepository.save(trip);
     }
 
-    public Trip saveTrip(Trip trip) {
+    public Trip updateTrip(Trip trip, UpdateTripRequest request) {
+        trip.setName(request.getName());
+        trip.setDestination(request.getDestination());
+        trip.setStartDate(request.getStartDate());
+        trip.setEndDate(request.getEndDate());
+        trip.setRegistrationCapacity(request.getRegistrationCapacity());
+        trip.setTravelerCapacity(request.getTravelerCapacity());
+        trip.setRegistrationCloseDate(request.getRegistrationCloseDate());
+
         return tripRepository.save(trip);
     }
 

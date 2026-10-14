@@ -5,9 +5,11 @@ import com.gragroup.compass.model.Trip;
 import com.gragroup.compass.service.TripService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.gragroup.compass.dto.CreateTripRequest;
+import com.gragroup.compass.dto.UpdateTripRequest;
+import jakarta.validation.Valid;
 
 import java.util.List;
- 
 
 @RestController
 @RequestMapping("/api/trips")
@@ -32,8 +34,10 @@ public class TripController {
     }
 
     @PostMapping
-    public ResponseEntity<Trip> createTrip(@RequestBody Trip trip) {
-        Trip createdTrip = tripService.createTrip(trip);
+    public ResponseEntity<Trip> createTrip(
+            @Valid @RequestBody CreateTripRequest request) {
+
+        Trip createdTrip = tripService.createTrip(request);
 
         return ResponseEntity.status(201).body(createdTrip);
     }
@@ -41,15 +45,12 @@ public class TripController {
     @PutMapping("/{id}")
     public ResponseEntity<Trip> updateTrip(
             @PathVariable String id,
-            @RequestBody Trip trip) {
+            @Valid @RequestBody UpdateTripRequest request) {
 
-        if (tripService.getTripById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        trip.setId(id);
-
-        return ResponseEntity.ok(tripService.saveTrip(trip));
+        return tripService.getTripById(id)
+                .map(existingTrip -> ResponseEntity.ok(
+                        tripService.updateTrip(existingTrip, request)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")

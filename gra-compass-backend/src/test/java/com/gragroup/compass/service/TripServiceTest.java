@@ -10,7 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import com.gragroup.compass.dto.CreateTripRequest;
+import com.gragroup.compass.dto.UpdateTripRequest;
 
 class TripServiceTest {
 
@@ -54,33 +57,56 @@ class TripServiceTest {
 
     @Test
     void createsTripWithBackendOwnedDefaults() {
-        Trip trip = new Trip();
-        trip.setId("frontend-generated-id");
-        trip.setName("Cancun Incentive Trip");
-        trip.setRegistrationCount(42);
-        trip.setRegistrationsPaused(true);
+        CreateTripRequest request = new CreateTripRequest();
+        request.setName("Cancun Incentive Trip");
+        request.setDestination("Cancun, Mexico");
+        request.setRegistrationCapacity(250);
+        request.setTravelerCapacity(300);
 
-        when(tripRepository.save(trip)).thenReturn(trip);
+        when(tripRepository.save(any(Trip.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Trip result = tripService.createTrip(trip);
+        Trip result = tripService.createTrip(request);
 
         assertNull(result.getId());
+        assertEquals("Cancun Incentive Trip", result.getName());
+        assertEquals("Cancun, Mexico", result.getDestination());
+        assertEquals(250, result.getRegistrationCapacity());
+        assertEquals(300, result.getTravelerCapacity());
         assertEquals(0, result.getRegistrationCount());
         assertFalse(result.isRegistrationsPaused());
-        verify(tripRepository).save(trip);
+
+        verify(tripRepository).save(any(Trip.class));
     }
 
     @Test
-    void savesTrip() {
-        Trip trip = new Trip();
-        trip.setId("trip123");
+    void updatesTripWithoutChangingBackendOwnedFields() {
+        Trip existingTrip = new Trip();
+        existingTrip.setId("trip123");
+        existingTrip.setName("Old Trip");
+        existingTrip.setRegistrationCount(42);
+        existingTrip.setRegistrationsPaused(true);
 
-        when(tripRepository.save(trip)).thenReturn(trip);
+        UpdateTripRequest request = new UpdateTripRequest();
+        request.setName("Updated Trip");
+        request.setDestination("Orlando, Florida");
+        request.setRegistrationCapacity(250);
+        request.setTravelerCapacity(300);
 
-        Trip result = tripService.saveTrip(trip);
+        when(tripRepository.save(existingTrip)).thenReturn(existingTrip);
 
-        assertSame(trip, result);
-        verify(tripRepository).save(trip);
+        Trip result = tripService.updateTrip(existingTrip, request);
+
+        assertEquals("trip123", result.getId());
+        assertEquals("Updated Trip", result.getName());
+        assertEquals("Orlando, Florida", result.getDestination());
+        assertEquals(250, result.getRegistrationCapacity());
+        assertEquals(300, result.getTravelerCapacity());
+
+        assertEquals(42, result.getRegistrationCount());
+        assertTrue(result.isRegistrationsPaused());
+
+        verify(tripRepository).save(existingTrip);
     }
 
     @Test
