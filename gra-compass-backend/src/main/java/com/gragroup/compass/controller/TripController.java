@@ -7,9 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.gragroup.compass.dto.CreateTripRequest;
 import com.gragroup.compass.dto.UpdateTripRequest;
+import com.gragroup.compass.dto.TripResponse;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/trips")
@@ -22,34 +24,42 @@ public class TripController {
     }
 
     @GetMapping
-    public List<Trip> getAllTrips() {
-        return tripService.getAllTrips();
+    public List<TripResponse> getAllTrips() {
+        return tripService.getAllTrips()
+                .stream()
+                .map(TripResponse::from)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Trip> getTripById(@PathVariable String id) {
+    public ResponseEntity<TripResponse> getTripById(@PathVariable String id) {
         return tripService.getTripById(id)
+                .map(TripResponse::from)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Trip> createTrip(
+    public ResponseEntity<TripResponse> createTrip(
             @Valid @RequestBody CreateTripRequest request) {
 
         Trip createdTrip = tripService.createTrip(request);
 
-        return ResponseEntity.status(201).body(createdTrip);
+        URI location = URI.create("/api/trips/" + createdTrip.getId());
+
+        return ResponseEntity.created(location)
+                .body(TripResponse.from(createdTrip));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Trip> updateTrip(
+    public ResponseEntity<TripResponse> updateTrip(
             @PathVariable String id,
             @Valid @RequestBody UpdateTripRequest request) {
 
         return tripService.getTripById(id)
-                .map(existingTrip -> ResponseEntity.ok(
+                .map(existingTrip -> TripResponse.from(
                         tripService.updateTrip(existingTrip, request)))
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 

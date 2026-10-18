@@ -18,6 +18,7 @@ import java.util.Optional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 import com.gragroup.compass.dto.CreateTripRequest;
 import com.gragroup.compass.dto.UpdateTripRequest;
@@ -95,6 +96,9 @@ class TripControllerTest {
                                                 }
                                                 """))
                                 .andExpect(status().isCreated())
+                                .andExpect(header().string(
+                                                "Location",
+                                                "/api/trips/trip456"))
                                 .andExpect(jsonPath("$.id").value("trip456"))
                                 .andExpect(jsonPath("$.name").value("Cancun Incentive Trip"))
                                 .andExpect(jsonPath("$.destination").value("Cancun, Mexico"));
