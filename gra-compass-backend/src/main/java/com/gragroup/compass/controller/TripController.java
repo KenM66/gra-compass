@@ -9,10 +9,12 @@ import com.gragroup.compass.dto.CreateTripRequest;
 import com.gragroup.compass.dto.UpdateTripRequest;
 import com.gragroup.compass.dto.TripResponse;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 import java.net.URI;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/trips")
 public class TripController {
