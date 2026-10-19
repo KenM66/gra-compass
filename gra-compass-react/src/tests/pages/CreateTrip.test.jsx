@@ -53,12 +53,12 @@ describe("CreateTrip", () => {
   });
   test("requires the trip name, destination, start date, and end date", async () => {
     const user = userEvent.setup();
-    const setTrips = vi.fn();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
-    renderCreateTrip({
-      setTrips,
-    });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+
+    const { store } = renderCreateTrip();
+
+    const tripsBeforeSubmit = store.getState().trips.items;
 
     await user.click(
       screen.getByRole("button", {
@@ -70,18 +70,18 @@ describe("CreateTrip", () => {
       "Trip name, destination, start date, and end date are required.",
     );
 
-    expect(setTrips).not.toHaveBeenCalled();
+    expect(store.getState().trips.items).toEqual(tripsBeforeSubmit);
 
     alertSpy.mockRestore();
   });
   test("does not create a trip when the end date is before the start date", async () => {
     const user = userEvent.setup();
-    const setTrips = vi.fn();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
-    renderCreateTrip({
-      setTrips,
-    });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+
+    const { store } = renderCreateTrip();
+
+    const tripsBeforeSubmit = store.getState().trips.items;
 
     await user.type(screen.getByLabelText("Trip Name"), "Cancún Adventure");
 
@@ -101,7 +101,9 @@ describe("CreateTrip", () => {
       "End date cannot be before the start date.",
     );
 
-    expect(setTrips).not.toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith(
+      "End date cannot be before the start date.",
+    );
 
     alertSpy.mockRestore();
   });
@@ -145,11 +147,8 @@ describe("CreateTrip", () => {
   });
   test("trims whitespace from the trip name and destination", async () => {
     const user = userEvent.setup();
-    const setTrips = vi.fn();
 
-    renderCreateTrip({
-      setTrips,
-    });
+    const { store } = renderCreateTrip();
 
     await user.type(
       screen.getByLabelText("Trip Name"),
@@ -171,12 +170,14 @@ describe("CreateTrip", () => {
       }),
     );
 
-    const updateTrips = setTrips.mock.calls[0][0];
-    const updatedTrips = updateTrips([]);
+    const trips = store.getState().trips.items;
+    const createdTrip = trips.find(
+      (trip) => trip.name === "Cancún Adventure",
+    );
 
-    expect(updatedTrips[0].name).toBe("Cancún Adventure");
+    expect(createdTrip.name).toBe("Cancún Adventure");
 
-    expect(updatedTrips[0].destination).toBe("Cancún, Mexico");
+    expect(createdTrip.destination).toBe("Cancún, Mexico");
   });
   test("displays a preview when a trip image is selected", async () => {
     const user = userEvent.setup();
@@ -205,18 +206,25 @@ describe("CreateTrip", () => {
   });
   test("navigates to the dashboard after successfully creating a trip", async () => {
     const user = userEvent.setup();
-    const setTrips = vi.fn();
+
+    const store = configureStore({
+      reducer: {
+        trips: tripsReducer,
+      },
+    });
 
     render(
-      <MemoryRouter initialEntries={["/trips/create"]}>
-        <Routes>
-          <Route
-            path="/trips/create"
-            element={<CreateTrip setTrips={setTrips} />}
-          />
-          <Route path="/" element={<div>Dashboard Destination</div>} />
-        </Routes>
-      </MemoryRouter>,
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/trips/create"]}>
+          <Routes>
+            <Route
+              path="/trips/create"
+              element={<CreateTrip />}
+            />
+            <Route path="/" element={<div>Dashboard Destination</div>} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
     );
 
     await user.type(screen.getByLabelText("Trip Name"), "Cancún Adventure");
