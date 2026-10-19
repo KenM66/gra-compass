@@ -15,7 +15,8 @@ import Settings from "./pages/Settings";
 import TripManagement from "./pages/TripManagement";
 import CreateTrip from "./pages/CreateTrip";
 import { useState } from "react";
-import tripsData from "./data/mockTrips";
+import { useSelector } from "react-redux";
+
 import registrationsData from "./data/mockRegistrations";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -29,7 +30,7 @@ const App = () => {
     sessionStorage.getItem("isAuthenticated") === "true",
   );
 
-  const [trips, setTrips] = useState(tripsData);
+  const trips = useSelector((state) => state.trips.items);
 
   const [registrationsByTrip, setRegistrationsByTrip] =
     useState(registrationsData);
@@ -177,7 +178,6 @@ const App = () => {
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <TripManagement
                 trips={trips}
-                setTrips={setTrips}
                 registrationsByTrip={registrationsByTrip}
               />
             </ProtectedRoute>
@@ -188,7 +188,7 @@ const App = () => {
           path="/trips/create"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <CreateTrip setTrips={setTrips} />
+              <CreateTrip />
             </ProtectedRoute>
           }
         />
