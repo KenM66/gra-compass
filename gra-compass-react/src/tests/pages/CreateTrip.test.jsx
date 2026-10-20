@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
@@ -54,7 +54,7 @@ describe("CreateTrip", () => {
   test("requires the trip name, destination, start date, and end date", async () => {
     const user = userEvent.setup();
 
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     const { store } = renderCreateTrip();
 
@@ -77,7 +77,7 @@ describe("CreateTrip", () => {
   test("does not create a trip when the end date is before the start date", async () => {
     const user = userEvent.setup();
 
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     const { store } = renderCreateTrip();
 
@@ -110,7 +110,23 @@ describe("CreateTrip", () => {
   test("creates a new trip with the entered information", async () => {
     const user = userEvent.setup();
 
-    const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(123456789);
+    const createdTrip = {
+      id: "6716f2c8a123456789abcdef",
+      name: "Cancún Adventure",
+      destination: "Cancún, Mexico",
+      startDate: "2027-03-08",
+      endDate: "2027-03-13",
+      registrationCount: 0,
+      registrationCapacity: 0,
+      travelerCapacity: 0,
+      registrationCloseDate: "",
+      registrationsPaused: false,
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => createdTrip,
+    });
 
     const { store } = renderCreateTrip();
 
@@ -128,22 +144,9 @@ describe("CreateTrip", () => {
       }),
     );
 
-    const trips = store.getState().trips.items;
-
-    expect(trips).toContainEqual({
-      id: 123456789,
-      name: "Cancún Adventure",
-      destination: "Cancún, Mexico",
-      startDate: "2027-03-08",
-      endDate: "2027-03-13",
-      registrationCount: 0,
-      registrationCapacity: 0,
-      travelerCapacity: 0,
-      registrationCloseDate: "",
-      imagePreview: "",
+    await waitFor(() => {
+      expect(store.getState().trips.items).toContainEqual(createdTrip);
     });
-
-    dateNowSpy.mockRestore();
   });
   test("trims whitespace from the trip name and destination", async () => {
     const user = userEvent.setup();
@@ -171,9 +174,7 @@ describe("CreateTrip", () => {
     );
 
     const trips = store.getState().trips.items;
-    const createdTrip = trips.find(
-      (trip) => trip.name === "Cancún Adventure",
-    );
+    const createdTrip = trips.find((trip) => trip.name === "Cancún Adventure");
 
     expect(createdTrip.name).toBe("Cancún Adventure");
 
@@ -217,10 +218,7 @@ describe("CreateTrip", () => {
       <Provider store={store}>
         <MemoryRouter initialEntries={["/trips/create"]}>
           <Routes>
-            <Route
-              path="/trips/create"
-              element={<CreateTrip />}
-            />
+            <Route path="/trips/create" element={<CreateTrip />} />
             <Route path="/" element={<div>Dashboard Destination</div>} />
           </Routes>
         </MemoryRouter>

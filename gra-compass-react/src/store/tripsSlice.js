@@ -11,6 +11,22 @@ export const fetchTrips = createAsyncThunk("trips/fetchTrips", async () => {
   return response.json();
 });
 
+export const createTrip = createAsyncThunk("trips/createTrip", async (trip) => {
+  const response = await fetch("http://localhost:8080/api/trips", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(trip),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create trip");
+  }
+
+  return response.json();
+});
+
 const initialState = {
   items: tripsData,
   status: "idle",
@@ -48,6 +64,9 @@ const tripsSlice = createSlice({
       .addCase(fetchTrips.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
+      })
+      .addCase(createTrip.fulfilled, (state, action) => {
+        state.items.push(action.payload);
       });
   },
 });
