@@ -27,6 +27,25 @@ export const createTrip = createAsyncThunk("trips/createTrip", async (trip) => {
   return response.json();
 });
 
+export const saveTrip = createAsyncThunk(
+  "trips/saveTrip",
+  async ({ id, changes }) => {
+    const response = await fetch(`http://localhost:8080/api/trips/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(changes),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update trip");
+    }
+
+    return response.json();
+  }
+);
+
 const initialState = {
   items: tripsData,
   status: "idle",
@@ -67,6 +86,17 @@ const tripsSlice = createSlice({
       })
       .addCase(createTrip.fulfilled, (state, action) => {
         state.items.push(action.payload);
+      })
+      .addCase(saveTrip.fulfilled, (state, action) => {
+        const updatedTrip = action.payload;
+
+        const index = state.items.findIndex(
+          (trip) => trip.id === updatedTrip.id
+        );
+
+        if (index !== -1) {
+          state.items[index] = updatedTrip;
+        }
       });
   },
 });

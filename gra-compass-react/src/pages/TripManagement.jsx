@@ -7,12 +7,12 @@ import RegistrationSummary from "../components/RegistrationSummary";
 import RegistrationSettings from "../components/RegistrationSettings";
 import RegistrationList from "../components/RegistrationList";
 import { useDispatch } from "react-redux";
-import { updateTrip } from "../store/tripsSlice";
+import { updateTrip, saveTrip } from "../store/tripsSlice";
 
 const TripManagement = ({ trips, registrationsByTrip }) => {
   const { tripId } = useParams();
   const dispatch = useDispatch();
-  const trip = trips.find((trip) => trip.id === Number(tripId));
+  const trip = trips.find((trip) => String(trip.id) === tripId);
   console.log("Current trip:", trip);
   const getRegistrationStatus = () => {
     if (!trip) {
@@ -138,14 +138,19 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     }
 
     dispatch(
-      updateTrip({
-        id: Number(tripId),
+      saveTrip({
+        id: trip.id,
         changes: {
           name: editTripName.trim(),
+          destination: trip.destination,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+          registrationCapacity: trip.registrationCapacity,
+          travelerCapacity: trip.travelerCapacity,
+          registrationCloseDate: trip.registrationCloseDate || null,
         },
       }),
     );
-
     showSavedFeedback("name");
   };
 
@@ -361,11 +366,11 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-            ...selection,
-            sessions: selection.sessions.filter(
-              (session) => session.id !== sessionId,
-            ),
-          }
+          ...selection,
+          sessions: selection.sessions.filter(
+            (session) => session.id !== sessionId,
+          ),
+        }
         : selection,
     );
 
@@ -382,16 +387,16 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-            ...selection,
-            sessions: selection.sessions.map((session) =>
-              session.id === sessionId
-                ? {
-                    ...session,
-                    active: !session.active,
-                  }
-                : session,
-            ),
-          }
+          ...selection,
+          sessions: selection.sessions.map((session) =>
+            session.id === sessionId
+              ? {
+                ...session,
+                active: !session.active,
+              }
+              : session,
+          ),
+        }
         : selection,
     );
 
@@ -450,9 +455,9 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-            ...selection,
-            sessions: [...selection.sessions, newSession],
-          }
+          ...selection,
+          sessions: [...selection.sessions, newSession],
+        }
         : selection,
     );
 
@@ -474,10 +479,10 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-            ...selection,
-            type: selectionType.trim(),
-            name: selectionName.trim(),
-          }
+          ...selection,
+          type: selectionType.trim(),
+          name: selectionName.trim(),
+        }
         : selection,
     );
 
@@ -521,18 +526,18 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-            ...selection,
-            sessions: selection.sessions.map((session) =>
-              session.id === sessionId
-                ? {
-                    ...session,
-                    date: sessionDate,
-                    time: sessionTime,
-                    maxCapacity: newCapacity,
-                  }
-                : session,
-            ),
-          }
+          ...selection,
+          sessions: selection.sessions.map((session) =>
+            session.id === sessionId
+              ? {
+                ...session,
+                date: sessionDate,
+                time: sessionTime,
+                maxCapacity: newCapacity,
+              }
+              : session,
+          ),
+        }
         : selection,
     );
 
