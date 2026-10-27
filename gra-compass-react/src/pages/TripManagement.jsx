@@ -161,10 +161,16 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     }
 
     dispatch(
-      updateTrip({
-        id: Number(tripId),
+      saveTrip({
+        id: trip.id,
         changes: {
+          name: trip.name,
           destination: editDestination.trim(),
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+          registrationCapacity: trip.registrationCapacity,
+          travelerCapacity: trip.travelerCapacity,
+          registrationCloseDate: trip.registrationCloseDate || null,
         },
       }),
     );
@@ -209,12 +215,16 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     }
 
     dispatch(
-      updateTrip({
-        id: Number(tripId),
+      saveTrip({
+        id: trip.id,
         changes: {
+          name: trip.name,
+          destination: trip.destination,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
           registrationCapacity: newRegistrationCapacity,
           travelerCapacity: newTravelerCapacity,
-          registrationCloseDate,
+          registrationCloseDate: registrationCloseDate || null,
         },
       }),
     );
@@ -229,10 +239,16 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     }
 
     dispatch(
-      updateTrip({
-        id: Number(tripId),
+      saveTrip({
+        id: trip.id,
         changes: {
+          name: trip.name,
+          destination: trip.destination,
           startDate: editStartDate,
+          endDate: trip.endDate,
+          registrationCapacity: trip.registrationCapacity,
+          travelerCapacity: trip.travelerCapacity,
+          registrationCloseDate: trip.registrationCloseDate || null,
         },
       }),
     );
@@ -252,10 +268,16 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     }
 
     dispatch(
-      updateTrip({
-        id: Number(tripId),
+      saveTrip({
+        id: trip.id,
         changes: {
+          name: trip.name,
+          destination: trip.destination,
+          startDate: trip.startDate,
           endDate: editEndDate,
+          registrationCapacity: trip.registrationCapacity,
+          travelerCapacity: trip.travelerCapacity,
+          registrationCloseDate: trip.registrationCloseDate || null,
         },
       }),
     );

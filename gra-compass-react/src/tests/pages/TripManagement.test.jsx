@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
@@ -124,6 +124,16 @@ describe("TripManagement", () => {
   test("edits and saves the trip name", async () => {
     const user = userEvent.setup();
 
+    const updatedTripResponse = {
+      ...trip,
+      name: "Cancun Adventure",
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedTripResponse,
+    });
+
     const { store } = renderTripManagement();
 
     await user.click(
@@ -143,13 +153,15 @@ describe("TripManagement", () => {
 
     await user.click(saveButtons[0]);
 
-    const updatedTrip = store
-      .getState()
-      .trips.items.find((trip) => trip.id === 1);
+    await waitFor(() => {
+      const updatedTrip = store
+        .getState()
+        .trips.items.find((trip) => trip.id === 1);
 
-    expect(updatedTrip.name).toBe("Cancun Adventure");
-    expect(updatedTrip.destination).toBe("Cancun, Mexico");
-    expect(updatedTrip.id).toBe(1);
+      expect(updatedTrip.name).toBe("Cancun Adventure");
+      expect(updatedTrip.destination).toBe("Cancun, Mexico");
+      expect(updatedTrip.id).toBe(1);
+    });
   });
   test("does not save an empty trip name", async () => {
     const user = userEvent.setup();
@@ -335,6 +347,18 @@ describe("TripManagement", () => {
   test("saves valid registration settings", async () => {
     const user = userEvent.setup();
 
+    const updatedTripResponse = {
+      ...trip,
+      registrationCapacity: 75,
+      travelerCapacity: 125,
+      registrationCloseDate: "2027-02-20",
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedTripResponse,
+    });
+
     const { store } = renderTripManagement();
 
     await user.click(
@@ -364,13 +388,15 @@ describe("TripManagement", () => {
       }),
     );
 
-    const updatedTrip = store
-      .getState()
-      .trips.items.find((trip) => trip.id === 1);
+    await waitFor(() => {
+      const updatedTrip = store
+        .getState()
+        .trips.items.find((trip) => trip.id === 1);
 
-    expect(updatedTrip.registrationCapacity).toBe(75);
-    expect(updatedTrip.travelerCapacity).toBe(125);
-    expect(updatedTrip.registrationCloseDate).toBe("2027-02-20");
+      expect(updatedTrip.registrationCapacity).toBe(75);
+      expect(updatedTrip.travelerCapacity).toBe(125);
+      expect(updatedTrip.registrationCloseDate).toBe("2027-02-20");
+    });
 
     expect(
       screen.getByRole("heading", {
