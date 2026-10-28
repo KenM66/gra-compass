@@ -178,6 +178,78 @@ class TripControllerTest {
         }
 
         @Test
+        void returnsNotFoundWhenPausingRegistrationsForMissingTrip() throws Exception {
+                when(tripService.getTripById("missing"))
+                                .thenReturn(Optional.empty());
+
+                mockMvc.perform(put("/api/trips/missing/pause-registrations"))
+                                .andExpect(status().isNotFound());
+
+                org.mockito.Mockito.verify(
+                                tripService,
+                                org.mockito.Mockito.never())
+                                .pauseRegistrations(org.mockito.ArgumentMatchers.any(Trip.class));
+        }
+
+        @Test
+        void returnsNotFoundWhenResumingRegistrationsForMissingTrip() throws Exception {
+                when(tripService.getTripById("missing"))
+                                .thenReturn(Optional.empty());
+
+                mockMvc.perform(put("/api/trips/missing/resume-registrations"))
+                                .andExpect(status().isNotFound());
+
+                org.mockito.Mockito.verify(
+                                tripService,
+                                org.mockito.Mockito.never())
+                                .resumeRegistrations(org.mockito.ArgumentMatchers.any(Trip.class));
+        }
+
+        @Test
+        void pausesRegistrations() throws Exception {
+                Trip existingTrip = new Trip();
+                existingTrip.setId("trip123");
+                existingTrip.setRegistrationsPaused(false);
+
+                Trip pausedTrip = new Trip();
+                pausedTrip.setId("trip123");
+                pausedTrip.setRegistrationsPaused(true);
+
+                when(tripService.getTripById("trip123"))
+                                .thenReturn(Optional.of(existingTrip));
+
+                when(tripService.pauseRegistrations(existingTrip))
+                                .thenReturn(pausedTrip);
+
+                mockMvc.perform(put("/api/trips/trip123/pause-registrations"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value("trip123"))
+                                .andExpect(jsonPath("$.registrationsPaused").value(true));
+        }
+
+        @Test
+        void resumesRegistrations() throws Exception {
+                Trip existingTrip = new Trip();
+                existingTrip.setId("trip123");
+                existingTrip.setRegistrationsPaused(true);
+
+                Trip resumedTrip = new Trip();
+                resumedTrip.setId("trip123");
+                resumedTrip.setRegistrationsPaused(false);
+
+                when(tripService.getTripById("trip123"))
+                                .thenReturn(Optional.of(existingTrip));
+
+                when(tripService.resumeRegistrations(existingTrip))
+                                .thenReturn(resumedTrip);
+
+                mockMvc.perform(put("/api/trips/trip123/resume-registrations"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value("trip123"))
+                                .andExpect(jsonPath("$.registrationsPaused").value(false));
+        }
+
+        @Test
         void deletesTrip() throws Exception {
                 Trip existingTrip = new Trip();
                 existingTrip.setId("trip123");

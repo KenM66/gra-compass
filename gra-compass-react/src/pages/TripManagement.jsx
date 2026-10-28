@@ -6,10 +6,18 @@ import SelectionCard from "../components/SelectionCard";
 import RegistrationSummary from "../components/RegistrationSummary";
 import RegistrationSettings from "../components/RegistrationSettings";
 import RegistrationList from "../components/RegistrationList";
+import { useDispatch } from "react-redux";
+import {
+  updateTrip,
+  saveTrip,
+  pauseRegistrations,
+  resumeRegistrations,
+} from "../store/tripsSlice";
 
-const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
+const TripManagement = ({ trips, registrationsByTrip }) => {
   const { tripId } = useParams();
-  const trip = trips.find((trip) => trip.id === Number(tripId));
+  const dispatch = useDispatch();
+  const trip = trips.find((trip) => String(trip.id) === tripId);
   console.log("Current trip:", trip);
   const getRegistrationStatus = () => {
     if (!trip) {
@@ -134,15 +142,19 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
       return;
     }
 
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              name: editTripName.trim(),
-            }
-          : currentTrip,
-      ),
+    dispatch(
+      saveTrip({
+        id: trip.id,
+        changes: {
+          name: editTripName.trim(),
+          destination: trip.destination,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+          registrationCapacity: trip.registrationCapacity,
+          travelerCapacity: trip.travelerCapacity,
+          registrationCloseDate: trip.registrationCloseDate || null,
+        },
+      }),
     );
     showSavedFeedback("name");
   };
@@ -153,16 +165,21 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
       return;
     }
 
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              destination: editDestination.trim(),
-            }
-          : currentTrip,
-      ),
+    dispatch(
+      saveTrip({
+        id: trip.id,
+        changes: {
+          name: trip.name,
+          destination: editDestination.trim(),
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+          registrationCapacity: trip.registrationCapacity,
+          travelerCapacity: trip.travelerCapacity,
+          registrationCloseDate: trip.registrationCloseDate || null,
+        },
+      }),
     );
+
     showSavedFeedback("destination");
   };
 
@@ -202,17 +219,19 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
       return;
     }
 
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              registrationCapacity: newRegistrationCapacity,
-              travelerCapacity: newTravelerCapacity,
-              registrationCloseDate,
-            }
-          : currentTrip,
-      ),
+    dispatch(
+      saveTrip({
+        id: trip.id,
+        changes: {
+          name: trip.name,
+          destination: trip.destination,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+          registrationCapacity: newRegistrationCapacity,
+          travelerCapacity: newTravelerCapacity,
+          registrationCloseDate: registrationCloseDate || null,
+        },
+      }),
     );
 
     setEditingRegistrationSettings(false);
@@ -224,16 +243,21 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
       return;
     }
 
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              startDate: editStartDate,
-            }
-          : currentTrip,
-      ),
+    dispatch(
+      saveTrip({
+        id: trip.id,
+        changes: {
+          name: trip.name,
+          destination: trip.destination,
+          startDate: editStartDate,
+          endDate: trip.endDate,
+          registrationCapacity: trip.registrationCapacity,
+          travelerCapacity: trip.travelerCapacity,
+          registrationCloseDate: trip.registrationCloseDate || null,
+        },
+      }),
     );
+
     showSavedFeedback("startDate");
   };
 
@@ -248,16 +272,21 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
       return;
     }
 
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              endDate: editEndDate,
-            }
-          : currentTrip,
-      ),
+    dispatch(
+      saveTrip({
+        id: trip.id,
+        changes: {
+          name: trip.name,
+          destination: trip.destination,
+          startDate: trip.startDate,
+          endDate: editEndDate,
+          registrationCapacity: trip.registrationCapacity,
+          travelerCapacity: trip.travelerCapacity,
+          registrationCloseDate: trip.registrationCloseDate || null,
+        },
+      }),
     );
+
     showSavedFeedback("endDate");
   };
   const handleSaveTripImage = () => {
@@ -266,15 +295,13 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
       return;
     }
 
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              imagePreview: editImagePreview,
-            }
-          : currentTrip,
-      ),
+    dispatch(
+      updateTrip({
+        id: Number(tripId),
+        changes: {
+          imagePreview: editImagePreview,
+        },
+      }),
     );
 
     showSavedFeedback("image");
@@ -404,29 +431,11 @@ const TripManagement = ({ trips, setTrips, registrationsByTrip }) => {
   };
 
   const handlePauseRegistrations = () => {
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              registrationsPaused: true,
-            }
-          : currentTrip,
-      ),
-    );
+    dispatch(pauseRegistrations(trip.id));
   };
 
   const handleResumeRegistrations = () => {
-    setTrips((currentTrips) =>
-      currentTrips.map((currentTrip) =>
-        currentTrip.id === Number(tripId)
-          ? {
-              ...currentTrip,
-              registrationsPaused: false,
-            }
-          : currentTrip,
-      ),
-    );
+    dispatch(resumeRegistrations(trip.id));
   };
 
   const handleAddSession = (

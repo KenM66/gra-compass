@@ -110,6 +110,40 @@ class TripServiceTest {
     }
 
     @Test
+    void pausesRegistrations() {
+        Trip trip = new Trip();
+        trip.setId("trip123");
+        trip.setName("Cancun Incentive Trip");
+        trip.setRegistrationsPaused(false);
+
+        when(tripRepository.save(trip)).thenReturn(trip);
+
+        Trip result = tripService.pauseRegistrations(trip);
+
+        assertTrue(result.isRegistrationsPaused());
+        assertEquals("Cancun Incentive Trip", result.getName());
+
+        verify(tripRepository).save(trip);
+    }
+
+    @Test
+    void resumesRegistrations() {
+        Trip trip = new Trip();
+        trip.setId("trip123");
+        trip.setName("Cancun Incentive Trip");
+        trip.setRegistrationsPaused(true);
+
+        when(tripRepository.save(trip)).thenReturn(trip);
+
+        Trip result = tripService.resumeRegistrations(trip);
+
+        assertFalse(result.isRegistrationsPaused());
+        assertEquals("Cancun Incentive Trip", result.getName());
+
+        verify(tripRepository).save(trip);
+    }
+
+    @Test
     void deletesTrip() {
         tripService.deleteTrip("trip123");
 

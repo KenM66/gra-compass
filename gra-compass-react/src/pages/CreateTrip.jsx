@@ -1,8 +1,10 @@
 import { useState } from "react";
 import "../styles/CreateTrip.css";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { createTrip } from "../store/tripsSlice";
 
-const CreateTrip = ({ setTrips }) => {
+const CreateTrip = () => {
   const [tripName, setTripName] = useState("");
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -11,8 +13,9 @@ const CreateTrip = ({ setTrips }) => {
   const [imagePreview, setImagePreview] = useState("");
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (endDate < startDate) {
       alert("End date cannot be before the start date.");
@@ -37,7 +40,7 @@ const CreateTrip = ({ setTrips }) => {
       imagePreview,
     };
 
-    setTrips((currentTrips) => [...currentTrips, newTrip]);
+    await dispatch(createTrip(newTrip)).unwrap();
 
     navigate("/");
   };

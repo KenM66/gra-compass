@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.net.URI;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/trips")
 public class TripController {
@@ -59,6 +60,28 @@ public class TripController {
         return tripService.getTripById(id)
                 .map(existingTrip -> TripResponse.from(
                         tripService.updateTrip(existingTrip, request)))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/pause-registrations")
+    public ResponseEntity<TripResponse> pauseRegistrations(
+            @PathVariable String id) {
+
+        return tripService.getTripById(id)
+                .map(existingTrip -> TripResponse.from(
+                        tripService.pauseRegistrations(existingTrip)))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/resume-registrations")
+    public ResponseEntity<TripResponse> resumeRegistrations(
+            @PathVariable String id) {
+
+        return tripService.getTripById(id)
+                .map(existingTrip -> TripResponse.from(
+                        tripService.resumeRegistrations(existingTrip)))
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

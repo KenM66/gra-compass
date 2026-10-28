@@ -55,6 +55,16 @@ public class TripService {
         return tripRepository.save(trip);
     }
 
+    public Trip pauseRegistrations(Trip trip) {
+        trip.setRegistrationsPaused(true);
+        return tripRepository.save(trip);
+    }
+
+    public Trip resumeRegistrations(Trip trip) {
+        trip.setRegistrationsPaused(false);
+        return tripRepository.save(trip);
+    }
+
     public void deleteTrip(String id) {
         tripRepository.deleteById(id);
     }

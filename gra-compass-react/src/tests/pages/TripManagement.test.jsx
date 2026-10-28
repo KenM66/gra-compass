@@ -1,7 +1,10 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import tripsReducer from "../../store/tripsSlice";
 import TripManagement from "../../pages/TripManagement";
 
 const trip = {
@@ -26,26 +29,36 @@ const renderTripManagement = ({
   testRegistrationsByTrip = registrationsByTrip,
   initialEntry = "/trips/1/manage",
 } = {}) => {
-  const setTrips = vi.fn();
+  const store = configureStore({
+    reducer: {
+      trips: tripsReducer,
+    },
+    preloadedState: {
+      trips: {
+        items: testTrips,
+      },
+    },
+  });
 
   render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <Routes>
-        <Route
-          path="/trips/:tripId/manage"
-          element={
-            <TripManagement
-              trips={testTrips}
-              setTrips={setTrips}
-              registrationsByTrip={testRegistrationsByTrip}
-            />
-          }
-        />
-      </Routes>
-    </MemoryRouter>,
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route
+            path="/trips/:tripId/manage"
+            element={
+              <TripManagement
+                trips={testTrips}
+                registrationsByTrip={testRegistrationsByTrip}
+              />
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    </Provider>,
   );
 
-  return { setTrips };
+  return { store };
 };
 
 describe("TripManagement", () => {
@@ -111,7 +124,17 @@ describe("TripManagement", () => {
   test("edits and saves the trip name", async () => {
     const user = userEvent.setup();
 
-    const { setTrips } = renderTripManagement();
+    const updatedTripResponse = {
+      ...trip,
+      name: "Cancun Adventure",
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedTripResponse,
+    });
+
+    const { store } = renderTripManagement();
 
     await user.click(
       screen.getByRole("button", {
@@ -130,20 +153,23 @@ describe("TripManagement", () => {
 
     await user.click(saveButtons[0]);
 
-    expect(setTrips).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      const updatedTrip = store
+        .getState()
+        .trips.items.find((trip) => trip.id === 1);
 
-    const updateTrips = setTrips.mock.calls[0][0];
-    const updatedTrips = updateTrips([trip]);
-
-    expect(updatedTrips[0].name).toBe("Cancun Adventure");
-    expect(updatedTrips[0].destination).toBe("Cancun, Mexico");
-    expect(updatedTrips[0].id).toBe(1);
+      expect(updatedTrip.name).toBe("Cancun Adventure");
+      expect(updatedTrip.destination).toBe("Cancun, Mexico");
+      expect(updatedTrip.id).toBe(1);
+    });
   });
   test("does not save an empty trip name", async () => {
     const user = userEvent.setup();
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
-    const { setTrips } = renderTripManagement();
+    const { store } = renderTripManagement();
+
+    const tripsBeforeSave = store.getState().trips.items;
 
     await user.click(
       screen.getByRole("button", {
@@ -162,7 +188,7 @@ describe("TripManagement", () => {
     await user.click(saveButtons[0]);
 
     expect(alertSpy).toHaveBeenCalledWith("Trip name is required.");
-    expect(setTrips).not.toHaveBeenCalled();
+    expect(store.getState().trips.items).toEqual(tripsBeforeSave);
 
     alertSpy.mockRestore();
   });
@@ -170,7 +196,9 @@ describe("TripManagement", () => {
     const user = userEvent.setup();
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
-    const { setTrips } = renderTripManagement();
+    const { store } = renderTripManagement();
+
+    const tripsBeforeSave = store.getState().trips.items;
 
     await user.click(
       screen.getByRole("button", {
@@ -192,7 +220,7 @@ describe("TripManagement", () => {
       "End date cannot be before the start date.",
     );
 
-    expect(setTrips).not.toHaveBeenCalled();
+    expect(store.getState().trips.items).toEqual(tripsBeforeSave);
 
     alertSpy.mockRestore();
   });
@@ -220,9 +248,11 @@ describe("TripManagement", () => {
       ],
     };
 
-    const { setTrips } = renderTripManagement({
+    const { store } = renderTripManagement({
       testRegistrationsByTrip,
     });
+
+    const tripsBeforeSave = store.getState().trips.items;
 
     await user.click(
       screen.getByRole("button", {
@@ -247,7 +277,7 @@ describe("TripManagement", () => {
       "Registration capacity cannot be lower than the 3 existing registrations.",
     );
 
-    expect(setTrips).not.toHaveBeenCalled();
+    expect(store.getState().trips.items).toEqual(tripsBeforeSave);
 
     alertSpy.mockRestore();
   });
@@ -276,9 +306,11 @@ describe("TripManagement", () => {
       ],
     };
 
-    const { setTrips } = renderTripManagement({
+    const { store } = renderTripManagement({
       testRegistrationsByTrip,
     });
+
+    const tripsBeforeSave = store.getState().trips.items;
 
     await user.click(
       screen.getByRole("button", {
@@ -308,14 +340,26 @@ describe("TripManagement", () => {
       "Traveler capacity cannot be lower than the 3 existing travelers.",
     );
 
-    expect(setTrips).not.toHaveBeenCalled();
+    expect(store.getState().trips.items).toEqual(tripsBeforeSave);
 
     alertSpy.mockRestore();
   });
   test("saves valid registration settings", async () => {
     const user = userEvent.setup();
 
-    const { setTrips } = renderTripManagement();
+    const updatedTripResponse = {
+      ...trip,
+      registrationCapacity: 75,
+      travelerCapacity: 125,
+      registrationCloseDate: "2027-02-20",
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedTripResponse,
+    });
+
+    const { store } = renderTripManagement();
 
     await user.click(
       screen.getByRole("button", {
@@ -344,14 +388,15 @@ describe("TripManagement", () => {
       }),
     );
 
-    expect(setTrips).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      const updatedTrip = store
+        .getState()
+        .trips.items.find((trip) => trip.id === 1);
 
-    const updateTrips = setTrips.mock.calls[0][0];
-    const updatedTrips = updateTrips([trip]);
-
-    expect(updatedTrips[0].registrationCapacity).toBe(75);
-    expect(updatedTrips[0].travelerCapacity).toBe(125);
-    expect(updatedTrips[0].registrationCloseDate).toBe("2027-02-20");
+      expect(updatedTrip.registrationCapacity).toBe(75);
+      expect(updatedTrip.travelerCapacity).toBe(125);
+      expect(updatedTrip.registrationCloseDate).toBe("2027-02-20");
+    });
 
     expect(
       screen.getByRole("heading", {
@@ -362,7 +407,17 @@ describe("TripManagement", () => {
   test("pauses registrations", async () => {
     const user = userEvent.setup();
 
-    const { setTrips } = renderTripManagement();
+    const pausedTripResponse = {
+      ...trip,
+      registrationsPaused: true,
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => pausedTripResponse,
+    });
+
+    const { store } = renderTripManagement();
 
     await user.click(
       screen.getByRole("button", {
@@ -376,14 +431,16 @@ describe("TripManagement", () => {
       }),
     );
 
-    expect(setTrips).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      const updatedTrip = store
+        .getState()
+        .trips.items.find((trip) => trip.id === 1);
 
-    const updateTrips = setTrips.mock.calls[0][0];
-    const updatedTrips = updateTrips([trip]);
-
-    expect(updatedTrips[0].registrationsPaused).toBe(true);
-    expect(updatedTrips[0].name).toBe("Cancun Incentive Trip");
+      expect(updatedTrip.registrationsPaused).toBe(true);
+      expect(updatedTrip.name).toBe("Cancun Incentive Trip");
+    });
   });
+
   test("resumes paused registrations", async () => {
     const user = userEvent.setup();
 
@@ -392,7 +449,17 @@ describe("TripManagement", () => {
       registrationsPaused: true,
     };
 
-    const { setTrips } = renderTripManagement({
+    const resumedTripResponse = {
+      ...trip,
+      registrationsPaused: false,
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => resumedTripResponse,
+    });
+
+    const { store } = renderTripManagement({
       testTrips: [pausedTrip],
     });
 
@@ -408,12 +475,13 @@ describe("TripManagement", () => {
       }),
     );
 
-    expect(setTrips).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      const updatedTrip = store
+        .getState()
+        .trips.items.find((trip) => trip.id === 1);
 
-    const updateTrips = setTrips.mock.calls[0][0];
-    const updatedTrips = updateTrips([pausedTrip]);
-
-    expect(updatedTrips[0].registrationsPaused).toBe(false);
+      expect(updatedTrip.registrationsPaused).toBe(false);
+    });
   });
   test("requires selection details before adding a trip selection", async () => {
     const user = userEvent.setup();
