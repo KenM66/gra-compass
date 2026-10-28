@@ -9,7 +9,6 @@ import com.gragroup.compass.dto.CreateTripRequest;
 import com.gragroup.compass.dto.UpdateTripRequest;
 import com.gragroup.compass.dto.TripResponse;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 import java.net.URI;
@@ -61,6 +60,28 @@ public class TripController {
         return tripService.getTripById(id)
                 .map(existingTrip -> TripResponse.from(
                         tripService.updateTrip(existingTrip, request)))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/pause-registrations")
+    public ResponseEntity<TripResponse> pauseRegistrations(
+            @PathVariable String id) {
+
+        return tripService.getTripById(id)
+                .map(existingTrip -> TripResponse.from(
+                        tripService.pauseRegistrations(existingTrip)))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/resume-registrations")
+    public ResponseEntity<TripResponse> resumeRegistrations(
+            @PathVariable String id) {
+
+        return tripService.getTripById(id)
+                .map(existingTrip -> TripResponse.from(
+                        tripService.resumeRegistrations(existingTrip)))
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

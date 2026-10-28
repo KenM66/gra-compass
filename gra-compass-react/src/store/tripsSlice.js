@@ -43,7 +43,43 @@ export const saveTrip = createAsyncThunk(
     }
 
     return response.json();
-  }
+  },
+);
+
+export const pauseRegistrations = createAsyncThunk(
+  "trips/pauseRegistrations",
+  async (id) => {
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${id}/pause-registrations`,
+      {
+        method: "PUT",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to pause registrations");
+    }
+
+    return response.json();
+  },
+);
+
+export const resumeRegistrations = createAsyncThunk(
+  "trips/resumeRegistrations",
+  async (id) => {
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${id}/resume-registrations`,
+      {
+        method: "PUT",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to resume registrations");
+    }
+
+    return response.json();
+  },
 );
 
 const initialState = {
@@ -91,7 +127,29 @@ const tripsSlice = createSlice({
         const updatedTrip = action.payload;
 
         const index = state.items.findIndex(
-          (trip) => trip.id === updatedTrip.id
+          (trip) => trip.id === updatedTrip.id,
+        );
+
+        if (index !== -1) {
+          state.items[index] = updatedTrip;
+        }
+      })
+      .addCase(pauseRegistrations.fulfilled, (state, action) => {
+        const updatedTrip = action.payload;
+
+        const index = state.items.findIndex(
+          (trip) => trip.id === updatedTrip.id,
+        );
+
+        if (index !== -1) {
+          state.items[index] = updatedTrip;
+        }
+      })
+      .addCase(resumeRegistrations.fulfilled, (state, action) => {
+        const updatedTrip = action.payload;
+
+        const index = state.items.findIndex(
+          (trip) => trip.id === updatedTrip.id,
         );
 
         if (index !== -1) {

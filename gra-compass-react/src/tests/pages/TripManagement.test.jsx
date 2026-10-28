@@ -165,7 +165,7 @@ describe("TripManagement", () => {
   });
   test("does not save an empty trip name", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     const { store } = renderTripManagement();
 
@@ -194,7 +194,7 @@ describe("TripManagement", () => {
   });
   test("does not save an end date before the start date", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     const { store } = renderTripManagement();
 
@@ -226,7 +226,7 @@ describe("TripManagement", () => {
   });
   test("does not allow registration capacity below existing registrations", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     const testRegistrationsByTrip = {
       1: [
@@ -283,7 +283,7 @@ describe("TripManagement", () => {
   });
   test("does not allow traveler capacity below existing travelers including guests", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     const testRegistrationsByTrip = {
       1: [
@@ -407,6 +407,16 @@ describe("TripManagement", () => {
   test("pauses registrations", async () => {
     const user = userEvent.setup();
 
+    const pausedTripResponse = {
+      ...trip,
+      registrationsPaused: true,
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => pausedTripResponse,
+    });
+
     const { store } = renderTripManagement();
 
     await user.click(
@@ -421,12 +431,14 @@ describe("TripManagement", () => {
       }),
     );
 
-    const updatedTrip = store
-      .getState()
-      .trips.items.find((trip) => trip.id === 1);
+    await waitFor(() => {
+      const updatedTrip = store
+        .getState()
+        .trips.items.find((trip) => trip.id === 1);
 
-    expect(updatedTrip.registrationsPaused).toBe(true);
-    expect(updatedTrip.name).toBe("Cancun Incentive Trip");
+      expect(updatedTrip.registrationsPaused).toBe(true);
+      expect(updatedTrip.name).toBe("Cancun Incentive Trip");
+    });
   });
 
   test("resumes paused registrations", async () => {
@@ -436,6 +448,16 @@ describe("TripManagement", () => {
       ...trip,
       registrationsPaused: true,
     };
+
+    const resumedTripResponse = {
+      ...trip,
+      registrationsPaused: false,
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => resumedTripResponse,
+    });
 
     const { store } = renderTripManagement({
       testTrips: [pausedTrip],
@@ -453,15 +475,17 @@ describe("TripManagement", () => {
       }),
     );
 
-    const updatedTrip = store
-      .getState()
-      .trips.items.find((trip) => trip.id === 1);
+    await waitFor(() => {
+      const updatedTrip = store
+        .getState()
+        .trips.items.find((trip) => trip.id === 1);
 
-    expect(updatedTrip.registrationsPaused).toBe(false);
+      expect(updatedTrip.registrationsPaused).toBe(false);
+    });
   });
   test("requires selection details before adding a trip selection", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     renderTripManagement({
       initialEntry: "/trips/1/manage?tab=selections",
@@ -519,7 +543,7 @@ describe("TripManagement", () => {
   });
   test("does not delete a session that already has registrations", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
     const confirmSpy = vi
       .spyOn(window, "confirm")
       .mockImplementation(() => true);
@@ -614,7 +638,7 @@ describe("TripManagement", () => {
   });
   test("does not lower session capacity below existing registrations", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     const testRegistrationsByTrip = {
       1: [
@@ -759,7 +783,7 @@ describe("TripManagement", () => {
   });
   test("requires a date and time when adding a session", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     renderTripManagement({
       initialEntry: "/trips/1/manage?tab=selections",
@@ -828,7 +852,7 @@ describe("TripManagement", () => {
   });
   test("does not add a session with capacity below one", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     renderTripManagement({
       initialEntry: "/trips/1/manage?tab=selections",
@@ -945,7 +969,7 @@ describe("TripManagement", () => {
   });
   test("does not save a trip selection with a blank name", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     renderTripManagement({
       initialEntry: "/trips/1/manage?tab=selections",

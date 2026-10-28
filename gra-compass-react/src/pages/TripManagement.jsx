@@ -7,7 +7,12 @@ import RegistrationSummary from "../components/RegistrationSummary";
 import RegistrationSettings from "../components/RegistrationSettings";
 import RegistrationList from "../components/RegistrationList";
 import { useDispatch } from "react-redux";
-import { updateTrip, saveTrip } from "../store/tripsSlice";
+import {
+  updateTrip,
+  saveTrip,
+  pauseRegistrations,
+  resumeRegistrations,
+} from "../store/tripsSlice";
 
 const TripManagement = ({ trips, registrationsByTrip }) => {
   const { tripId } = useParams();
@@ -388,11 +393,11 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          sessions: selection.sessions.filter(
-            (session) => session.id !== sessionId,
-          ),
-        }
+            ...selection,
+            sessions: selection.sessions.filter(
+              (session) => session.id !== sessionId,
+            ),
+          }
         : selection,
     );
 
@@ -409,16 +414,16 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          sessions: selection.sessions.map((session) =>
-            session.id === sessionId
-              ? {
-                ...session,
-                active: !session.active,
-              }
-              : session,
-          ),
-        }
+            ...selection,
+            sessions: selection.sessions.map((session) =>
+              session.id === sessionId
+                ? {
+                    ...session,
+                    active: !session.active,
+                  }
+                : session,
+            ),
+          }
         : selection,
     );
 
@@ -426,25 +431,11 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
   };
 
   const handlePauseRegistrations = () => {
-    dispatch(
-      updateTrip({
-        id: Number(tripId),
-        changes: {
-          registrationsPaused: true,
-        },
-      }),
-    );
+    dispatch(pauseRegistrations(trip.id));
   };
 
   const handleResumeRegistrations = () => {
-    dispatch(
-      updateTrip({
-        id: Number(tripId),
-        changes: {
-          registrationsPaused: false,
-        },
-      }),
-    );
+    dispatch(resumeRegistrations(trip.id));
   };
 
   const handleAddSession = (
@@ -477,9 +468,9 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          sessions: [...selection.sessions, newSession],
-        }
+            ...selection,
+            sessions: [...selection.sessions, newSession],
+          }
         : selection,
     );
 
@@ -501,10 +492,10 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          type: selectionType.trim(),
-          name: selectionName.trim(),
-        }
+            ...selection,
+            type: selectionType.trim(),
+            name: selectionName.trim(),
+          }
         : selection,
     );
 
@@ -548,18 +539,18 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          sessions: selection.sessions.map((session) =>
-            session.id === sessionId
-              ? {
-                ...session,
-                date: sessionDate,
-                time: sessionTime,
-                maxCapacity: newCapacity,
-              }
-              : session,
-          ),
-        }
+            ...selection,
+            sessions: selection.sessions.map((session) =>
+              session.id === sessionId
+                ? {
+                    ...session,
+                    date: sessionDate,
+                    time: sessionTime,
+                    maxCapacity: newCapacity,
+                  }
+                : session,
+            ),
+          }
         : selection,
     );
 
