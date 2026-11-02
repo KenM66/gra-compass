@@ -1,16 +1,22 @@
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/RegistrationDetails.css";
 import selectionsByTrip from "../data/mockTripSelections";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
 
-const RegistrationDetails = ({
-  registrationsByTrip,
-  setRegistrationsByTrip,
-}) => {
+const RegistrationDetails = ({ setRegistrationsByTrip }) => {
   const { tripId, id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const tripRegistrations = registrationsByTrip[tripId] || [];
+  const tripRegistrations = useSelector(
+    (state) => state.registrations.byTrip[tripId] || [],
+  );
+
+  useEffect(() => {
+    dispatch(fetchRegistrationsByTrip(tripId));
+  }, [dispatch, tripId]);
 
   const getSessionRegistrationCount = (sessionId) =>
     tripRegistrations.filter((registration) =>
@@ -70,11 +76,16 @@ const RegistrationDetails = ({
   const [isEditingSelections, setIsEditingSelections] = useState(false);
   const [editSelections, setEditSelections] = useState([]);
 
-  const registrations = registrationsByTrip[tripId] || [];
-
-  const registration = registrations.find(
+  const registration = tripRegistrations.find(
     (registration) => registration.travelerNumber === Number(id),
   );
+  if (!registration) {
+    return (
+      <main className="registration-details-page">
+        <p>Loading registration...</p>
+      </main>
+    );
+  }
 
   const availableSelections = selectionsByTrip[tripId] || [];
 

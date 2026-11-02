@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from "vitest";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import tripsReducer from "../../store/tripsSlice";
+import registrationsReducer from "../../store/registrationsSlice";
 import TripManagement from "../../pages/TripManagement";
 
 const trip = {
@@ -28,14 +29,46 @@ const renderTripManagement = ({
   testTrips = [trip],
   testRegistrationsByTrip = registrationsByTrip,
   initialEntry = "/trips/1/manage",
+  mutationResponse = {},
 } = {}) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url) => {
+      const requestUrl = String(url);
+
+      if (requestUrl === "http://localhost:8080/api/trips") {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(testTrips),
+        });
+      }
+
+      if (requestUrl.endsWith("/registrations")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(testRegistrationsByTrip[1] || []),
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mutationResponse),
+      });
+    }),
+  );
   const store = configureStore({
     reducer: {
       trips: tripsReducer,
+      registrations: registrationsReducer,
     },
     preloadedState: {
       trips: {
         items: testTrips,
+      },
+      registrations: {
+        byTrip: testRegistrationsByTrip,
+        status: "idle",
+        error: null,
       },
     },
   });
@@ -46,12 +79,7 @@ const renderTripManagement = ({
         <Routes>
           <Route
             path="/trips/:tripId/manage"
-            element={
-              <TripManagement
-                trips={testTrips}
-                registrationsByTrip={testRegistrationsByTrip}
-              />
-            }
+            element={<TripManagement trips={testTrips} />}
           />
         </Routes>
       </MemoryRouter>
@@ -129,12 +157,9 @@ describe("TripManagement", () => {
       name: "Cancun Adventure",
     };
 
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => updatedTripResponse,
+    const { store } = renderTripManagement({
+      mutationResponse: updatedTripResponse,
     });
-
-    const { store } = renderTripManagement();
 
     await user.click(
       screen.getByRole("button", {
@@ -354,12 +379,9 @@ describe("TripManagement", () => {
       registrationCloseDate: "2027-02-20",
     };
 
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => updatedTripResponse,
+    const { store } = renderTripManagement({
+      mutationResponse: updatedTripResponse,
     });
-
-    const { store } = renderTripManagement();
 
     await user.click(
       screen.getByRole("button", {
@@ -412,12 +434,9 @@ describe("TripManagement", () => {
       registrationsPaused: true,
     };
 
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => pausedTripResponse,
+    const { store } = renderTripManagement({
+      mutationResponse: pausedTripResponse,
     });
-
-    const { store } = renderTripManagement();
 
     await user.click(
       screen.getByRole("button", {
@@ -454,13 +473,9 @@ describe("TripManagement", () => {
       registrationsPaused: false,
     };
 
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => resumedTripResponse,
-    });
-
     const { store } = renderTripManagement({
       testTrips: [pausedTrip],
+      mutationResponse: resumedTripResponse,
     });
 
     await user.click(

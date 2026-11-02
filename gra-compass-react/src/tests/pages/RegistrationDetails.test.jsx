@@ -3,6 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
 import RegistrationDetails from "../../pages/RegistrationDetails";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import registrationsReducer from "../../store/registrationsSlice";
 
 const registration = {
   travelerNumber: 1047,
@@ -63,20 +66,43 @@ const renderRegistrationDetails = (
 ) => {
   const setRegistrationsByTrip = vi.fn();
 
+  const store = configureStore({
+    reducer: {
+      registrations: registrationsReducer,
+    },
+    preloadedState: {
+      registrations: {
+        byTrip: testRegistrationsByTrip,
+        status: "idle",
+        error: null,
+      },
+    },
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(testRegistrationsByTrip[1] || []),
+      }),
+    ),
+  );
+
   render(
-    <MemoryRouter initialEntries={["/trips/1/registrations/1047"]}>
-      <Routes>
-        <Route
-          path="/trips/:tripId/registrations/:id"
-          element={
-            <RegistrationDetails
-              registrationsByTrip={testRegistrationsByTrip}
-              setRegistrationsByTrip={setRegistrationsByTrip}
-            />
-          }
-        />
-      </Routes>
-    </MemoryRouter>,
+    <Provider store={store}>
+      <MemoryRouter initialEntries={["/trips/1/registrations/1047"]}>
+        <Routes>
+          <Route
+            path="/trips/:tripId/registrations/:id"
+            element={
+              <RegistrationDetails
+                setRegistrationsByTrip={setRegistrationsByTrip}
+              />
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    </Provider>,
   );
 
   return { setRegistrationsByTrip };

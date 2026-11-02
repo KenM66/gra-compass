@@ -173,12 +173,16 @@ describe("CreateTrip", () => {
       }),
     );
 
-    const trips = store.getState().trips.items;
-    const createdTrip = trips.find((trip) => trip.name === "Cancún Adventure");
+    await waitFor(() => {
+      const trips = store.getState().trips.items;
+      const createdTrip = trips.find(
+        (trip) => trip.name === "Cancún Adventure",
+      );
 
-    expect(createdTrip.name).toBe("Cancún Adventure");
-
-    expect(createdTrip.destination).toBe("Cancún, Mexico");
+      expect(createdTrip).toBeDefined();
+      expect(createdTrip.name).toBe("Cancún Adventure");
+      expect(createdTrip.destination).toBe("Cancún, Mexico");
+    });
   });
   test("displays a preview when a trip image is selected", async () => {
     const user = userEvent.setup();
