@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import CreateTrip from "../../pages/CreateTrip";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -24,6 +24,17 @@ const renderCreateTrip = () => {
 
   return { store };
 };
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => {
+      throw new Error(
+        "Unexpected real fetch in CreateTrip test. Mock this request explicitly.",
+      );
+    }),
+  );
+});
 
 describe("CreateTrip", () => {
   test("displays the create trip form", () => {
@@ -123,7 +134,7 @@ describe("CreateTrip", () => {
       registrationsPaused: false,
     };
 
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+    globalThis.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => createdTrip,
     });
@@ -150,6 +161,24 @@ describe("CreateTrip", () => {
   });
   test("trims whitespace from the trip name and destination", async () => {
     const user = userEvent.setup();
+
+    const createdTrip = {
+      id: "6716f2c8a123456789abcdef",
+      name: "Cancún Adventure",
+      destination: "Cancún, Mexico",
+      startDate: "2027-03-08",
+      endDate: "2027-03-13",
+      registrationCount: 0,
+      registrationCapacity: 0,
+      travelerCapacity: 0,
+      registrationCloseDate: "",
+      registrationsPaused: false,
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => createdTrip,
+    });
 
     const { store } = renderCreateTrip();
 
@@ -187,6 +216,24 @@ describe("CreateTrip", () => {
   test("displays a preview when a trip image is selected", async () => {
     const user = userEvent.setup();
 
+    const createdTrip = {
+      id: "6716f2c8a123456789abcdef",
+      name: "Cancún Adventure",
+      destination: "Cancún, Mexico",
+      startDate: "2027-03-08",
+      endDate: "2027-03-13",
+      registrationCount: 0,
+      registrationCapacity: 0,
+      travelerCapacity: 0,
+      registrationCloseDate: "",
+      registrationsPaused: false,
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => createdTrip,
+    });
+
     const createObjectURLSpy = vi
       .spyOn(URL, "createObjectURL")
       .mockReturnValue("blob:trip-preview");
@@ -211,6 +258,23 @@ describe("CreateTrip", () => {
   });
   test("navigates to the dashboard after successfully creating a trip", async () => {
     const user = userEvent.setup();
+    const createdTrip = {
+      id: "6716f2c8a123456789abcdef",
+      name: "Cancún Adventure",
+      destination: "Cancún, Mexico",
+      startDate: "2027-03-08",
+      endDate: "2027-03-13",
+      registrationCount: 0,
+      registrationCapacity: 0,
+      travelerCapacity: 0,
+      registrationCloseDate: "",
+      registrationsPaused: false,
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => createdTrip,
+    });
 
     const store = configureStore({
       reducer: {
