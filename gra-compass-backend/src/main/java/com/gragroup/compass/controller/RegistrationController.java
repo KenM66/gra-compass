@@ -35,4 +35,16 @@ public class RegistrationController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @PutMapping("/{travelerNumber}")
+    public ResponseEntity<Registration> updateRegistration(
+            @PathVariable String tripId,
+            @PathVariable int travelerNumber,
+            @RequestBody Registration updatedRegistration) {
+
+        return registrationService
+                .updateRegistration(tripId, travelerNumber, updatedRegistration)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }

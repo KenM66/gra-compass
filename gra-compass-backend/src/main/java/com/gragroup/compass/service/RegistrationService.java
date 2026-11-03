@@ -27,4 +27,46 @@ public class RegistrationService {
                 tripId,
                 travelerNumber);
     }
+
+    public Optional<Registration> updateRegistration(
+            String tripId,
+            int travelerNumber,
+            Registration updatedRegistration) {
+
+        return registrationRepository
+                .findByTripIdAndTravelerNumber(tripId, travelerNumber)
+                .map(existingRegistration -> {
+                    existingRegistration.setFirstName(updatedRegistration.getFirstName());
+                    existingRegistration.setLastName(updatedRegistration.getLastName());
+                    existingRegistration.setPreferredName(updatedRegistration.getPreferredName());
+                    existingRegistration.setEmail(updatedRegistration.getEmail());
+                    existingRegistration.setPhone(updatedRegistration.getPhone());
+                    existingRegistration.setDateOfBirth(updatedRegistration.getDateOfBirth());
+
+                    existingRegistration.setAddress(updatedRegistration.getAddress());
+
+                    existingRegistration.setTsaPrecheck(updatedRegistration.isTsaPrecheck());
+                    existingRegistration.setPassportNumber(updatedRegistration.getPassportNumber());
+                    existingRegistration.setPassportExpiration(updatedRegistration.getPassportExpiration());
+                    existingRegistration.setAirport(updatedRegistration.getAirport());
+                    existingRegistration.setSex(updatedRegistration.getSex());
+
+                    existingRegistration.setBringingGuest(updatedRegistration.isBringingGuest());
+                    existingRegistration.setGuest(updatedRegistration.getGuest());
+
+                    existingRegistration.setEmergencyContact(
+                            updatedRegistration.getEmergencyContact());
+
+                    existingRegistration.setAccessibility(
+                            updatedRegistration.getAccessibility());
+                    existingRegistration.setDietaryRequirements(
+                            updatedRegistration.getDietaryRequirements());
+
+                    existingRegistration.setActivities(updatedRegistration.getActivities());
+                    existingRegistration.setRole(updatedRegistration.getRole());
+
+                    return registrationRepository.save(existingRegistration);
+                });
+    }
+
 }

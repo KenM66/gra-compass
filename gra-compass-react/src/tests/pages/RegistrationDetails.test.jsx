@@ -20,14 +20,11 @@ const registration = {
     state: "OH",
     zipCode: "44113",
   },
-  departureAirport: "CLE",
+  airport: "CLE",
   tsaPrecheck: true,
   passportNumber: "123456789",
   passportExpiration: "August 12, 2030",
-  passportIssuingCountry: "United States",
   sex: "Male",
-  nationality: "American",
-  citizenship: "United States",
   bringingGuest: true,
   guest: {
     firstName: "Amanda",
@@ -64,8 +61,6 @@ const registrationsByTrip = {
 const renderRegistrationDetails = (
   testRegistrationsByTrip = registrationsByTrip,
 ) => {
-  const setRegistrationsByTrip = vi.fn();
-
   const store = configureStore({
     reducer: {
       registrations: registrationsReducer,
@@ -94,18 +89,12 @@ const renderRegistrationDetails = (
         <Routes>
           <Route
             path="/trips/:tripId/registrations/:id"
-            element={
-              <RegistrationDetails
-                setRegistrationsByTrip={setRegistrationsByTrip}
-              />
-            }
+            element={<RegistrationDetails />}
           />
         </Routes>
       </MemoryRouter>
     </Provider>,
   );
-
-  return { setRegistrationsByTrip };
 };
 describe("RegistrationDetails", () => {
   test("displays the correct traveler from the URL", () => {
@@ -124,7 +113,7 @@ describe("RegistrationDetails", () => {
   test("allows personal information to be edited and saved", async () => {
     const user = userEvent.setup();
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -141,26 +130,45 @@ describe("RegistrationDetails", () => {
     await user.clear(emailInput);
     await user.type(emailInput, "bob@example.com");
 
+    const updatedRegistration = {
+      ...registration,
+      firstName: "Bob",
+      email: "bob@example.com",
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
       }),
     );
 
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
-    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    expect(updatedRegistrations[1][0].firstName).toBe("Bob");
-    expect(updatedRegistrations[1][0].email).toBe("bob@example.com");
-    expect(updatedRegistrations[1][0].lastName).toBe("Henderson");
-    expect(updatedRegistrations[1][0].travelerNumber).toBe(1047);
+    expect(requestBody.firstName).toBe("Bob");
+    expect(requestBody.email).toBe("bob@example.com");
+    expect(requestBody.lastName).toBe("Henderson");
+    expect(requestBody.travelerNumber).toBe(1047);
   });
   test("cancels personal information changes without saving them", async () => {
     const user = userEvent.setup();
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -181,7 +189,10 @@ describe("RegistrationDetails", () => {
       }),
     );
 
-    expect(setRegistrationsByTrip).not.toHaveBeenCalled();
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/trips/1/registrations",
+    );
 
     expect(screen.queryByDisplayValue("Bob")).not.toBeInTheDocument();
 
@@ -212,7 +223,7 @@ describe("RegistrationDetails", () => {
   test("toggles TSA PreCheck and saves the updated travel information", async () => {
     const user = userEvent.setup();
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -234,27 +245,50 @@ describe("RegistrationDetails", () => {
       }),
     ).toBeInTheDocument();
 
+    const updatedRegistration = {
+      ...registration,
+      tsaPrecheck: false,
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
       }),
     );
 
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+    expect(requestBody.airport).toBe("CLE");
+    expect(requestBody.tsaPrecheck).toBe(false);
+    expect(requestBody.travelerNumber).toBe(1047);
 
-    expect(updatedRegistrations[1][0].tsaPrecheck).toBe(false);
-    expect(updatedRegistrations[1][0].travelerNumber).toBe(1047);
+    expect(requestBody).not.toHaveProperty("departureAirport");
+    expect(requestBody).not.toHaveProperty("passportIssuingCountry");
+    expect(requestBody).not.toHaveProperty("nationality");
+    expect(requestBody).not.toHaveProperty("citizenship");
   });
   test("keeps the guest when guest removal is cancelled", async () => {
     const user = userEvent.setup();
 
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     expect(screen.getByText("Amanda Henderson")).toBeInTheDocument();
     expect(screen.getByText("amanda@example.com")).toBeInTheDocument();
@@ -269,7 +303,10 @@ describe("RegistrationDetails", () => {
 
     expect(confirmSpy).toHaveBeenCalledTimes(1);
 
-    expect(setRegistrationsByTrip).not.toHaveBeenCalled();
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/trips/1/registrations",
+    );
 
     expect(screen.getByText("Amanda Henderson")).toBeInTheDocument();
 
@@ -280,7 +317,18 @@ describe("RegistrationDetails", () => {
 
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
+
+    const updatedRegistration = {
+      ...registration,
+      bringingGuest: false,
+      guest: null,
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
 
     const guestToggle = screen.getByRole("button", {
       name: "Yes",
@@ -289,14 +337,23 @@ describe("RegistrationDetails", () => {
     await user.click(guestToggle);
 
     expect(confirmSpy).toHaveBeenCalledTimes(1);
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
 
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
-    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    expect(updatedRegistrations[1][0].bringingGuest).toBe(false);
-    expect(updatedRegistrations[1][0].guest).toBeNull();
+    expect(requestBody.bringingGuest).toBe(false);
+    expect(requestBody.guest).toBeNull();
+    expect(requestBody.travelerNumber).toBe(1047);
 
     confirmSpy.mockRestore();
   });
@@ -313,25 +370,9 @@ describe("RegistrationDetails", () => {
       1: [registrationWithoutGuest],
     };
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails(
-      testRegistrationsByTrip,
-    );
+    renderRegistrationDetails(testRegistrationsByTrip);
 
-    const guestToggle = screen.getByRole("button", {
-      name: "No",
-    });
-
-    await user.click(guestToggle);
-
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
-
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
-
-    const updatedRegistrations = updateRegistrations(testRegistrationsByTrip);
-
-    expect(updatedRegistrations[1][0].bringingGuest).toBe(true);
-
-    expect(updatedRegistrations[1][0].guest).toEqual({
+    const blankGuest = {
       firstName: "",
       preferredName: "",
       lastName: "",
@@ -342,15 +383,49 @@ describe("RegistrationDetails", () => {
       passportNumber: "",
       passportExpiration: "",
       accessibility: "",
-      dietaryRestrictions: "",
+      dietaryRequirements: "",
+    };
+
+    const updatedRegistration = {
+      ...registrationWithoutGuest,
+      bringingGuest: true,
+      guest: blankGuest,
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
     });
+
+    const guestToggle = screen.getByRole("button", {
+      name: "No",
+    });
+
+    await user.click(guestToggle);
+
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
+
+    expect(requestBody.bringingGuest).toBe(true);
+    expect(requestBody.guest).toEqual(blankGuest);
+    expect(requestBody.travelerNumber).toBe(1047);
   });
   test("does not save a trip selection without a session", async () => {
     const user = userEvent.setup();
 
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -374,14 +449,17 @@ describe("RegistrationDetails", () => {
       "Please select a session for each trip selection.",
     );
 
-    expect(setRegistrationsByTrip).not.toHaveBeenCalled();
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/trips/1/registrations",
+    );
 
     alertSpy.mockRestore();
   });
   test("adds a trip selection with its selected session", async () => {
     const user = userEvent.setup();
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -401,24 +479,44 @@ describe("RegistrationDetails", () => {
 
     await user.click(jeepTourSession);
 
+    const jeepTour = {
+      id: 2,
+      type: "Excursion",
+      name: "Island Jeep Tour",
+      sessionId: 201,
+    };
+
+    const updatedRegistration = {
+      ...registration,
+      activities: [...registration.activities, jeepTour],
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
       }),
     );
 
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    const updatedRegistrations = updateRegistrations(registrationsByTrip);
-
-    expect(updatedRegistrations[1][0].activities).toContainEqual({
-      id: 2,
-      type: "Excursion",
-      name: "Island Jeep Tour",
-      sessionId: 201,
-    });
+    expect(requestBody.activities).toContainEqual(jeepTour);
+    expect(requestBody.travelerNumber).toBe(1047);
   });
   test("disables an unavailable trip selection session", async () => {
     const user = userEvent.setup();
@@ -526,9 +624,7 @@ describe("RegistrationDetails", () => {
       1: [registration, ...fullSessionRegistrations],
     };
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails(
-      testRegistrationsByTrip,
-    );
+    renderRegistrationDetails(testRegistrationsByTrip);
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -543,6 +639,22 @@ describe("RegistrationDetails", () => {
     await user.click(afternoonSession);
 
     expect(afternoonSession).toBeChecked();
+    const updatedRegistration = {
+      ...registration,
+      activities: registration.activities.map((activity) =>
+        activity.id === 1
+          ? {
+              ...activity,
+              sessionId: 102,
+            }
+          : activity,
+      ),
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
 
     await user.click(
       screen.getByRole("button", {
@@ -550,22 +662,32 @@ describe("RegistrationDetails", () => {
       }),
     );
 
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
-    const updatedRegistrations = updateRegistrations(testRegistrationsByTrip);
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    expect(updatedRegistrations[1][0].activities).toContainEqual({
+    expect(requestBody.activities).toContainEqual({
       id: 1,
       type: "Excursion",
       name: "Catamaran & Snorkeling",
       sessionId: 102,
     });
+
+    expect(requestBody.travelerNumber).toBe(1047);
   });
   test("removes an existing trip selection", async () => {
     const user = userEvent.setup();
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -579,6 +701,18 @@ describe("RegistrationDetails", () => {
 
     expect(catamaranCheckbox).toBeChecked();
 
+    const updatedRegistration = {
+      ...registration,
+      activities: registration.activities.filter(
+        (activity) => activity.id !== 1,
+      ),
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
+
     await user.click(catamaranCheckbox);
 
     expect(catamaranCheckbox).not.toBeChecked();
@@ -589,28 +723,38 @@ describe("RegistrationDetails", () => {
       }),
     );
 
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
-    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    expect(updatedRegistrations[1][0].activities).not.toContainEqual(
+    expect(requestBody.activities).not.toContainEqual(
       expect.objectContaining({
         id: 1,
       }),
     );
 
-    expect(updatedRegistrations[1][0].activities).toContainEqual({
+    expect(requestBody.activities).toContainEqual({
       id: 4,
       type: "Spa",
       name: "Massage Appointment",
       sessionId: 401,
     });
+
+    expect(requestBody.travelerNumber).toBe(1047);
   });
   test("allows emergency contact information to be edited and saved", async () => {
     const user = userEvent.setup();
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -631,29 +775,51 @@ describe("RegistrationDetails", () => {
     await user.clear(phoneInput);
     await user.type(phoneInput, "216-555-9999");
 
+    const updatedRegistration = {
+      ...registration,
+      emergencyContact: {
+        name: "Susan Henderson",
+        relationship: "Mother",
+        phone: "216-555-9999",
+      },
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
       }),
     );
 
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
-    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    expect(updatedRegistrations[1][0].emergencyContact).toEqual({
+    expect(requestBody.emergencyContact).toEqual({
       name: "Susan Henderson",
       relationship: "Mother",
       phone: "216-555-9999",
     });
 
-    expect(updatedRegistrations[1][0].travelerNumber).toBe(1047);
+    expect(requestBody.travelerNumber).toBe(1047);
   });
   test("allows address information to be edited and saved", async () => {
     const user = userEvent.setup();
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -678,30 +844,53 @@ describe("RegistrationDetails", () => {
     await user.clear(zipInput);
     await user.type(zipInput, "44114");
 
+    const updatedRegistration = {
+      ...registration,
+      address: {
+        street: "456 Euclid Avenue",
+        city: "Cleveland",
+        state: "OH",
+        zipCode: "44114",
+      },
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
       }),
     );
 
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
 
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
-    const updatedRegistrations = updateRegistrations(registrationsByTrip);
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    expect(updatedRegistrations[1][0].address).toEqual({
+    expect(requestBody.address).toEqual({
       street: "456 Euclid Avenue",
       city: "Cleveland",
       state: "OH",
       zipCode: "44114",
     });
 
-    expect(updatedRegistrations[1][0].travelerNumber).toBe(1047);
+    expect(requestBody.travelerNumber).toBe(1047);
   });
   test("allows special requirements to be edited and saved", async () => {
     const user = userEvent.setup();
 
-    const { setRegistrationsByTrip } = renderRegistrationDetails();
+    renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -718,23 +907,40 @@ describe("RegistrationDetails", () => {
     await user.clear(dietaryInput);
     await user.type(dietaryInput, "Gluten-free");
 
+    const updatedRegistration = {
+      ...registration,
+      accessibility: "Wheelchair accessible transportation",
+      dietaryRequirements: "Gluten-free",
+    };
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedRegistration,
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
       }),
     );
 
-    expect(setRegistrationsByTrip).toHaveBeenCalledTimes(1);
-
-    const updateRegistrations = setRegistrationsByTrip.mock.calls[0][0];
-    const updatedRegistrations = updateRegistrations(registrationsByTrip);
-
-    expect(updatedRegistrations[1][0].accessibility).toBe(
-      "Wheelchair accessible transportation",
+    expect(globalThis.fetch).toHaveBeenLastCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047",
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
     );
 
-    expect(updatedRegistrations[1][0].dietaryRequirements).toBe("Gluten-free");
+    const request = globalThis.fetch.mock.calls.at(-1)[1];
+    const requestBody = JSON.parse(request.body);
 
-    expect(updatedRegistrations[1][0].travelerNumber).toBe(1047);
+    expect(requestBody.accessibility).toBe(
+      "Wheelchair accessible transportation",
+    );
+    expect(requestBody.dietaryRequirements).toBe("Gluten-free");
+    expect(requestBody.travelerNumber).toBe(1047);
   });
 });

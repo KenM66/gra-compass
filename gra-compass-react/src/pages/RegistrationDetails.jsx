@@ -3,9 +3,12 @@ import "../styles/RegistrationDetails.css";
 import selectionsByTrip from "../data/mockTripSelections";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
+import {
+  fetchRegistrationsByTrip,
+  updateRegistration,
+} from "../store/registrationsSlice";
 
-const RegistrationDetails = ({ setRegistrationsByTrip }) => {
+const RegistrationDetails = () => {
   const { tripId, id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -48,13 +51,10 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
   const [isEditingTravelInfo, setIsEditingTravelInfo] = useState(false);
 
   const [editTravelInfo, setEditTravelInfo] = useState({
-    departureAirport: "",
+    airport: "",
     tsaPrecheck: false,
     passportNumber: "",
     passportExpiration: "",
-    passportIssuingCountry: "",
-    nationality: "",
-    citizenship: "",
   });
 
   const [isEditingEmergencyContact, setIsEditingEmergencyContact] =
@@ -92,37 +92,39 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
   const hasGuest = registration?.bringingGuest ?? false;
   const guestInfo = registration?.guest ?? null;
 
-  const handleSavePersonalInfo = () => {
-    setRegistrationsByTrip((currentRegistrations) => ({
-      ...currentRegistrations,
-      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
-        currentRegistration.travelerNumber === Number(id)
-          ? {
-              ...currentRegistration,
-              ...editPersonalInfo,
-            }
-          : currentRegistration,
-      ),
-    }));
+  const handleSavePersonalInfo = async () => {
+    const updatedRegistration = {
+      ...registration,
+      ...editPersonalInfo,
+    };
+
+    await dispatch(
+      updateRegistration({
+        tripId,
+        travelerNumber: registration.travelerNumber,
+        registration: updatedRegistration,
+      }),
+    ).unwrap();
 
     setIsEditingPersonalInfo(false);
   };
 
-  const handleSaveAddress = () => {
-    setRegistrationsByTrip((currentRegistrations) => ({
-      ...currentRegistrations,
-      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
-        currentRegistration.travelerNumber === Number(id)
-          ? {
-              ...currentRegistration,
-              address: {
-                ...currentRegistration.address,
-                ...editAddress,
-              },
-            }
-          : currentRegistration,
-      ),
-    }));
+  const handleSaveAddress = async () => {
+    const updatedRegistration = {
+      ...registration,
+      address: {
+        ...registration.address,
+        ...editAddress,
+      },
+    };
+
+    await dispatch(
+      updateRegistration({
+        tripId,
+        travelerNumber: registration.travelerNumber,
+        registration: updatedRegistration,
+      }),
+    ).unwrap();
 
     setIsEditingAddress(false);
   };
@@ -355,14 +357,10 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
               type="button"
               onClick={() => {
                 setEditTravelInfo({
-                  departureAirport: registration.departureAirport || "",
+                  airport: registration.airport || "",
                   tsaPrecheck: registration.tsaPrecheck ?? false,
                   passportNumber: registration.passportNumber || "",
                   passportExpiration: registration.passportExpiration || "",
-                  passportIssuingCountry:
-                    registration.passportIssuingCountry || "",
-                  nationality: registration.nationality || "",
-                  citizenship: registration.citizenship || "",
                 });
 
                 setIsEditingTravelInfo(true);
@@ -377,17 +375,17 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
             {isEditingTravelInfo ? (
               <input
                 type="text"
-                value={editTravelInfo.departureAirport}
+                value={editTravelInfo.airport}
                 onChange={(event) =>
                   setEditTravelInfo({
                     ...editTravelInfo,
-                    departureAirport: event.target.value.toUpperCase(),
+                    airport: event.target.value.toUpperCase(),
                   })
                 }
                 maxLength={3}
               />
             ) : (
-              <strong>{registration.departureAirport || ""}</strong>
+              <strong>{registration.airport || ""}</strong>
             )}
           </div>
 
@@ -451,79 +449,24 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
               <strong>{registration.passportExpiration}</strong>
             )}
           </div>
-          <div className="detail-row">
-            <span>Passport Issuing Country</span>
 
-            {isEditingTravelInfo ? (
-              <input
-                type="text"
-                value={editTravelInfo.passportIssuingCountry}
-                onChange={(event) =>
-                  setEditTravelInfo({
-                    ...editTravelInfo,
-                    passportIssuingCountry: event.target.value,
-                  })
-                }
-              />
-            ) : (
-              <strong>{registration.passportIssuingCountry || ""}</strong>
-            )}
-          </div>
-
-          <div className="detail-row">
-            <span>Nationality</span>
-
-            {isEditingTravelInfo ? (
-              <input
-                type="text"
-                value={editTravelInfo.nationality}
-                onChange={(event) =>
-                  setEditTravelInfo({
-                    ...editTravelInfo,
-                    nationality: event.target.value,
-                  })
-                }
-              />
-            ) : (
-              <strong>{registration.nationality || ""}</strong>
-            )}
-          </div>
-
-          <div className="detail-row">
-            <span>Citizenship</span>
-
-            {isEditingTravelInfo ? (
-              <input
-                type="text"
-                value={editTravelInfo.citizenship}
-                onChange={(event) =>
-                  setEditTravelInfo({
-                    ...editTravelInfo,
-                    citizenship: event.target.value,
-                  })
-                }
-              />
-            ) : (
-              <strong>{registration.citizenship || ""}</strong>
-            )}
-          </div>
           {isEditingTravelInfo && (
             <div className="travel-info-edit-actions">
               <button
                 type="button"
-                onClick={() => {
-                  setRegistrationsByTrip((currentRegistrations) => ({
-                    ...currentRegistrations,
-                    [tripId]: currentRegistrations[tripId].map(
-                      (currentRegistration) =>
-                        currentRegistration.travelerNumber === Number(id)
-                          ? {
-                              ...currentRegistration,
-                              ...editTravelInfo,
-                            }
-                          : currentRegistration,
-                    ),
-                  }));
+                onClick={async () => {
+                  const updatedRegistration = {
+                    ...registration,
+                    ...editTravelInfo,
+                  };
+
+                  await dispatch(
+                    updateRegistration({
+                      tripId,
+                      travelerNumber: registration.travelerNumber,
+                      registration: updatedRegistration,
+                    }),
+                  ).unwrap();
 
                   setIsEditingTravelInfo(false);
                 }}
@@ -535,14 +478,10 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
                 type="button"
                 onClick={() => {
                   setEditTravelInfo({
-                    departureAirport: registration.departureAirport || "",
+                    airport: registration.airport || "",
                     tsaPrecheck: registration.tsaPrecheck ?? false,
                     passportNumber: registration.passportNumber || "",
                     passportExpiration: registration.passportExpiration || "",
-                    passportIssuingCountry:
-                      registration.passportIssuingCountry || "",
-                    nationality: registration.nationality || "",
-                    citizenship: registration.citizenship || "",
                   });
 
                   setIsEditingTravelInfo(false);
@@ -563,7 +502,7 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
             <button
               type="button"
               className={`guest-toggle ${hasGuest ? "yes" : "no"}`}
-              onClick={() => {
+              onClick={async () => {
                 if (hasGuest) {
                   const confirmed = window.confirm(
                     "Are you sure you want to remove this guest? All guest information for this traveler will be deleted and cannot be undone.",
@@ -573,48 +512,48 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
                     return;
                   }
 
-                  setRegistrationsByTrip((currentRegistrations) => ({
-                    ...currentRegistrations,
-                    [tripId]: currentRegistrations[tripId].map(
-                      (currentRegistration) =>
-                        currentRegistration.travelerNumber === Number(id)
-                          ? {
-                              ...currentRegistration,
-                              bringingGuest: false,
-                              guest: null,
-                            }
-                          : currentRegistration,
-                    ),
-                  }));
+                  const updatedRegistration = {
+                    ...registration,
+                    bringingGuest: false,
+                    guest: null,
+                  };
+
+                  await dispatch(
+                    updateRegistration({
+                      tripId,
+                      travelerNumber: registration.travelerNumber,
+                      registration: updatedRegistration,
+                    }),
+                  ).unwrap();
 
                   return;
                 }
 
-                setRegistrationsByTrip((currentRegistrations) => ({
-                  ...currentRegistrations,
-                  [tripId]: currentRegistrations[tripId].map(
-                    (currentRegistration) =>
-                      currentRegistration.travelerNumber === Number(id)
-                        ? {
-                            ...currentRegistration,
-                            bringingGuest: true,
-                            guest: {
-                              firstName: "",
-                              preferredName: "",
-                              lastName: "",
-                              sex: "",
-                              email: "",
-                              phone: "",
-                              dateOfBirth: "",
-                              passportNumber: "",
-                              passportExpiration: "",
-                              accessibility: "",
-                              dietaryRestrictions: "",
-                            },
-                          }
-                        : currentRegistration,
-                  ),
-                }));
+                const updatedRegistration = {
+                  ...registration,
+                  bringingGuest: true,
+                  guest: {
+                    firstName: "",
+                    preferredName: "",
+                    lastName: "",
+                    sex: "",
+                    email: "",
+                    phone: "",
+                    dateOfBirth: "",
+                    passportNumber: "",
+                    passportExpiration: "",
+                    accessibility: "",
+                    dietaryRequirements: "",
+                  },
+                };
+
+                await dispatch(
+                  updateRegistration({
+                    tripId,
+                    travelerNumber: registration.travelerNumber,
+                    registration: updatedRegistration,
+                  }),
+                ).unwrap();
               }}
             >
               <span className="guest-toggle-label">
@@ -732,22 +671,22 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
             <div className="edit-actions">
               <button
                 type="button"
-                onClick={() => {
-                  setRegistrationsByTrip((currentRegistrations) => ({
-                    ...currentRegistrations,
-                    [tripId]: currentRegistrations[tripId].map(
-                      (currentRegistration) =>
-                        currentRegistration.travelerNumber === Number(id)
-                          ? {
-                              ...currentRegistration,
-                              emergencyContact: {
-                                ...currentRegistration.emergencyContact,
-                                ...editEmergencyContact,
-                              },
-                            }
-                          : currentRegistration,
-                    ),
-                  }));
+                onClick={async () => {
+                  const updatedRegistration = {
+                    ...registration,
+                    emergencyContact: {
+                      ...registration.emergencyContact,
+                      ...editEmergencyContact,
+                    },
+                  };
+
+                  await dispatch(
+                    updateRegistration({
+                      tripId,
+                      travelerNumber: registration.travelerNumber,
+                      registration: updatedRegistration,
+                    }),
+                  ).unwrap();
 
                   setIsEditingEmergencyContact(false);
                 }}
@@ -952,19 +891,19 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
             <div className="edit-actions">
               <button
                 type="button"
-                onClick={() => {
-                  setRegistrationsByTrip((currentRegistrations) => ({
-                    ...currentRegistrations,
-                    [tripId]: currentRegistrations[tripId].map(
-                      (currentRegistration) =>
-                        currentRegistration.travelerNumber === Number(id)
-                          ? {
-                              ...currentRegistration,
-                              ...editSpecialRequirements,
-                            }
-                          : currentRegistration,
-                    ),
-                  }));
+                onClick={async () => {
+                  const updatedRegistration = {
+                    ...registration,
+                    ...editSpecialRequirements,
+                  };
+
+                  await dispatch(
+                    updateRegistration({
+                      tripId,
+                      travelerNumber: registration.travelerNumber,
+                      registration: updatedRegistration,
+                    }),
+                  ).unwrap();
 
                   setIsEditingSpecialRequirements(false);
                 }}
@@ -1098,7 +1037,7 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
               <div className="selection-edit-actions">
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     const hasMissingSession = editSelections.some(
                       (activity) => !activity.sessionId,
                     );
@@ -1108,19 +1047,18 @@ const RegistrationDetails = ({ setRegistrationsByTrip }) => {
                       return;
                     }
 
-                    setRegistrationsByTrip((currentRegistrations) => ({
-                      ...currentRegistrations,
-                      [tripId]: currentRegistrations[tripId].map(
-                        (currentRegistration) =>
-                          currentRegistration.travelerNumber ===
-                          registration.travelerNumber
-                            ? {
-                                ...currentRegistration,
-                                activities: editSelections,
-                              }
-                            : currentRegistration,
-                      ),
-                    }));
+                    const updatedRegistration = {
+                      ...registration,
+                      activities: editSelections,
+                    };
+
+                    await dispatch(
+                      updateRegistration({
+                        tripId,
+                        travelerNumber: registration.travelerNumber,
+                        registration: updatedRegistration,
+                      }),
+                    ).unwrap();
 
                     setIsEditingSelections(false);
                   }}

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
 import { useParams, useNavigate } from "react-router-dom";
 
 import "../styles/RegistrationDetails.css";
@@ -7,6 +9,15 @@ import selectionsByTrip from "../data/mockTripSelections";
 const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const { tripId, id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const registrations = useSelector(
+    (state) => state.registrations.byTrip[tripId] || [],
+  );
+
+  useEffect(() => {
+    dispatch(fetchRegistrationsByTrip(tripId));
+  }, [dispatch, tripId]);
   const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
 
   const [editPersonalInfo, setEditPersonalInfo] = useState({
@@ -41,8 +52,6 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const [isEditingSelections, setIsEditingSelections] = useState(false);
   const [editSelections, setEditSelections] = useState([]);
 
-  const registrations = registrationsByTrip[tripId] || [];
-
   const registration = registrations.find(
     (registration) => registration.travelerNumber === Number(id),
   );
@@ -50,7 +59,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const guest = registration?.guest;
   const availableSelections = selectionsByTrip[tripId] ?? [];
   const getSessionRegistrationCount = (sessionId) =>
-    (registrationsByTrip[tripId] ?? []).reduce((count, currentRegistration) => {
+    registrations.reduce((count, currentRegistration) => {
       const primaryCount = (currentRegistration.activities ?? []).some(
         (activity) => activity.sessionId === sessionId,
       )

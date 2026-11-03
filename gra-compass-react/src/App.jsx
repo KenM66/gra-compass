@@ -57,10 +57,7 @@ const App = () => {
           path="/trips/:tripId/registrations/:id"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <RegistrationDetails
-                registrationsByTrip={registrationsByTrip}
-                setRegistrationsByTrip={setRegistrationsByTrip}
-              />
+              <RegistrationDetails />
             </ProtectedRoute>
           }
         />
