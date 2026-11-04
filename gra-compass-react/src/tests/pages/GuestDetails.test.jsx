@@ -35,8 +35,6 @@ const registrationsByTrip = {
 };
 
 const renderGuestDetails = (testRegistrationsByTrip = registrationsByTrip) => {
-  const setRegistrationsByTrip = vi.fn();
-
   const store = configureStore({
     reducer: {
       registrations: registrationsReducer,
@@ -66,12 +64,7 @@ const renderGuestDetails = (testRegistrationsByTrip = registrationsByTrip) => {
         <Routes>
           <Route
             path="/trips/:tripId/registrations/:id/guest"
-            element={
-              <GuestDetails
-                registrationsByTrip={testRegistrationsByTrip}
-                setRegistrationsByTrip={setRegistrationsByTrip}
-              />
-            }
+            element={<GuestDetails />}
           />
           <Route
             path="/trips/:tripId/registrations/:id"
@@ -81,8 +74,6 @@ const renderGuestDetails = (testRegistrationsByTrip = registrationsByTrip) => {
       </MemoryRouter>
     </Provider>,
   );
-
-  return { setRegistrationsByTrip };
 };
 
 describe("GuestDetails", () => {

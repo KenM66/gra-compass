@@ -66,10 +66,7 @@ const App = () => {
           path="/trips/:tripId/registrations/:id/guest"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <GuestDetails
-                registrationsByTrip={registrationsByTrip}
-                setRegistrationsByTrip={setRegistrationsByTrip}
-              />
+              <GuestDetails />
             </ProtectedRoute>
           }
         />
@@ -197,10 +194,7 @@ const App = () => {
           path="/"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Dashboard
-                trips={trips}
-                registrationsByTrip={registrationsByTrip}
-              />
+              <Dashboard trips={trips} />
             </ProtectedRoute>
           }
         />

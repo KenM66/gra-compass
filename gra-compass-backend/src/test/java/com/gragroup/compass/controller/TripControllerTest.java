@@ -2,6 +2,7 @@ package com.gragroup.compass.controller;
 
 import com.gragroup.compass.model.Trip;
 import com.gragroup.compass.service.TripService;
+import com.gragroup.compass.service.RegistrationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -32,6 +33,9 @@ class TripControllerTest {
         @MockitoBean
         private TripService tripService;
 
+        @MockitoBean
+        private RegistrationService registrationService;
+
         @Test
         void getsAllTrips() throws Exception {
                 Trip trip = new Trip();
@@ -41,11 +45,18 @@ class TripControllerTest {
 
                 when(tripService.getAllTrips()).thenReturn(List.of(trip));
 
+                when(registrationService.countRegistrationsByTripId("trip123"))
+                                .thenReturn(12L);
+
+                when(registrationService.countTravelersByTripId("trip123"))
+                                .thenReturn(18L);
                 mockMvc.perform(get("/api/trips"))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$[0].id").value("trip123"))
                                 .andExpect(jsonPath("$[0].name").value("Cancun Incentive Trip"))
-                                .andExpect(jsonPath("$[0].destination").value("Cancun, Mexico"));
+                                .andExpect(jsonPath("$[0].destination").value("Cancun, Mexico"))
+                                .andExpect(jsonPath("$[0].registrationCount").value(12))
+                                .andExpect(jsonPath("$[0].travelerCount").value(18));
         }
 
         @Test
@@ -58,11 +69,19 @@ class TripControllerTest {
                 when(tripService.getTripById("trip123"))
                                 .thenReturn(Optional.of(trip));
 
+                when(registrationService.countRegistrationsByTripId("trip123"))
+                                .thenReturn(8L);
+
+                when(registrationService.countTravelersByTripId("trip123"))
+                                .thenReturn(11L);
+
                 mockMvc.perform(get("/api/trips/trip123"))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.id").value("trip123"))
                                 .andExpect(jsonPath("$.name").value("Alaska Adventure"))
-                                .andExpect(jsonPath("$.destination").value("Alaska, USA"));
+                                .andExpect(jsonPath("$.destination").value("Alaska, USA"))
+                                .andExpect(jsonPath("$.registrationCount").value(8))
+                                .andExpect(jsonPath("$.travelerCount").value(11));
         }
 
         @Test

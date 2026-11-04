@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
-const Dashboard = ({ trips, registrationsByTrip }) => {
+const Dashboard = ({ trips }) => {
   const navigate = useNavigate();
   const [showArchivedTrips, setShowArchivedTrips] = useState(false);
 
@@ -49,17 +49,8 @@ const Dashboard = ({ trips, registrationsByTrip }) => {
 
         <div className="trip-list">
           {visibleTrips.map((trip) => {
-            const registrations = registrationsByTrip[trip.id] || [];
-
-            const registrationCount = registrations.length;
-
-            const travelerCount = registrations.reduce(
-              (total, registration) =>
-                total +
-                1 +
-                (registration.bringingGuest && registration.guest ? 1 : 0),
-              0,
-            );
+            const registrationCount = trip.registrationCount ?? 0;
+            const travelerCount = trip.travelerCount ?? 0;
 
             return (
               <TripCard
