@@ -1,13 +1,25 @@
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import RegistrationList from "../components/RegistrationList";
+import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
 import "../styles/Registrations.css";
-import registrationsByTrip from "../data/mockRegistrations";
-import trips from "../data/mockTrips";
 
 const Registrations = () => {
   const { tripId } = useParams();
-  const trip = trips.find((trip) => trip.id === Number(tripId));
-  const registrations = registrationsByTrip[tripId] || [];
+  const dispatch = useDispatch();
+
+  const trip = useSelector((state) =>
+    state.trips.items.find((trip) => trip.id === tripId),
+  );
+
+  const registrations = useSelector(
+    (state) => state.registrations.byTrip[tripId] || [],
+  );
+
+  useEffect(() => {
+    dispatch(fetchRegistrationsByTrip(tripId));
+  }, [dispatch, tripId]);
 
   return (
     <main className="registrations-page">

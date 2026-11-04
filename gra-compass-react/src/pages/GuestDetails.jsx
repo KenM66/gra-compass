@@ -1,4 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchRegistrationsByTrip,
+  updateRegistration,
+} from "../store/registrationsSlice";
 import { useParams, useNavigate } from "react-router-dom";
 
 import "../styles/RegistrationDetails.css";
@@ -7,6 +12,15 @@ import selectionsByTrip from "../data/mockTripSelections";
 const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const { tripId, id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const registrations = useSelector(
+    (state) => state.registrations.byTrip[tripId] || [],
+  );
+
+  useEffect(() => {
+    dispatch(fetchRegistrationsByTrip(tripId));
+  }, [dispatch, tripId]);
   const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
 
   const [editPersonalInfo, setEditPersonalInfo] = useState({
@@ -25,9 +39,6 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
     airport: "",
     passportNumber: "",
     passportExpiration: "",
-    passportIssuingCountry: "",
-    nationality: "",
-    citizenship: "",
   });
 
   const [isEditingAccessibilityDietary, setIsEditingAccessibilityDietary] =
@@ -35,13 +46,11 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
 
   const [editAccessibilityDietary, setEditAccessibilityDietary] = useState({
     accessibility: "",
-    dietaryRestrictions: "",
+    dietaryRequirements: "",
   });
 
   const [isEditingSelections, setIsEditingSelections] = useState(false);
   const [editSelections, setEditSelections] = useState([]);
-
-  const registrations = registrationsByTrip[tripId] || [];
 
   const registration = registrations.find(
     (registration) => registration.travelerNumber === Number(id),
@@ -50,7 +59,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const guest = registration?.guest;
   const availableSelections = selectionsByTrip[tripId] ?? [];
   const getSessionRegistrationCount = (sessionId) =>
-    (registrationsByTrip[tripId] ?? []).reduce((count, currentRegistration) => {
+    registrations.reduce((count, currentRegistration) => {
       const primaryCount = (currentRegistration.activities ?? []).some(
         (activity) => activity.sessionId === sessionId,
       )
@@ -94,21 +103,22 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
       </main>
     );
   }
-  const handleSavePersonalInfo = () => {
-    setRegistrationsByTrip((currentRegistrations) => ({
-      ...currentRegistrations,
-      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
-        currentRegistration.travelerNumber === Number(id)
-          ? {
-              ...currentRegistration,
-              guest: {
-                ...currentRegistration.guest,
-                ...editPersonalInfo,
-              },
-            }
-          : currentRegistration,
-      ),
-    }));
+  const handleSavePersonalInfo = async () => {
+    const updatedRegistration = {
+      ...registration,
+      guest: {
+        ...registration.guest,
+        ...editPersonalInfo,
+      },
+    };
+
+    await dispatch(
+      updateRegistration({
+        tripId,
+        travelerNumber: registration.travelerNumber,
+        registration: updatedRegistration,
+      }),
+    ).unwrap();
 
     setIsEditingPersonalInfo(false);
   };
@@ -127,28 +137,29 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
     setIsEditingPersonalInfo(false);
   };
 
-  const handleSaveTravelInfo = () => {
-    setRegistrationsByTrip((currentRegistrations) => ({
-      ...currentRegistrations,
-      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
-        currentRegistration.travelerNumber === Number(id)
-          ? {
-              ...currentRegistration,
-              guest: {
-                ...currentRegistration.guest,
-                ...editTravelInfo,
-              },
-            }
-          : currentRegistration,
-      ),
-    }));
+  const handleSaveTravelInfo = async () => {
+    const updatedRegistration = {
+      ...registration,
+      guest: {
+        ...registration.guest,
+        ...editTravelInfo,
+      },
+    };
+
+    await dispatch(
+      updateRegistration({
+        tripId,
+        travelerNumber: registration.travelerNumber,
+        registration: updatedRegistration,
+      }),
+    ).unwrap();
 
     setIsEditingTravelInfo(false);
   };
 
   const handleCancelTravelInfo = () => {
     setEditTravelInfo({
-      airport: guest.departureAirport || "",
+      airport: guest.airport || "",
       passportNumber: guest.passportNumber || "",
       passportExpiration: guest.passportExpiration || "",
       passportIssuingCountry: guest.passportIssuingCountry || "",
@@ -159,21 +170,22 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
     setIsEditingTravelInfo(false);
   };
 
-  const handleSaveAccessibilityDietary = () => {
-    setRegistrationsByTrip((currentRegistrations) => ({
-      ...currentRegistrations,
-      [tripId]: currentRegistrations[tripId].map((currentRegistration) =>
-        currentRegistration.travelerNumber === Number(id)
-          ? {
-              ...currentRegistration,
-              guest: {
-                ...currentRegistration.guest,
-                ...editAccessibilityDietary,
-              },
-            }
-          : currentRegistration,
-      ),
-    }));
+  const handleSaveAccessibilityDietary = async () => {
+    const updatedRegistration = {
+      ...registration,
+      guest: {
+        ...registration.guest,
+        ...editAccessibilityDietary,
+      },
+    };
+
+    await dispatch(
+      updateRegistration({
+        tripId,
+        travelerNumber: registration.travelerNumber,
+        registration: updatedRegistration,
+      }),
+    ).unwrap();
 
     setIsEditingAccessibilityDietary(false);
   };
@@ -181,7 +193,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
   const handleCancelAccessibilityDietary = () => {
     setEditAccessibilityDietary({
       accessibility: guest.accessibility || "",
-      dietaryRestrictions: guest.dietaryRestrictions || "",
+      dietaryRequirements: guest.dietaryRequirements || "",
     });
 
     setIsEditingAccessibilityDietary(false);
@@ -451,62 +463,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             <strong>{guest.passportExpiration || "Not Provided"}</strong>
           )}
         </div>
-        <div className="detail-row">
-          <span>Passport Issuing Country</span>
 
-          {isEditingTravelInfo ? (
-            <input
-              type="text"
-              value={editTravelInfo.passportIssuingCountry}
-              onChange={(event) =>
-                setEditTravelInfo({
-                  ...editTravelInfo,
-                  passportIssuingCountry: event.target.value,
-                })
-              }
-            />
-          ) : (
-            <strong>{guest.passportIssuingCountry || ""}</strong>
-          )}
-        </div>
-
-        <div className="detail-row">
-          <span>Nationality</span>
-
-          {isEditingTravelInfo ? (
-            <input
-              type="text"
-              value={editTravelInfo.nationality}
-              onChange={(event) =>
-                setEditTravelInfo({
-                  ...editTravelInfo,
-                  nationality: event.target.value,
-                })
-              }
-            />
-          ) : (
-            <strong>{guest.nationality || ""}</strong>
-          )}
-        </div>
-
-        <div className="detail-row">
-          <span>Citizenship</span>
-
-          {isEditingTravelInfo ? (
-            <input
-              type="text"
-              value={editTravelInfo.citizenship}
-              onChange={(event) =>
-                setEditTravelInfo({
-                  ...editTravelInfo,
-                  citizenship: event.target.value,
-                })
-              }
-            />
-          ) : (
-            <strong>{guest.citizenship || ""}</strong>
-          )}
-        </div>
         {isEditingTravelInfo && (
           <div className="edit-actions">
             <button type="button" onClick={handleSaveTravelInfo}>
@@ -529,7 +486,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             onClick={() => {
               setEditAccessibilityDietary({
                 accessibility: guest.accessibility || "",
-                dietaryRestrictions: guest.dietaryRestrictions || "",
+                dietaryRequirements: guest.dietaryRequirements || "",
               });
 
               setIsEditingAccessibilityDietary(true);
@@ -564,16 +521,16 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
           {isEditingAccessibilityDietary ? (
             <input
               type="text"
-              value={editAccessibilityDietary.dietaryRestrictions}
+              value={editAccessibilityDietary.dietaryRequirements}
               onChange={(event) =>
                 setEditAccessibilityDietary({
                   ...editAccessibilityDietary,
-                  dietaryRestrictions: event.target.value,
+                  dietaryRequirements: event.target.value,
                 })
               }
             />
           ) : (
-            <strong>{guest.dietaryRestrictions || "None"}</strong>
+            <strong>{guest.dietaryRequirements || "None"}</strong>
           )}
         </div>
         {isEditingAccessibilityDietary && (
@@ -698,7 +655,7 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
             <div className="selection-edit-actions">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   const hasMissingSession = editSelections.some(
                     (activity) => !activity.sessionId,
                   );
@@ -707,22 +664,21 @@ const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
                     alert("Please select a session for each trip selection.");
                     return;
                   }
-                  setRegistrationsByTrip((currentRegistrations) => ({
-                    ...currentRegistrations,
-                    [tripId]: currentRegistrations[tripId].map(
-                      (currentRegistration) =>
-                        currentRegistration.travelerNumber ===
-                        registration.travelerNumber
-                          ? {
-                              ...currentRegistration,
-                              guest: {
-                                ...currentRegistration.guest,
-                                activities: editSelections,
-                              },
-                            }
-                          : currentRegistration,
-                    ),
-                  }));
+                  const updatedRegistration = {
+                    ...registration,
+                    guest: {
+                      ...registration.guest,
+                      activities: editSelections,
+                    },
+                  };
+
+                  await dispatch(
+                    updateRegistration({
+                      tripId,
+                      travelerNumber: registration.travelerNumber,
+                      registration: updatedRegistration,
+                    }),
+                  ).unwrap();
 
                   setIsEditingSelections(false);
                 }}

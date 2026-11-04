@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import selectionsByTrip from "../data/mockTripSelections";
 import "../styles/TripManagement.css";
@@ -6,18 +6,24 @@ import SelectionCard from "../components/SelectionCard";
 import RegistrationSummary from "../components/RegistrationSummary";
 import RegistrationSettings from "../components/RegistrationSettings";
 import RegistrationList from "../components/RegistrationList";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
+  fetchTrips,
   updateTrip,
   saveTrip,
   pauseRegistrations,
   resumeRegistrations,
 } from "../store/tripsSlice";
+import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
 
-const TripManagement = ({ trips, registrationsByTrip }) => {
+const TripManagement = () => {
   const { tripId } = useParams();
   const dispatch = useDispatch();
-  const trip = trips.find((trip) => String(trip.id) === tripId);
+
+  const trip = useSelector((state) =>
+    state.trips.items.find((trip) => String(trip.id) === tripId),
+  );
+
   console.log("Current trip:", trip);
   const getRegistrationStatus = () => {
     if (!trip) {
@@ -50,7 +56,14 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
 
   const registrationStatus = getRegistrationStatus();
 
-  const tripRegistrations = registrationsByTrip[tripId] || [];
+  const tripRegistrations = useSelector(
+    (state) => state.registrations.byTrip[tripId] || [],
+  );
+
+  useEffect(() => {
+    dispatch(fetchTrips());
+    dispatch(fetchRegistrationsByTrip(tripId));
+  }, [dispatch, tripId]);
 
   const getSessionRegistrationCount = (sessionId) =>
     tripRegistrations.filter((registration) =>
@@ -316,6 +329,14 @@ const TripManagement = ({ trips, registrationsByTrip }) => {
 
   const [newSessionDate, setNewSessionDate] = useState("");
   const [newSessionTime, setNewSessionTime] = useState("");
+
+  if (!trip) {
+    return (
+      <main className="trip-management">
+        <p>Loading trip...</p>
+      </main>
+    );
+  }
 
   const handleAddSelection = () => {
     if (
