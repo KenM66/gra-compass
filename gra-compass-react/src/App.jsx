@@ -36,8 +36,7 @@ const App = () => {
   }, [dispatch]);
   const trips = useSelector((state) => state.trips.items);
 
-  const [registrationsByTrip, setRegistrationsByTrip] =
-    useState(registrationsData);
+  const [registrationsByTrip] = useState(registrationsData);
 
   return (
     <BrowserRouter>
@@ -101,7 +100,7 @@ const App = () => {
           path="/reports/accessibility"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AccessibilityReport registrationsByTrip={registrationsByTrip} />
+              <AccessibilityReport />
             </ProtectedRoute>
           }
         />
