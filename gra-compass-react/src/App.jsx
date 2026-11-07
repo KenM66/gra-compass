@@ -93,7 +93,7 @@ const App = () => {
           path="/reports/registrations"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <RegistrationReport registrationsByTrip={registrationsByTrip} />
+              <RegistrationReport />
             </ProtectedRoute>
           }
         />

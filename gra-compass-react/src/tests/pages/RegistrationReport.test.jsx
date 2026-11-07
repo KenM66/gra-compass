@@ -1,17 +1,55 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, test, vi } from "vitest";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import tripsReducer from "../../store/tripsSlice";
+import registrationsReducer from "../../store/registrationsSlice";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import RegistrationReport from "../../pages/RegistrationReport";
 import userEvent from "@testing-library/user-event";
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => new Promise(() => {})),
+  );
+});
 
 const renderRegistrationReport = ({
   initialEntry = "/reports/registrations?tripId=1",
   registrationsByTrip = {},
 } = {}) => {
+  const store = configureStore({
+    reducer: {
+      trips: tripsReducer,
+      registrations: registrationsReducer,
+    },
+    preloadedState: {
+      trips: {
+        items: [
+          {
+            id: "1",
+            name: "Upcoming Trip",
+            destination: "Orlando, FL",
+          },
+        ],
+        status: "idle",
+        error: null,
+      },
+      registrations: {
+        byTrip: registrationsByTrip,
+        status: "idle",
+        error: null,
+      },
+    },
+  });
+
   render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <RegistrationReport registrationsByTrip={registrationsByTrip} />
-    </MemoryRouter>,
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <RegistrationReport />
+      </MemoryRouter>
+    </Provider>,
   );
 };
 

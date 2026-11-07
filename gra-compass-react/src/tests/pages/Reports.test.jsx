@@ -2,11 +2,43 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import tripsReducer from "../../store/tripsSlice";
 import Reports from "../../pages/Reports";
+
+const renderReports = () => {
+  const store = configureStore({
+    reducer: {
+      trips: tripsReducer,
+    },
+    preloadedState: {
+      trips: {
+        items: [
+          {
+            id: "6ae7cb5678f43b681c8bd890",
+            name: "Test Trip",
+            destination: "Orlando, FL",
+          },
+        ],
+        status: "idle",
+        error: null,
+      },
+    },
+  });
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter>
+        <Reports />
+      </MemoryRouter>
+    </Provider>,
+  );
+};
 
 describe("Reports", () => {
   test("displays the reports page and trip selector", () => {
-    render(<Reports />);
+    renderReports();
 
     expect(
       screen.getByRole("heading", {
@@ -23,7 +55,7 @@ describe("Reports", () => {
     ).toBeInTheDocument();
   });
   test("does not display report builders before a trip is selected", () => {
-    const { container } = render(<Reports />);
+    const { container } = renderReports();
 
     expect(
       container.querySelector(".reports-builders"),
@@ -32,11 +64,7 @@ describe("Reports", () => {
   test("displays report builders after a trip is selected", async () => {
     const user = userEvent.setup();
 
-    const { container } = render(
-      <MemoryRouter>
-        <Reports />
-      </MemoryRouter>,
-    );
+    const { container } = renderReports();
 
     const tripSelect = screen.getByLabelText("Trip");
     const tripOptions = screen.getAllByRole("option");
@@ -58,11 +86,7 @@ describe("Reports", () => {
   test("hides report builders when the trip selection is cleared", async () => {
     const user = userEvent.setup();
 
-    const { container } = render(
-      <MemoryRouter>
-        <Reports />
-      </MemoryRouter>,
-    );
+    const { container } = renderReports();
 
     const tripSelect = screen.getByLabelText("Trip");
     const tripOptions = screen.getAllByRole("option");
