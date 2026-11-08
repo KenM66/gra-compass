@@ -16,6 +16,18 @@ public class RegistrationService {
         this.registrationRepository = registrationRepository;
     }
 
+    public long countRegistrationsByTripId(String tripId) {
+        return registrationRepository.countByTripId(tripId);
+    }
+
+    public long countTravelersByTripId(String tripId) {
+        return registrationRepository.findByTripId(tripId)
+                .stream()
+                .mapToLong(registration -> registration.isBringingGuest()
+                        && registration.getGuest() != null ? 2 : 1)
+                .sum();
+    }
+
     public List<Registration> getRegistrationsByTripId(String tripId) {
         return registrationRepository.findByTripId(tripId);
     }

@@ -1,15 +1,29 @@
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import trips from "../data/mockTrips";
+import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
 import "../styles/RegistrationReport.css";
 
-const RegistrationReport = ({ registrationsByTrip }) => {
+const RegistrationReport = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const dispatch = useDispatch();
 
   const tripId = searchParams.get("tripId");
 
-  const trip = trips.find((trip) => trip.id === Number(tripId));
-  const registrations = registrationsByTrip[tripId] || [];
+  const trip = useSelector((state) =>
+    state.trips.items.find((trip) => trip.id === tripId),
+  );
+
+  const registrations = useSelector(
+    (state) => state.registrations.byTrip[tripId] || [],
+  );
+
+  useEffect(() => {
+    if (tripId) {
+      dispatch(fetchRegistrationsByTrip(tripId));
+    }
+  }, [dispatch, tripId]);
 
   const hasValidReport = trip && registrations.length > 0;
 

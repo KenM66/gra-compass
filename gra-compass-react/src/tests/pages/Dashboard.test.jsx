@@ -11,6 +11,8 @@ const trips = [
     destination: "Orlando, FL",
     startDate: "2099-06-01",
     endDate: "2099-06-07",
+    registrationCount: 3,
+    travelerCount: 5,
   },
   {
     id: 2,
@@ -21,37 +23,10 @@ const trips = [
   },
 ];
 
-const registrationsByTrip = {
-  1: [
-    {
-      id: 101,
-      bringingGuest: false,
-      guest: null,
-    },
-    {
-      id: 102,
-      bringingGuest: true,
-      guest: {
-        firstName: "Guest",
-        lastName: "One",
-      },
-    },
-    {
-      id: 103,
-      bringingGuest: true,
-      guest: {
-        firstName: "Guest",
-        lastName: "Two",
-      },
-    },
-  ],
-  2: [],
-};
-
 const renderDashboard = () => {
   return render(
     <MemoryRouter>
-      <Dashboard trips={trips} registrationsByTrip={registrationsByTrip} />
+      <Dashboard trips={trips} />
     </MemoryRouter>,
   );
 };
@@ -101,7 +76,7 @@ describe("Dashboard", () => {
 
     render(
       <MemoryRouter>
-        <Dashboard trips={tripsEndingToday} registrationsByTrip={{ 3: [] }} />
+        <Dashboard trips={tripsEndingToday} />
       </MemoryRouter>,
     );
 
@@ -120,23 +95,16 @@ describe("Dashboard", () => {
       }),
     ).toBeInTheDocument();
   });
-  test("does not count a guest when the guest information is missing", () => {
-    const registrationsWithMissingGuest = {
-      1: [
-        {
-          id: 201,
-          bringingGuest: true,
-          guest: null,
-        },
-      ],
+  test("displays a single traveler count from the API", () => {
+    const tripWithOneTraveler = {
+      ...trips[0],
+      registrationCount: 1,
+      travelerCount: 1,
     };
 
     render(
       <MemoryRouter>
-        <Dashboard
-          trips={[trips[0]]}
-          registrationsByTrip={registrationsWithMissingGuest}
-        />
+        <Dashboard trips={[tripWithOneTraveler]} />
       </MemoryRouter>,
     );
 
@@ -155,7 +123,7 @@ describe("Dashboard", () => {
 
     render(
       <MemoryRouter initialEntries={["/"]}>
-        <Dashboard trips={trips} registrationsByTrip={registrationsByTrip} />
+        <Dashboard trips={trips} />
       </MemoryRouter>,
     );
 
@@ -173,15 +141,7 @@ describe("Dashboard", () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <Dashboard
-                trips={trips}
-                registrationsByTrip={registrationsByTrip}
-              />
-            }
-          />
+          <Route path="/" element={<Dashboard trips={trips} />} />
           <Route path="/trips/create" element={<div>Create Trip Page</div>} />
         </Routes>
       </MemoryRouter>,
@@ -201,15 +161,7 @@ describe("Dashboard", () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <Dashboard
-                trips={[trips[0]]}
-                registrationsByTrip={registrationsByTrip}
-              />
-            }
-          />
+          <Route path="/" element={<Dashboard trips={[trips[0]]} />} />
           <Route
             path="/trips/:tripId/manage"
             element={<div>Manage Trip Page</div>}

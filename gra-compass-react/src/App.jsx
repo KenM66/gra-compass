@@ -36,8 +36,7 @@ const App = () => {
   }, [dispatch]);
   const trips = useSelector((state) => state.trips.items);
 
-  const [registrationsByTrip, setRegistrationsByTrip] =
-    useState(registrationsData);
+  const [registrationsByTrip] = useState(registrationsData);
 
   return (
     <BrowserRouter>
@@ -66,10 +65,7 @@ const App = () => {
           path="/trips/:tripId/registrations/:id/guest"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <GuestDetails
-                registrationsByTrip={registrationsByTrip}
-                setRegistrationsByTrip={setRegistrationsByTrip}
-              />
+              <GuestDetails />
             </ProtectedRoute>
           }
         />
@@ -86,9 +82,7 @@ const App = () => {
           path="/reports/activity-sessions"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <ActivitySessionReport
-                registrationsByTrip={registrationsByTrip}
-              />
+              <ActivitySessionReport />
             </ProtectedRoute>
           }
         />
@@ -96,7 +90,7 @@ const App = () => {
           path="/reports/registrations"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <RegistrationReport registrationsByTrip={registrationsByTrip} />
+              <RegistrationReport />
             </ProtectedRoute>
           }
         />
@@ -104,7 +98,7 @@ const App = () => {
           path="/reports/accessibility"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AccessibilityReport registrationsByTrip={registrationsByTrip} />
+              <AccessibilityReport />
             </ProtectedRoute>
           }
         />
@@ -112,7 +106,7 @@ const App = () => {
           path="/reports/dietary"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <DietaryReport registrationsByTrip={registrationsByTrip} />
+              <DietaryReport />
             </ProtectedRoute>
           }
         />
@@ -120,7 +114,7 @@ const App = () => {
           path="/reports/flight-booking"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <FlightBookingReport registrationsByTrip={registrationsByTrip} />
+              <FlightBookingReport />
             </ProtectedRoute>
           }
         />
@@ -197,10 +191,7 @@ const App = () => {
           path="/"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Dashboard
-                trips={trips}
-                registrationsByTrip={registrationsByTrip}
-              />
+              <Dashboard trips={trips} />
             </ProtectedRoute>
           }
         />

@@ -22,6 +22,7 @@ public class TripResponse {
 
     private int registrationCount;
     private int registrationCapacity;
+    private int travelerCount;
     private int travelerCapacity;
 
     private LocalDate registrationCloseDate;

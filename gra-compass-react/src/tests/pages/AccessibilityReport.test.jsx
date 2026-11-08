@@ -1,16 +1,54 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, test } from "vitest";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import tripsReducer from "../../store/tripsSlice";
+import registrationsReducer from "../../store/registrationsSlice";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import AccessibilityReport from "../../pages/AccessibilityReport";
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => new Promise(() => {})),
+  );
+});
 
 const renderAccessibilityReport = ({
   initialEntry = "/reports/accessibility?tripId=1",
   registrationsByTrip = {},
 } = {}) => {
-  render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <AccessibilityReport registrationsByTrip={registrationsByTrip} />
-    </MemoryRouter>,
+  const store = configureStore({
+    reducer: {
+      trips: tripsReducer,
+      registrations: registrationsReducer,
+    },
+    preloadedState: {
+      trips: {
+        items: [
+          {
+            id: "1",
+            name: "Test Trip",
+            destination: "Orlando, FL",
+          },
+        ],
+        status: "idle",
+        error: null,
+      },
+      registrations: {
+        byTrip: registrationsByTrip,
+        status: "idle",
+        error: null,
+      },
+    },
+  });
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <AccessibilityReport />
+      </MemoryRouter>
+    </Provider>,
   );
 };
 

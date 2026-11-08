@@ -10,6 +10,8 @@ public interface RegistrationRepository extends MongoRepository<Registration, St
 
     List<Registration> findByTripId(String tripId);
 
+    long countByTripId(String tripId);
+
     Optional<Registration> findByTripIdAndTravelerNumber(
             String tripId,
             int travelerNumber);

@@ -12,88 +12,122 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 import java.net.URI;
+import com.gragroup.compass.service.RegistrationService;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/trips")
 public class TripController {
 
-    private final TripService tripService;
+        private final TripService tripService;
+        private final RegistrationService registrationService;
 
-    public TripController(TripService tripService) {
-        this.tripService = tripService;
-    }
-
-    @GetMapping
-    public List<TripResponse> getAllTrips() {
-        return tripService.getAllTrips()
-                .stream()
-                .map(TripResponse::from)
-                .toList();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<TripResponse> getTripById(@PathVariable String id) {
-        return tripService.getTripById(id)
-                .map(TripResponse::from)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public ResponseEntity<TripResponse> createTrip(
-            @Valid @RequestBody CreateTripRequest request) {
-
-        Trip createdTrip = tripService.createTrip(request);
-
-        URI location = URI.create("/api/trips/" + createdTrip.getId());
-
-        return ResponseEntity.created(location)
-                .body(TripResponse.from(createdTrip));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<TripResponse> updateTrip(
-            @PathVariable String id,
-            @Valid @RequestBody UpdateTripRequest request) {
-
-        return tripService.getTripById(id)
-                .map(existingTrip -> TripResponse.from(
-                        tripService.updateTrip(existingTrip, request)))
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/{id}/pause-registrations")
-    public ResponseEntity<TripResponse> pauseRegistrations(
-            @PathVariable String id) {
-
-        return tripService.getTripById(id)
-                .map(existingTrip -> TripResponse.from(
-                        tripService.pauseRegistrations(existingTrip)))
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/{id}/resume-registrations")
-    public ResponseEntity<TripResponse> resumeRegistrations(
-            @PathVariable String id) {
-
-        return tripService.getTripById(id)
-                .map(existingTrip -> TripResponse.from(
-                        tripService.resumeRegistrations(existingTrip)))
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTrip(@PathVariable String id) {
-        if (tripService.getTripById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
+        public TripController(
+                        TripService tripService,
+                        RegistrationService registrationService) {
+                this.tripService = tripService;
+                this.registrationService = registrationService;
         }
 
-        tripService.deleteTrip(id);
+        @GetMapping
+        public List<TripResponse> getAllTrips() {
+                return tripService.getAllTrips()
+                                .stream()
+                                .map(trip -> {
+                                        TripResponse response = TripResponse.from(trip);
 
-        return ResponseEntity.noContent().build();
-    }
+                                        long registrationCount = registrationService.countRegistrationsByTripId(
+                                                        trip.getId());
+
+                                        response.setRegistrationCount(
+                                                        Math.toIntExact(registrationCount));
+
+                                        long travelerCount = registrationService.countTravelersByTripId(
+                                                        trip.getId());
+
+                                        response.setTravelerCount(
+                                                        Math.toIntExact(travelerCount));
+
+                                        return response;
+                                })
+                                .toList();
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<TripResponse> getTripById(@PathVariable String id) {
+                return tripService.getTripById(id)
+                                .map(trip -> {
+                                        TripResponse response = TripResponse.from(trip);
+
+                                        response.setRegistrationCount(
+                                                        Math.toIntExact(
+                                                                        registrationService.countRegistrationsByTripId(
+                                                                                        id)));
+
+                                        response.setTravelerCount(
+                                                        Math.toIntExact(
+                                                                        registrationService
+                                                                                        .countTravelersByTripId(id)));
+
+                                        return ResponseEntity.ok(response);
+                                })
+                                .orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        @PostMapping
+        public ResponseEntity<TripResponse> createTrip(
+                        @Valid @RequestBody CreateTripRequest request) {
+
+                Trip createdTrip = tripService.createTrip(request);
+
+                URI location = URI.create("/api/trips/" + createdTrip.getId());
+
+                return ResponseEntity.created(location)
+                                .body(TripResponse.from(createdTrip));
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<TripResponse> updateTrip(
+                        @PathVariable String id,
+                        @Valid @RequestBody UpdateTripRequest request) {
+
+                return tripService.getTripById(id)
+                                .map(existingTrip -> TripResponse.from(
+                                                tripService.updateTrip(existingTrip, request)))
+                                .map(ResponseEntity::ok)
+                                .orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        @PutMapping("/{id}/pause-registrations")
+        public ResponseEntity<TripResponse> pauseRegistrations(
+                        @PathVariable String id) {
+
+                return tripService.getTripById(id)
+                                .map(existingTrip -> TripResponse.from(
+                                                tripService.pauseRegistrations(existingTrip)))
+                                .map(ResponseEntity::ok)
+                                .orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        @PutMapping("/{id}/resume-registrations")
+        public ResponseEntity<TripResponse> resumeRegistrations(
+                        @PathVariable String id) {
+
+                return tripService.getTripById(id)
+                                .map(existingTrip -> TripResponse.from(
+                                                tripService.resumeRegistrations(existingTrip)))
+                                .map(ResponseEntity::ok)
+                                .orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteTrip(@PathVariable String id) {
+                if (tripService.getTripById(id).isEmpty()) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                tripService.deleteTrip(id);
+
+                return ResponseEntity.noContent().build();
+        }
 }

@@ -1,5 +1,5 @@
+import { useSelector } from "react-redux";
 import { useState } from "react";
-import trips from "../data/mockTrips";
 import ActivitySessionReportBuilder from "../components/ActivitySessionReportBuilder";
 import RegistrationReportBuilder from "../components/RegistrationReportBuilder";
 import "../styles/Reports.css";
@@ -13,6 +13,8 @@ import ExcursionListReportBuilder from "../components/ExcursionListReportBuilder
 
 const Reports = () => {
   const [selectedTripId, setSelectedTripId] = useState("");
+
+  const trips = useSelector((state) => state.trips.items);
 
   return (
     <div className="reports-page">

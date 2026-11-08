@@ -1,11 +1,14 @@
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import trips from "../data/mockTrips";
+import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
 import selectionsByTrip from "../data/mockTripSelections";
 import "../styles/ActivitySessionReport.css";
 
-const ActivitySessionReport = ({ registrationsByTrip }) => {
+const ActivitySessionReport = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const dispatch = useDispatch();
 
   const tripId = searchParams.get("tripId");
   const sessionIds = (searchParams.get("sessionIds") || "")
@@ -13,10 +16,21 @@ const ActivitySessionReport = ({ registrationsByTrip }) => {
     .filter(Boolean)
     .map(Number);
 
-  const trip = trips.find((trip) => trip.id === Number(tripId));
+  const trip = useSelector((state) =>
+    state.trips.items.find((trip) => trip.id === tripId),
+  );
+
+  const tripRegistrations = useSelector(
+    (state) => state.registrations.byTrip[tripId] || [],
+  );
 
   const tripSelections = selectionsByTrip[tripId] || [];
-  const tripRegistrations = registrationsByTrip[tripId] || [];
+
+  useEffect(() => {
+    if (tripId) {
+      dispatch(fetchRegistrationsByTrip(tripId));
+    }
+  }, [dispatch, tripId]);
 
   const reportSessions = tripSelections
     .flatMap((selection) =>

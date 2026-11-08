@@ -1,16 +1,54 @@
 import { render, screen } from "@testing-library/react";
+import { configureStore } from "@reduxjs/toolkit";
+import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import DietaryReport from "../../pages/DietaryReport";
+import tripsReducer from "../../store/tripsSlice";
+import registrationsReducer from "../../store/registrationsSlice";
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => new Promise(() => {})),
+  );
+});
 
 const renderDietaryReport = ({
   initialEntry = "/reports/dietary?tripId=1",
   registrationsByTrip = {},
 } = {}) => {
-  render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <DietaryReport registrationsByTrip={registrationsByTrip} />
-    </MemoryRouter>,
+  const store = configureStore({
+    reducer: {
+      trips: tripsReducer,
+      registrations: registrationsReducer,
+    },
+    preloadedState: {
+      trips: {
+        items: [
+          {
+            id: "1",
+            name: "Test Trip",
+            destination: "Orlando, FL",
+          },
+        ],
+        status: "idle",
+        error: null,
+      },
+      registrations: {
+        byTrip: registrationsByTrip,
+        status: "idle",
+        error: null,
+      },
+    },
+  });
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <DietaryReport />
+      </MemoryRouter>
+    </Provider>,
   );
 };
 
@@ -119,7 +157,7 @@ describe("DietaryReport", () => {
           guest: {
             firstName: "Jamie",
             lastName: "Guest",
-            dietaryRestrictions: "Peanut allergy",
+            dietaryRequirements: "Peanut allergy",
           },
         },
       ],
@@ -169,7 +207,7 @@ describe("DietaryReport", () => {
           guest: {
             firstName: "Jamie",
             lastName: "Guest",
-            dietaryRestrictions: "Peanut allergy",
+            dietaryRequirements: "Peanut allergy",
           },
         },
       ],

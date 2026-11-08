@@ -9,7 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import "../styles/RegistrationDetails.css";
 import selectionsByTrip from "../data/mockTripSelections";
 
-const GuestDetails = ({ registrationsByTrip, setRegistrationsByTrip }) => {
+const GuestDetails = () => {
   const { tripId, id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
