@@ -82,9 +82,7 @@ const App = () => {
           path="/reports/activity-sessions"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <ActivitySessionReport
-                registrationsByTrip={registrationsByTrip}
-              />
+              <ActivitySessionReport />
             </ProtectedRoute>
           }
         />
