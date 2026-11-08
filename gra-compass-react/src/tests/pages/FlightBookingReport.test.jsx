@@ -1,16 +1,54 @@
 import { render, screen, within } from "@testing-library/react";
+import { configureStore } from "@reduxjs/toolkit";
+import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import FlightBookingReport from "../../pages/FlightBookingReport";
+import tripsReducer from "../../store/tripsSlice";
+import registrationsReducer from "../../store/registrationsSlice";
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => new Promise(() => {})),
+  );
+});
 
 const renderFlightBookingReport = ({
   initialEntry = "/reports/flight-booking?tripId=1",
   registrationsByTrip = {},
 } = {}) => {
-  render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <FlightBookingReport registrationsByTrip={registrationsByTrip} />
-    </MemoryRouter>,
+  const store = configureStore({
+    reducer: {
+      trips: tripsReducer,
+      registrations: registrationsReducer,
+    },
+    preloadedState: {
+      trips: {
+        items: [
+          {
+            id: "1",
+            name: "Test Trip",
+            destination: "Orlando, FL",
+          },
+        ],
+        status: "idle",
+        error: null,
+      },
+      registrations: {
+        byTrip: registrationsByTrip,
+        status: "idle",
+        error: null,
+      },
+    },
+  });
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <FlightBookingReport />
+      </MemoryRouter>
+    </Provider>,
   );
 };
 

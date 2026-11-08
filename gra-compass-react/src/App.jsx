@@ -116,7 +116,7 @@ const App = () => {
           path="/reports/flight-booking"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <FlightBookingReport registrationsByTrip={registrationsByTrip} />
+              <FlightBookingReport />
             </ProtectedRoute>
           }
         />
