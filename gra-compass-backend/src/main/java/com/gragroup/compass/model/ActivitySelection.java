@@ -11,7 +11,7 @@ import lombok.Setter;
 public class ActivitySelection {
 
     @JsonProperty("id")
-    private int activityId;
+    private String activityId;
 
     private String type;
     private String name;
