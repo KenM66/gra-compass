@@ -6,11 +6,13 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import tripsReducer from "../../store/tripsSlice";
 import Reports from "../../pages/Reports";
+import activitiesReducer from "../../store/activitiesSlice";
 
 const renderReports = () => {
   const store = configureStore({
     reducer: {
       trips: tripsReducer,
+      activities: activitiesReducer,
     },
     preloadedState: {
       trips: {

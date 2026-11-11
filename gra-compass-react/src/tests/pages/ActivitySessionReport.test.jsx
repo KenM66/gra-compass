@@ -7,6 +7,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import ActivitySessionReport from "../../pages/ActivitySessionReport";
 import tripsReducer from "../../store/tripsSlice";
 import registrationsReducer from "../../store/registrationsSlice";
+import activitiesReducer from "../../store/activitiesSlice";
+import selectionsByTrip from "../../data/mockTripSelections";
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -23,6 +25,7 @@ const renderActivitySessionReport = ({
     reducer: {
       trips: tripsReducer,
       registrations: registrationsReducer,
+      activities: activitiesReducer,
     },
     preloadedState: {
       trips: {
@@ -39,6 +42,11 @@ const renderActivitySessionReport = ({
       registrations: {
         byTrip: registrationsByTrip,
         status: "idle",
+        error: null,
+      },
+      activities: {
+        byTrip: selectionsByTrip,
+        loading: false,
         error: null,
       },
     },
@@ -77,7 +85,7 @@ describe("ActivitySessionReport", () => {
   });
   test("displays a valid activity session report for the selected trip and session", () => {
     renderActivitySessionReport({
-      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=501",
+      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=5:501",
     });
 
     expect(
@@ -138,7 +146,7 @@ describe("ActivitySessionReport", () => {
     };
 
     renderActivitySessionReport({
-      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=501",
+      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=5:501",
       registrationsByTrip,
     });
 
@@ -182,7 +190,7 @@ describe("ActivitySessionReport", () => {
     };
 
     renderActivitySessionReport({
-      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=501",
+      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=5:501",
       registrationsByTrip,
     });
 
@@ -228,7 +236,7 @@ describe("ActivitySessionReport", () => {
     };
 
     renderActivitySessionReport({
-      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=501",
+      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=5:501",
       registrationsByTrip,
     });
 
@@ -278,7 +286,7 @@ describe("ActivitySessionReport", () => {
     };
 
     renderActivitySessionReport({
-      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=501",
+      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=5:501",
       registrationsByTrip,
     });
 
@@ -335,7 +343,8 @@ describe("ActivitySessionReport", () => {
     };
 
     renderActivitySessionReport({
-      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=501,101",
+      initialEntry:
+        "/reports/activity-sessions?tripId=1&sessionIds=5:501,1:101",
       registrationsByTrip,
     });
 
@@ -365,7 +374,7 @@ describe("ActivitySessionReport", () => {
     };
 
     renderActivitySessionReport({
-      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=501",
+      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=5:501",
       registrationsByTrip,
     });
 
@@ -380,7 +389,7 @@ describe("ActivitySessionReport", () => {
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => {});
 
     renderActivitySessionReport({
-      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=501",
+      initialEntry: "/reports/activity-sessions?tripId=1&sessionIds=5:501",
     });
 
     await user.click(

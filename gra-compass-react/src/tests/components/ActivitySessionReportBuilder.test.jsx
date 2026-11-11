@@ -1,8 +1,12 @@
 import { render, screen } from "@testing-library/react";
+import { configureStore } from "@reduxjs/toolkit";
+import { Provider } from "react-redux";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import ActivitySessionReportBuilder from "../../components/ActivitySessionReportBuilder";
+import activitiesReducer from "../../store/activitiesSlice";
+import selectionsByTrip from "../../data/mockTripSelections";
 
 const ReportDestination = () => {
   const location = useLocation();
@@ -16,14 +20,44 @@ const ReportDestination = () => {
 };
 
 const renderActivitySessionReportBuilder = (tripId = "1") => {
+  const store = configureStore({
+    reducer: {
+      activities: activitiesReducer,
+    },
+    preloadedState: {
+      activities: {
+        byTrip: {
+          [tripId]: selectionsByTrip[tripId] || [],
+        },
+        loading: false,
+        error: null,
+      },
+    },
+  });
+
   render(
-    <MemoryRouter>
-      <ActivitySessionReportBuilder tripId={tripId} />
-    </MemoryRouter>,
+    <Provider store={store}>
+      <MemoryRouter>
+        <ActivitySessionReportBuilder tripId={tripId} />
+      </MemoryRouter>
+    </Provider>,
   );
 };
 
 describe("ActivitySessionReportBuilder", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => selectionsByTrip["1"],
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
   test("disables Generate Report when no sessions are selected", () => {
     renderActivitySessionReportBuilder();
 
@@ -167,22 +201,38 @@ describe("ActivitySessionReportBuilder", () => {
   test("navigates to the activity session report with the selected session", async () => {
     const user = userEvent.setup();
 
+    const store = configureStore({
+      reducer: {
+        activities: activitiesReducer,
+      },
+      preloadedState: {
+        activities: {
+          byTrip: {
+            1: selectionsByTrip["1"],
+          },
+          loading: false,
+          error: null,
+        },
+      },
+    });
+
     render(
-      <MemoryRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={<ActivitySessionReportBuilder tripId="1" />}
-          />
+      <Provider store={store}>
+        <MemoryRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={<ActivitySessionReportBuilder tripId="1" />}
+            />
 
-          <Route
-            path="/reports/activity-sessions"
-            element={<ReportDestination />}
-          />
-        </Routes>
-      </MemoryRouter>,
+            <Route
+              path="/reports/activity-sessions"
+              element={<ReportDestination />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
     );
-
     const sessionCheckboxes = screen.getAllByRole("checkbox");
 
     await user.click(sessionCheckboxes[0]);
@@ -196,26 +246,43 @@ describe("ActivitySessionReportBuilder", () => {
     const reportLocation = screen.getByTestId("report-location");
 
     expect(reportLocation).toHaveTextContent(
-      "/reports/activity-sessions?tripId=1&sessionIds=501",
+      "/reports/activity-sessions?tripId=1&sessionIds=5:501",
     );
   });
   test("includes multiple selected session IDs when generating a report", async () => {
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={<ActivitySessionReportBuilder tripId="1" />}
-          />
+    const store = configureStore({
+      reducer: {
+        activities: activitiesReducer,
+      },
+      preloadedState: {
+        activities: {
+          byTrip: {
+            1: selectionsByTrip["1"],
+          },
+          loading: false,
+          error: null,
+        },
+      },
+    });
 
-          <Route
-            path="/reports/activity-sessions"
-            element={<ReportDestination />}
-          />
-        </Routes>
-      </MemoryRouter>,
+    render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={<ActivitySessionReportBuilder tripId="1" />}
+            />
+
+            <Route
+              path="/reports/activity-sessions"
+              element={<ReportDestination />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
     );
 
     const sessionCheckboxes = screen.getAllByRole("checkbox");
@@ -230,7 +297,7 @@ describe("ActivitySessionReportBuilder", () => {
     );
 
     expect(screen.getByTestId("report-location")).toHaveTextContent(
-      "/reports/activity-sessions?tripId=1&sessionIds=501,101",
+      "/reports/activity-sessions?tripId=1&sessionIds=5:501,1:101",
     );
   });
 });

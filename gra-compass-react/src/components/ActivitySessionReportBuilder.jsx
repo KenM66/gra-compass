@@ -1,14 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { fetchActivities } from "../store/activitiesSlice";
 import selectionsByTrip from "../data/mockTripSelections";
 
 const ActivitySessionReportBuilder = ({ tripId }) => {
   const navigate = useNavigate();
 
+  const dispatch = useDispatch();
+
+  const tripActivities = useSelector(
+    (state) => state.activities.byTrip[tripId] || [],
+  );
+  useEffect(() => {
+    if (tripId) {
+      dispatch(fetchActivities(tripId));
+    }
+  }, [dispatch, tripId]);
+
   const [isOpen, setIsOpen] = useState(true);
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
 
-  const selectedTripSelections = selectionsByTrip[tripId] || [];
+  const selectedTripSelections = tripActivities;
 
   const sessions = selectedTripSelections
     .flatMap((selection) =>
@@ -43,7 +56,9 @@ const ActivitySessionReportBuilder = ({ tripId }) => {
   };
 
   const handleSelectAll = () => {
-    setSelectedSessionIds(sessions.map((session) => session.id));
+    setSelectedSessionIds(
+      sessions.map((session) => `${session.selectionId}:${session.id}`),
+    );
   };
 
   const handleClearAll = () => {
@@ -101,12 +116,21 @@ const ActivitySessionReportBuilder = ({ tripId }) => {
               </h3>
 
               {dateSessions.map((session) => (
-                <div key={session.id} className="reports-session">
+                <div
+                  key={`${session.selectionId}:${session.id}`}
+                  className="reports-session"
+                >
                   <label className="reports-session-label">
                     <input
                       type="checkbox"
-                      checked={selectedSessionIds.includes(session.id)}
-                      onChange={() => handleSessionToggle(session.id)}
+                      checked={selectedSessionIds.includes(
+                        `${session.selectionId}:${session.id}`,
+                      )}
+                      onChange={() =>
+                        handleSessionToggle(
+                          `${session.selectionId}:${session.id}`,
+                        )
+                      }
                     />
 
                     <strong>{session.selectionName}</strong>
