@@ -65,11 +65,11 @@ public class ActivityService {
             int sessionId) {
 
         return getRegistrationsForTrip(tripId).stream()
-                .filter(registration -> registration.getActivities() != null)
-                .flatMap(registration -> registration.getActivities().stream())
+                .filter(registration -> registration.getGuest() != null)
+                .filter(registration -> registration.getGuest().getActivities() != null)
+                .flatMap(registration -> registration.getGuest().getActivities().stream())
                 .filter(selection -> matchesSession(selection, activityId, sessionId))
-                .count()
-                + countGuestSessionRegistrations(tripId, activityId, sessionId);
+                .count();
     }
 
     private void validateSessionCapacity(
@@ -119,6 +119,8 @@ public class ActivityService {
 
         session.setMaxCapacity(updatedSession.getMaxCapacity());
         session.setDate(updatedSession.getDate());
+        session.setTime(updatedSession.getTime());
+        session.setActive(updatedSession.isActive());
 
         return activityRepository.save(activity);
     }

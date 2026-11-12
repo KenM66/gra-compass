@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.NoSuchElementException;
 import java.util.List;
+import java.util.Optional;
 
 class ActivityServiceTest {
 
@@ -68,6 +69,44 @@ class ActivityServiceTest {
 
                 verify(tripRepository).existsById(tripId);
                 verify(activityRepository).save(any(Activity.class));
+        }
+
+        @Test
+        void updatesActivitySessionCapacity() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+                int sessionId = 1;
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(sessionId);
+                session.setMaxCapacity(20);
+
+                activity.setSessions(List.of(session));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(30);
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of());
+
+                when(activityRepository.save(any(Activity.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                Activity result = activityService.updateActivitySession(
+                                tripId,
+                                activityId,
+                                sessionId,
+                                updatedSession);
+
+                assertEquals(30, result.getSessions().get(0).getMaxCapacity());
+                verify(activityRepository).save(activity);
         }
 
         @Test

@@ -80,4 +80,28 @@ public class ActivityController {
         }
     }
 
+    @PutMapping("/{activityId}/sessions/{sessionId}")
+    public ResponseEntity<Activity> updateActivitySession(
+            @PathVariable String tripId,
+            @PathVariable String activityId,
+            @PathVariable int sessionId,
+            @RequestBody ActivitySession updatedSession) {
+
+        try {
+            Activity activity = activityService.updateActivitySession(
+                    tripId,
+                    activityId,
+                    sessionId,
+                    updatedSession);
+
+            return ResponseEntity.ok(activity);
+
+        } catch (NoSuchElementException exception) {
+            return ResponseEntity.notFound().build();
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 }
