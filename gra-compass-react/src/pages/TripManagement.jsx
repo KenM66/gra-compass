@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import selectionsByTrip from "../data/mockTripSelections";
 import "../styles/TripManagement.css";
 import SelectionCard from "../components/SelectionCard";
 import RegistrationSummary from "../components/RegistrationSummary";
@@ -15,6 +14,7 @@ import {
   resumeRegistrations,
 } from "../store/tripsSlice";
 import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
+import { fetchActivities } from "../store/activitiesSlice";
 
 const TripManagement = () => {
   const { tripId } = useParams();
@@ -60,9 +60,26 @@ const TripManagement = () => {
     (state) => state.registrations.byTrip[tripId] || [],
   );
 
+  const storedSelections = useSelector(
+    (state) => state.activities.byTrip[tripId],
+  );
+
+  const activitiesLoading = useSelector((state) => state.activities.loading);
+
+  const activitiesError = useSelector((state) => state.activities.error);
+
+  const [selectionEdits, setSelectionEdits] = useState(null);
+
+  const selections = selectionEdits ?? storedSelections ?? [];
+
+  const setSelections = (updatedSelections) => {
+    setSelectionEdits(updatedSelections);
+  };
+
   useEffect(() => {
     dispatch(fetchTrips());
     dispatch(fetchRegistrationsByTrip(tripId));
+    dispatch(fetchActivities(tripId));
   }, [dispatch, tripId]);
 
   const getSessionRegistrationCount = (sessionId) =>
@@ -319,8 +336,6 @@ const TripManagement = () => {
 
     showSavedFeedback("image");
   };
-
-  const [selections, setSelections] = useState(selectionsByTrip[tripId] || []);
 
   const [newType, setNewType] = useState("");
   const [newName, setNewName] = useState("");
@@ -753,6 +768,8 @@ const TripManagement = () => {
         <section>
           <h2>Available Trip Selections</h2>
 
+          {activitiesLoading && <p>Loading activities...</p>}
+          {activitiesError && <p role="alert">{activitiesError}</p>}
           {selections.map((selection) => (
             <SelectionCard
               key={selection.id}

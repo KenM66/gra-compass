@@ -7,6 +7,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import tripsReducer from "../../store/tripsSlice";
 import registrationsReducer from "../../store/registrationsSlice";
 import TripManagement from "../../pages/TripManagement";
+import activitiesReducer from "../../store/activitiesSlice";
+import selectionsByTrip from "../../data/mockTripSelections";
 
 const trip = {
   id: 1,
@@ -50,6 +52,13 @@ const renderTripManagement = ({
         });
       }
 
+      if (requestUrl.endsWith("/activities")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(selectionsByTrip[1] || []),
+        });
+      }
+
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mutationResponse),
@@ -60,6 +69,7 @@ const renderTripManagement = ({
     reducer: {
       trips: tripsReducer,
       registrations: registrationsReducer,
+      activities: activitiesReducer,
     },
     preloadedState: {
       trips: {
@@ -68,6 +78,13 @@ const renderTripManagement = ({
       registrations: {
         byTrip: testRegistrationsByTrip,
         status: "idle",
+        error: null,
+      },
+      activities: {
+        byTrip: {
+          1: selectionsByTrip[1] || [],
+        },
+        loading: false,
         error: null,
       },
     },
