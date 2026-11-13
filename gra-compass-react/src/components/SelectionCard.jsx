@@ -74,8 +74,8 @@ const SelectionCard = ({
 
           <div className="selection-actions">
             <button
-              onClick={() => {
-                const saveSuccessful = handleSaveEdit(
+              onClick={async () => {
+                const saveSuccessful = await handleSaveEdit(
                   selection.id,
                   selectedSession.id,
                   editSessionDate,

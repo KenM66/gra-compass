@@ -33,9 +33,10 @@ const renderTripManagement = ({
   initialEntry = "/trips/1/manage",
   mutationResponse = {},
 } = {}) => {
+  let savedActivities = structuredClone(selectionsByTrip[1] || []);
   vi.stubGlobal(
     "fetch",
-    vi.fn((url) => {
+    vi.fn((url, options) => {
       const requestUrl = String(url);
 
       if (requestUrl === "http://localhost:8080/api/trips") {
@@ -52,10 +53,86 @@ const renderTripManagement = ({
         });
       }
 
-      if (requestUrl.endsWith("/activities")) {
+      if (requestUrl.endsWith("/activities") && !options?.method) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve(selectionsByTrip[1] || []),
+          json: () => Promise.resolve(savedActivities),
+        });
+      }
+
+      if (requestUrl.endsWith("/activities") && options?.method === "POST") {
+        const body = JSON.parse(options.body);
+
+        const activity = {
+          id: "new-activity-1",
+          tripId: 1,
+          type: body.type,
+          name: body.name,
+          sessions: [],
+        };
+
+        savedActivities = [...savedActivities, activity];
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(activity),
+        });
+      }
+
+      if (
+        requestUrl.includes("/activities/") &&
+        requestUrl.endsWith("/sessions") &&
+        options?.method === "POST"
+      ) {
+        const body = JSON.parse(options.body);
+        const activityId = requestUrl.split("/activities/")[1].split("/")[0];
+
+        const session = {
+          id: 201,
+          ...body,
+        };
+
+        savedActivities = savedActivities.map((activity) =>
+          String(activity.id) === activityId
+            ? { ...activity, sessions: [...activity.sessions, session] }
+            : activity,
+        );
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(session),
+        });
+      }
+
+      if (
+        requestUrl.includes("/activities/") &&
+        options?.method === "PUT"
+      ) {
+        const body = JSON.parse(options.body);
+
+        const activityId = requestUrl
+          .split("/activities/")[1]
+          .split("/")[0];
+
+        const sessionId = requestUrl
+          .split("/sessions/")[1];
+
+        savedActivities = savedActivities.map((activity) =>
+          String(activity.id) === activityId
+            ? {
+              ...activity,
+              sessions: activity.sessions.map((session) =>
+                String(session.id) === sessionId
+                  ? { ...session, ...body }
+                  : session,
+              ),
+            }
+            : activity,
+        );
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(body),
         });
       }
 
@@ -207,7 +284,7 @@ describe("TripManagement", () => {
   });
   test("does not save an empty trip name", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     const { store } = renderTripManagement();
 
@@ -236,7 +313,7 @@ describe("TripManagement", () => {
   });
   test("does not save an end date before the start date", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     const { store } = renderTripManagement();
 
@@ -268,7 +345,7 @@ describe("TripManagement", () => {
   });
   test("does not allow registration capacity below existing registrations", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     const testRegistrationsByTrip = {
       1: [
@@ -325,7 +402,7 @@ describe("TripManagement", () => {
   });
   test("does not allow traveler capacity below existing travelers including guests", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     const testRegistrationsByTrip = {
       1: [
@@ -517,7 +594,7 @@ describe("TripManagement", () => {
   });
   test("requires selection details before adding a trip selection", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     renderTripManagement({
       initialEntry: "/trips/1/manage?tab=selections",
@@ -565,7 +642,9 @@ describe("TripManagement", () => {
       }),
     );
 
-    expect(screen.getByText("Pirate Ship Adventure")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Pirate Ship Adventure"),
+    ).toBeInTheDocument();
 
     expect(typeInput).toHaveValue("");
     expect(nameInput).toHaveValue("");
@@ -575,7 +654,7 @@ describe("TripManagement", () => {
   });
   test("does not delete a session that already has registrations", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
     const confirmSpy = vi
       .spyOn(window, "confirm")
       .mockImplementation(() => true);
@@ -670,7 +749,7 @@ describe("TripManagement", () => {
   });
   test("does not lower session capacity below existing registrations", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     const testRegistrationsByTrip = {
       1: [
@@ -761,6 +840,17 @@ describe("TripManagement", () => {
 
     expect(capacityDisplays[0].parentElement).toHaveTextContent("Capacity: 30");
 
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/activities\/.+\/sessions\/.+$/),
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: expect.any(String),
+      }),
+    );
+
     expect(
       screen.queryByRole("button", {
         name: "Save",
@@ -815,7 +905,7 @@ describe("TripManagement", () => {
   });
   test("requires a date and time when adding a session", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     renderTripManagement({
       initialEntry: "/trips/1/manage?tab=selections",
@@ -884,7 +974,7 @@ describe("TripManagement", () => {
   });
   test("does not add a session with capacity below one", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     renderTripManagement({
       initialEntry: "/trips/1/manage?tab=selections",
@@ -1001,7 +1091,7 @@ describe("TripManagement", () => {
   });
   test("does not save a trip selection with a blank name", async () => {
     const user = userEvent.setup();
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => { });
 
     renderTripManagement({
       initialEntry: "/trips/1/manage?tab=selections",
