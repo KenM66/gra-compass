@@ -2,11 +2,15 @@ package com.gragroup.compass.service;
 
 import com.gragroup.compass.dto.CreateActivityRequest;
 import com.gragroup.compass.model.Activity;
+import com.gragroup.compass.model.ActivitySelection;
 import com.gragroup.compass.repository.ActivityRepository;
 import com.gragroup.compass.repository.TripRepository;
 import com.gragroup.compass.repository.RegistrationRepository;
 import com.gragroup.compass.dto.CreateActivitySessionRequest;
 import com.gragroup.compass.model.ActivitySession;
+import com.gragroup.compass.model.Guest;
+import com.gragroup.compass.model.Registration;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Optional;
@@ -20,6 +24,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -308,5 +313,159 @@ class ActivityServiceTest {
                 verify(activityRepository, never()).findById(anyString());
                 verify(sessionIdService, never()).getNextSessionId();
                 verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsSessionCapacityBelowExistingRegistrations() {
+
+                String tripId = "trip123";
+                String activityId = "activity456";
+                int sessionId = 1;
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(sessionId);
+                session.setMaxCapacity(20);
+
+                activity.setSessions(List.of(session));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(5);
+
+                Registration registration = new Registration();
+
+                ActivitySelection selection = new ActivitySelection();
+
+                selection.setActivityId(activityId);
+
+                selection.setSessionId(sessionId);
+                registration.setActivities(List.of(selection));
+
+                List<Registration> registrations = new ArrayList<>();
+
+                for (int i = 0; i < 10; i++) {
+                        Registration registeredTraveler = new Registration();
+                        registeredTraveler.setActivities(List.of(selection));
+                        registrations.add(registeredTraveler);
+                }
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(registrations);
+
+                assertThrows(IllegalArgumentException.class, () -> activityService.updateActivitySession(
+                                tripId,
+                                activityId,
+                                sessionId,
+                                updatedSession));
+
+                verify(activityRepository, never()).save(any(Activity.class));
+
+        }
+
+        @Test
+        void rejectsSessionCapacityBelowTravelerAndGuestCount() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+                int sessionId = 1;
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(sessionId);
+                session.setMaxCapacity(20);
+                activity.setSessions(List.of(session));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(6);
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activityId);
+                selection.setSessionId(sessionId);
+
+                List<Registration> registrations = new ArrayList<>();
+
+                for (int i = 0; i < 4; i++) {
+                        Registration registration = new Registration();
+                        registration.setActivities(List.of(selection));
+
+                        Guest guest = new Guest();
+                        guest.setActivities(List.of(selection));
+                        registration.setGuest(guest);
+
+                        registrations.add(registration);
+                }
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(registrations);
+
+                assertThrows(IllegalArgumentException.class, () -> activityService.updateActivitySession(
+                                tripId,
+                                activityId,
+                                sessionId,
+                                updatedSession));
+
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void allowsSessionCapacityEqualToRegisteredCount() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+                int sessionId = 1;
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(sessionId);
+                session.setMaxCapacity(20);
+                activity.setSessions(List.of(session));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(8);
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activityId);
+                selection.setSessionId(sessionId);
+
+                List<Registration> registrations = new ArrayList<>();
+
+                for (int i = 0; i < 4; i++) {
+                        Registration registration = new Registration();
+                        registration.setActivities(List.of(selection));
+
+                        Guest guest = new Guest();
+                        guest.setActivities(List.of(selection));
+                        registration.setGuest(guest);
+
+                        registrations.add(registration);
+                }
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(registrations);
+
+                when(activityRepository.save(any(Activity.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                Activity result = activityService.updateActivitySession(
+                                tripId, activityId, sessionId, updatedSession);
+
+                assertEquals(8, result.getSessions().get(0).getMaxCapacity());
+                verify(activityRepository).save(activity);
         }
 }
