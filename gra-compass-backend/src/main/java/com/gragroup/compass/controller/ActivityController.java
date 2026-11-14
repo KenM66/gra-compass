@@ -104,4 +104,26 @@ public class ActivityController {
         }
     }
 
+    @DeleteMapping("/{activityId}/sessions/{sessionId}")
+    public ResponseEntity<Void> deleteActivitySession(
+            @PathVariable String tripId,
+            @PathVariable String activityId,
+            @PathVariable int sessionId) {
+
+        try {
+            activityService.deleteActivitySession(
+                    tripId,
+                    activityId,
+                    sessionId);
+
+            return ResponseEntity.noContent().build();
+
+        } catch (NoSuchElementException exception) {
+            return ResponseEntity.notFound().build();
+
+        } catch (IllegalStateException exception) {
+            return ResponseEntity.status(409).build();
+        }
+    }
+
 }

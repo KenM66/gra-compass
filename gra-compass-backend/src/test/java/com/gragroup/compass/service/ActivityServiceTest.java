@@ -26,7 +26,6 @@ import static org.mockito.Mockito.*;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 class ActivityServiceTest {
 
@@ -468,4 +467,113 @@ class ActivityServiceTest {
                 assertEquals(8, result.getSessions().get(0).getMaxCapacity());
                 verify(activityRepository).save(activity);
         }
+
+        @Test
+        void deletesSessionWhenNoTravelersAreRegistered() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession firstSession = new ActivitySession();
+                firstSession.setId(101);
+
+                ActivitySession secondSession = new ActivitySession();
+                secondSession.setId(102);
+
+                activity.setSessions(
+                                new ArrayList<>(List.of(firstSession, secondSession)));
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of());
+
+                activityService.deleteActivitySession(
+                                tripId, activityId, 101);
+
+                assertEquals(1, activity.getSessions().size());
+                assertEquals(102, activity.getSessions().get(0).getId());
+
+                verify(activityRepository).save(activity);
+        }
+
+        @Test
+        void rejectsDeletionWhenTravelerIsRegistered() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(101);
+
+                activity.setSessions(new ArrayList<>(List.of(session)));
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activityId);
+                selection.setSessionId(101);
+
+                Registration registration = new Registration();
+                registration.setActivities(List.of(selection));
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of(registration));
+
+                assertThrows(
+                                IllegalStateException.class,
+                                () -> activityService.deleteActivitySession(
+                                                tripId, activityId, 101));
+
+                assertEquals(1, activity.getSessions().size());
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsDeletionWhenGuestIsRegistered() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(101);
+
+                activity.setSessions(new ArrayList<>(List.of(session)));
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activityId);
+                selection.setSessionId(101);
+
+                Guest guest = new Guest();
+                guest.setActivities(List.of(selection));
+
+                Registration registration = new Registration();
+                registration.setGuest(guest);
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of(registration));
+
+                assertThrows(
+                                IllegalStateException.class,
+                                () -> activityService.deleteActivitySession(
+                                                tripId, activityId, 101));
+
+                assertEquals(1, activity.getSessions().size());
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
 }

@@ -125,6 +125,37 @@ public class ActivityService {
         return activityRepository.save(activity);
     }
 
+    public void deleteActivitySession(
+            String tripId,
+            String activityId,
+            int sessionId) {
+
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Activity not found: " + activityId));
+
+        if (!activity.getTripId().equals(tripId)) {
+            throw new NoSuchElementException(
+                    "Activity not found for trip: " + tripId);
+        }
+
+        ActivitySession session = findSession(activity, sessionId);
+
+        long registeredCount = countSessionRegistrations(
+                tripId,
+                activityId,
+                sessionId);
+
+        if (registeredCount > 0) {
+            throw new IllegalStateException(
+                    "Cannot delete a session with registered travelers.");
+        }
+
+        activity.getSessions().remove(session);
+
+        activityRepository.save(activity);
+    }
+
     public List<Activity> getActivitiesByTripId(String tripId) {
         if (!tripRepository.existsById(tripId)) {
             throw new NoSuchElementException("Trip not found: " + tripId);

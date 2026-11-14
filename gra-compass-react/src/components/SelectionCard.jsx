@@ -217,14 +217,14 @@ const SelectionCard = ({
 
                 <button
                   className="delete-button"
-                  onClick={() => {
-                    const nextSessionId = handleDeleteSelection(
+                  onClick={async () => {
+                    const deleteSuccessful = await handleDeleteSelection(
                       selection.id,
                       selectedSession.id,
                     );
 
-                    if (nextSessionId !== false) {
-                      setSelectedSessionId(nextSessionId);
+                    if (deleteSuccessful) {
+                      setSelectedSessionId(null);
                     }
                   }}
                 >
@@ -290,8 +290,8 @@ const SelectionCard = ({
 
               <div className="selection-actions">
                 <button
-                  onClick={() => {
-                    const newSessionId = handleAddSession(
+                  onClick={async () => {
+                    const newSessionId = await handleAddSession(
                       selection.id,
                       additionalSessionDate,
                       additionalSessionTime,

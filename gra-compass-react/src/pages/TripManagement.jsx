@@ -429,18 +429,17 @@ const TripManagement = () => {
     }
   };
 
-  const handleDeleteSelection = (selectionId, sessionId) => {
-    const selection = selections.find(
-      (selection) => selection.id === selectionId,
-    );
+  const handleDeleteSelection = async (selectionId, sessionId) => {
+    const selection = selections.find((item) => item.id === selectionId);
 
-    const session = selection?.sessions.find(
-      (session) => session.id === sessionId,
-    );
+    const session = selection?.sessions.find((item) => item.id === sessionId);
 
-    const registeredCount = session
-      ? getSessionRegistrationCount(session.id)
-      : 0;
+    if (!session) {
+      alert("Session not found.");
+      return false;
+    }
+
+    const registeredCount = getSessionRegistrationCount(session.id);
 
     if (registeredCount > 0) {
       alert(
@@ -450,47 +449,56 @@ const TripManagement = () => {
     }
 
     const confirmed = window.confirm(
-      "Are you sure you want to delete this session?",
+      "Are you sure you want to permanently delete this session?",
     );
 
     if (!confirmed) {
       return false;
     }
 
-    const updatedSelections = selections.map((selection) =>
-      selection.id === selectionId
-        ? {
-          ...selection,
-          sessions: selection.sessions.filter(
-            (session) => session.id !== sessionId,
-          ),
-        }
-        : selection,
-    );
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/trips/${tripId}/activities/${selectionId}/sessions/${sessionId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
-    setSelections(updatedSelections);
+      if (response.status === 409) {
+        alert(
+          "This session cannot be deleted because travelers or guests are registered for it.",
+        );
+        return false;
+      }
 
-    const remainingSessions =
-      updatedSelections.find((selection) => selection.id === selectionId)
-        ?.sessions || [];
+      if (!response.ok) {
+        throw new Error(`Failed to delete session (HTTP ${response.status}).`);
+      }
 
-    return remainingSessions[0]?.id ?? null;
+      await dispatch(fetchActivities(tripId)).unwrap();
+      setSelectionEdits(null);
+
+      return true;
+    } catch (error) {
+      alert(error.message);
+      return false;
+    }
   };
 
   const handleToggleActive = (selectionId, sessionId) => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          sessions: selection.sessions.map((session) =>
-            session.id === sessionId
-              ? {
-                ...session,
-                active: !session.active,
-              }
-              : session,
-          ),
-        }
+            ...selection,
+            sessions: selection.sessions.map((session) =>
+              session.id === sessionId
+                ? {
+                    ...session,
+                    active: !session.active,
+                  }
+                : session,
+            ),
+          }
         : selection,
     );
 
@@ -505,7 +513,7 @@ const TripManagement = () => {
     dispatch(resumeRegistrations(trip.id));
   };
 
-  const handleAddSession = (
+  const handleAddSession = async (
     selectionId,
     sessionDate,
     sessionTime,
@@ -518,34 +526,43 @@ const TripManagement = () => {
 
     const capacity = sessionCapacity ? Number(sessionCapacity) : null;
 
-    if (capacity !== null && capacity < 1) {
+    if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1)) {
       alert("Max capacity must be at least 1.");
       return false;
     }
 
-    const newSession = {
-      id: Date.now(),
-      date: sessionDate,
-      time: sessionTime,
-      maxCapacity: capacity,
-      registeredCount: 0,
-      active: true,
-    };
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/trips/${tripId}/activities/${selectionId}/sessions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date: sessionDate,
+            time: sessionTime,
+            maxCapacity: capacity,
+            active: true,
+          }),
+        },
+      );
 
-    const updatedSelections = selections.map((selection) =>
-      selection.id === selectionId
-        ? {
-          ...selection,
-          sessions: [...selection.sessions, newSession],
-        }
-        : selection,
-    );
+      if (!response.ok) {
+        throw new Error(`Failed to create session (HTTP ${response.status}).`);
+      }
 
-    setSelections(updatedSelections);
+      const createdSession = await response.json();
 
-    return newSession.id;
+      await dispatch(fetchActivities(tripId)).unwrap();
+      setSelectionEdits(null);
+
+      return createdSession.id;
+    } catch (error) {
+      alert(error.message);
+      return false;
+    }
   };
-
 
   const handleSaveSelectionEdit = (
     selectionId,
@@ -560,18 +577,16 @@ const TripManagement = () => {
     const updatedSelections = selections.map((selection) =>
       selection.id === selectionId
         ? {
-          ...selection,
-          type: selectionType.trim(),
-          name: selectionName.trim(),
-        }
+            ...selection,
+            type: selectionType.trim(),
+            name: selectionName.trim(),
+          }
         : selection,
     );
 
     setSelections(updatedSelections);
     return true;
   };
-
-
 
   const handleSaveEdit = async (
     selectionId,
@@ -585,9 +600,7 @@ const TripManagement = () => {
       return false;
     }
 
-    const selection = selections.find(
-      (item) => item.id === selectionId,
-    );
+    const selection = selections.find((item) => item.id === selectionId);
 
     const currentSession = selection?.sessions.find(
       (session) => session.id === sessionId,
@@ -609,9 +622,7 @@ const TripManagement = () => {
       return false;
     }
 
-    const registeredCount = getSessionRegistrationCount(
-      currentSession.id,
-    );
+    const registeredCount = getSessionRegistrationCount(currentSession.id);
 
     if (newCapacity < registeredCount) {
       alert(
@@ -639,9 +650,7 @@ const TripManagement = () => {
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to update session (HTTP ${response.status}).`,
-        );
+        throw new Error(`Failed to update session (HTTP ${response.status}).`);
       }
 
       await dispatch(fetchActivities(tripId)).unwrap();
