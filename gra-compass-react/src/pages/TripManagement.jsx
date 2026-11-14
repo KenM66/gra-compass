@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import selectionsByTrip from "../data/mockTripSelections";
 import "../styles/TripManagement.css";
 import SelectionCard from "../components/SelectionCard";
 import RegistrationSummary from "../components/RegistrationSummary";
@@ -15,6 +14,7 @@ import {
   resumeRegistrations,
 } from "../store/tripsSlice";
 import { fetchRegistrationsByTrip } from "../store/registrationsSlice";
+import { fetchActivities } from "../store/activitiesSlice";
 
 const TripManagement = () => {
   const { tripId } = useParams();
@@ -60,9 +60,26 @@ const TripManagement = () => {
     (state) => state.registrations.byTrip[tripId] || [],
   );
 
+  const storedSelections = useSelector(
+    (state) => state.activities.byTrip[tripId],
+  );
+
+  const activitiesLoading = useSelector((state) => state.activities.loading);
+
+  const activitiesError = useSelector((state) => state.activities.error);
+
+  const [selectionEdits, setSelectionEdits] = useState(null);
+
+  const selections = selectionEdits ?? storedSelections ?? [];
+
+  const setSelections = (updatedSelections) => {
+    setSelectionEdits(updatedSelections);
+  };
+
   useEffect(() => {
     dispatch(fetchTrips());
     dispatch(fetchRegistrationsByTrip(tripId));
+    dispatch(fetchActivities(tripId));
   }, [dispatch, tripId]);
 
   const getSessionRegistrationCount = (sessionId) =>
@@ -320,8 +337,6 @@ const TripManagement = () => {
     showSavedFeedback("image");
   };
 
-  const [selections, setSelections] = useState(selectionsByTrip[tripId] || []);
-
   const [newType, setNewType] = useState("");
   const [newName, setNewName] = useState("");
 
@@ -338,7 +353,7 @@ const TripManagement = () => {
     );
   }
 
-  const handleAddSelection = () => {
+  const handleAddSelection = async () => {
     if (
       !newType.trim() ||
       !newName.trim() ||
@@ -351,50 +366,80 @@ const TripManagement = () => {
       return;
     }
 
-    const capacity = newMaxCapacity ? Number(newMaxCapacity) : null;
+    const capacity = Number(newMaxCapacity);
 
-    if (capacity !== null && capacity < 1) {
+    if (!Number.isInteger(capacity) || capacity < 1) {
       alert("Max capacity must be at least 1.");
       return;
     }
 
-    const newSelection = {
-      id: Date.now(),
-      type: newType.trim(),
-      name: newName.trim(),
-      sessions: [
+    try {
+      const activityResponse = await fetch(
+        `http://localhost:8080/api/trips/${tripId}/activities`,
         {
-          id: Date.now() + 1,
-          date: newSessionDate,
-          time: newSessionTime,
-          maxCapacity: capacity,
-          registeredCount: 0,
-          active: true,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            type: newType.trim(),
+            name: newName.trim(),
+          }),
         },
-      ],
-    };
+      );
 
-    setSelections([...selections, newSelection]);
+      if (!activityResponse.ok) {
+        throw new Error("Failed to create activity.");
+      }
 
-    setNewType("");
-    setNewName("");
-    setNewMaxCapacity("");
-    setNewSessionDate("");
-    setNewSessionTime("");
+      const activity = await activityResponse.json();
+
+      const sessionResponse = await fetch(
+        `http://localhost:8080/api/trips/${tripId}/activities/${activity.id}/sessions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date: newSessionDate,
+            time: newSessionTime,
+            maxCapacity: capacity,
+            active: true,
+          }),
+        },
+      );
+
+      if (!sessionResponse.ok) {
+        throw new Error(
+          "Activity created, but its first session could not be saved.",
+        );
+      }
+
+      await dispatch(fetchActivities(tripId)).unwrap();
+      setSelectionEdits(null);
+
+      setNewType("");
+      setNewName("");
+      setNewMaxCapacity("");
+      setNewSessionDate("");
+      setNewSessionTime("");
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
-  const handleDeleteSelection = (selectionId, sessionId) => {
-    const selection = selections.find(
-      (selection) => selection.id === selectionId,
-    );
+  const handleDeleteSelection = async (selectionId, sessionId) => {
+    const selection = selections.find((item) => item.id === selectionId);
 
-    const session = selection?.sessions.find(
-      (session) => session.id === sessionId,
-    );
+    const session = selection?.sessions.find((item) => item.id === sessionId);
 
-    const registeredCount = session
-      ? getSessionRegistrationCount(session.id)
-      : 0;
+    if (!session) {
+      alert("Session not found.");
+      return false;
+    }
+
+    const registeredCount = getSessionRegistrationCount(session.id);
 
     if (registeredCount > 0) {
       alert(
@@ -404,31 +449,40 @@ const TripManagement = () => {
     }
 
     const confirmed = window.confirm(
-      "Are you sure you want to delete this session?",
+      "Are you sure you want to permanently delete this session?",
     );
 
     if (!confirmed) {
       return false;
     }
 
-    const updatedSelections = selections.map((selection) =>
-      selection.id === selectionId
-        ? {
-            ...selection,
-            sessions: selection.sessions.filter(
-              (session) => session.id !== sessionId,
-            ),
-          }
-        : selection,
-    );
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/trips/${tripId}/activities/${selectionId}/sessions/${sessionId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
-    setSelections(updatedSelections);
+      if (response.status === 409) {
+        alert(
+          "This session cannot be deleted because travelers or guests are registered for it.",
+        );
+        return false;
+      }
 
-    const remainingSessions =
-      updatedSelections.find((selection) => selection.id === selectionId)
-        ?.sessions || [];
+      if (!response.ok) {
+        throw new Error(`Failed to delete session (HTTP ${response.status}).`);
+      }
 
-    return remainingSessions[0]?.id ?? null;
+      await dispatch(fetchActivities(tripId)).unwrap();
+      setSelectionEdits(null);
+
+      return true;
+    } catch (error) {
+      alert(error.message);
+      return false;
+    }
   };
 
   const handleToggleActive = (selectionId, sessionId) => {
@@ -459,7 +513,7 @@ const TripManagement = () => {
     dispatch(resumeRegistrations(trip.id));
   };
 
-  const handleAddSession = (
+  const handleAddSession = async (
     selectionId,
     sessionDate,
     sessionTime,
@@ -472,32 +526,42 @@ const TripManagement = () => {
 
     const capacity = sessionCapacity ? Number(sessionCapacity) : null;
 
-    if (capacity !== null && capacity < 1) {
+    if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1)) {
       alert("Max capacity must be at least 1.");
       return false;
     }
 
-    const newSession = {
-      id: Date.now(),
-      date: sessionDate,
-      time: sessionTime,
-      maxCapacity: capacity,
-      registeredCount: 0,
-      active: true,
-    };
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/trips/${tripId}/activities/${selectionId}/sessions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date: sessionDate,
+            time: sessionTime,
+            maxCapacity: capacity,
+            active: true,
+          }),
+        },
+      );
 
-    const updatedSelections = selections.map((selection) =>
-      selection.id === selectionId
-        ? {
-            ...selection,
-            sessions: [...selection.sessions, newSession],
-          }
-        : selection,
-    );
+      if (!response.ok) {
+        throw new Error(`Failed to create session (HTTP ${response.status}).`);
+      }
 
-    setSelections(updatedSelections);
+      const createdSession = await response.json();
 
-    return newSession.id;
+      await dispatch(fetchActivities(tripId)).unwrap();
+      setSelectionEdits(null);
+
+      return createdSession.id;
+    } catch (error) {
+      alert(error.message);
+      return false;
+    }
   };
 
   const handleSaveSelectionEdit = (
@@ -524,7 +588,7 @@ const TripManagement = () => {
     return true;
   };
 
-  const handleSaveEdit = (
+  const handleSaveEdit = async (
     selectionId,
     sessionId,
     sessionDate,
@@ -536,48 +600,67 @@ const TripManagement = () => {
       return false;
     }
 
-    const selection = selections.find(
-      (selection) => selection.id === selectionId,
-    );
+    const selection = selections.find((item) => item.id === selectionId);
 
     const currentSession = selection?.sessions.find(
       (session) => session.id === sessionId,
     );
 
-    const newCapacity = maxCapacity ? Number(maxCapacity) : null;
+    if (!currentSession) {
+      alert("Session not found.");
+      return false;
+    }
 
-    const registeredCount = currentSession
-      ? getSessionRegistrationCount(currentSession.id)
-      : 0;
+    const newCapacity = Number(maxCapacity);
 
-    if (newCapacity !== null && newCapacity < registeredCount) {
+    if (
+      !String(maxCapacity).trim() ||
+      !Number.isInteger(newCapacity) ||
+      newCapacity < 1
+    ) {
+      alert("Max capacity must be at least 1.");
+      return false;
+    }
+
+    const registeredCount = getSessionRegistrationCount(currentSession.id);
+
+    if (newCapacity < registeredCount) {
       alert(
         `Capacity cannot be lower than the ${registeredCount} people already registered.`,
       );
       return false;
     }
 
-    const updatedSelections = selections.map((selection) =>
-      selection.id === selectionId
-        ? {
-            ...selection,
-            sessions: selection.sessions.map((session) =>
-              session.id === sessionId
-                ? {
-                    ...session,
-                    date: sessionDate,
-                    time: sessionTime,
-                    maxCapacity: newCapacity,
-                  }
-                : session,
-            ),
-          }
-        : selection,
-    );
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/trips/${tripId}/activities/${selectionId}/sessions/${sessionId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: currentSession.id,
+            date: sessionDate,
+            time: sessionTime,
+            maxCapacity: newCapacity,
+            active: currentSession.active,
+          }),
+        },
+      );
 
-    setSelections(updatedSelections);
+      if (!response.ok) {
+        throw new Error(`Failed to update session (HTTP ${response.status}).`);
+      }
 
-    return true;
+      await dispatch(fetchActivities(tripId)).unwrap();
+      setSelectionEdits(null);
+
+      return true;
+    } catch (error) {
+      alert(error.message);
+      return false;
+    }
   };
 
   return (
@@ -753,6 +836,8 @@ const TripManagement = () => {
         <section>
           <h2>Available Trip Selections</h2>
 
+          {activitiesLoading && <p>Loading activities...</p>}
+          {activitiesError && <p role="alert">{activitiesError}</p>}
           {selections.map((selection) => (
             <SelectionCard
               key={selection.id}

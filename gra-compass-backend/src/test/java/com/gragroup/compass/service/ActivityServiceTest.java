@@ -2,10 +2,15 @@ package com.gragroup.compass.service;
 
 import com.gragroup.compass.dto.CreateActivityRequest;
 import com.gragroup.compass.model.Activity;
+import com.gragroup.compass.model.ActivitySelection;
 import com.gragroup.compass.repository.ActivityRepository;
 import com.gragroup.compass.repository.TripRepository;
+import com.gragroup.compass.repository.RegistrationRepository;
 import com.gragroup.compass.dto.CreateActivitySessionRequest;
 import com.gragroup.compass.model.ActivitySession;
+import com.gragroup.compass.model.Guest;
+import com.gragroup.compass.model.Registration;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Optional;
@@ -19,251 +24,556 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
 import java.util.List;
 
 class ActivityServiceTest {
 
-    private ActivityRepository activityRepository;
-    private TripRepository tripRepository;
-    private SessionIdService sessionIdService;
-    private ActivityService activityService;
+        private ActivityRepository activityRepository;
+        private TripRepository tripRepository;
+        private SessionIdService sessionIdService;
+        private ActivityService activityService;
+        private RegistrationRepository registrationRepository;
 
-    @BeforeEach
-    void setUp() {
-        activityRepository = Mockito.mock(ActivityRepository.class);
-        tripRepository = Mockito.mock(TripRepository.class);
-        sessionIdService = Mockito.mock(SessionIdService.class);
+        @BeforeEach
+        void setUp() {
+                activityRepository = Mockito.mock(ActivityRepository.class);
+                tripRepository = Mockito.mock(TripRepository.class);
+                registrationRepository = Mockito.mock(RegistrationRepository.class);
+                sessionIdService = Mockito.mock(SessionIdService.class);
 
-        activityService = new ActivityService(
-                activityRepository,
-                tripRepository,
-                sessionIdService);
-    }
+                activityService = new ActivityService(
+                                activityRepository,
+                                tripRepository,
+                                registrationRepository,
+                                sessionIdService);
+        }
 
-    @Test
-    void createsActivityForExistingTrip() {
-        String tripId = "trip123";
+        @Test
+        void createsActivityForExistingTrip() {
+                String tripId = "trip123";
 
-        CreateActivityRequest request = new CreateActivityRequest();
-        request.setType("Excursion");
-        request.setName("Catamaran & Snorkeling");
+                CreateActivityRequest request = new CreateActivityRequest();
+                request.setType("Excursion");
+                request.setName("Catamaran & Snorkeling");
 
-        when(tripRepository.existsById(tripId)).thenReturn(true);
+                when(tripRepository.existsById(tripId)).thenReturn(true);
 
-        when(activityRepository.save(any(Activity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                when(activityRepository.save(any(Activity.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Activity result = activityService.createActivity(tripId, request);
+                Activity result = activityService.createActivity(tripId, request);
 
-        assertNull(result.getId());
-        assertEquals(tripId, result.getTripId());
-        assertEquals("Excursion", result.getType());
-        assertEquals("Catamaran & Snorkeling", result.getName());
-        assertNotNull(result.getSessions());
-        assertTrue(result.getSessions().isEmpty());
+                assertNull(result.getId());
+                assertEquals(tripId, result.getTripId());
+                assertEquals("Excursion", result.getType());
+                assertEquals("Catamaran & Snorkeling", result.getName());
+                assertNotNull(result.getSessions());
+                assertTrue(result.getSessions().isEmpty());
 
-        verify(tripRepository).existsById(tripId);
-        verify(activityRepository).save(any(Activity.class));
-    }
+                verify(tripRepository).existsById(tripId);
+                verify(activityRepository).save(any(Activity.class));
+        }
 
-    @Test
-    void rejectsActivityCreationWhenTripDoesNotExist() {
-        String tripId = "missingTrip";
+        @Test
+        void updatesActivitySessionCapacity() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+                int sessionId = 1;
 
-        CreateActivityRequest request = new CreateActivityRequest();
-        request.setType("Excursion");
-        request.setName("Catamaran & Snorkeling");
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
 
-        when(tripRepository.existsById(tripId)).thenReturn(false);
+                ActivitySession session = new ActivitySession();
+                session.setId(sessionId);
+                session.setMaxCapacity(20);
 
-        NoSuchElementException exception = assertThrows(
-                NoSuchElementException.class,
-                () -> activityService.createActivity(tripId, request));
+                activity.setSessions(List.of(session));
 
-        assertEquals("Trip not found: missingTrip", exception.getMessage());
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(30);
 
-        verify(tripRepository).existsById(tripId);
-        verify(activityRepository, never()).save(any(Activity.class));
-    }
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
 
-    @Test
-    void getsActivitiesForExistingTrip() {
-        String tripId = "trip123";
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of());
 
-        Activity excursion = new Activity();
-        excursion.setId("activity123");
-        excursion.setTripId(tripId);
-        excursion.setType("Excursion");
-        excursion.setName("Catamaran & Snorkeling");
+                when(activityRepository.save(any(Activity.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Activity spa = new Activity();
-        spa.setId("activity456");
-        spa.setTripId(tripId);
-        spa.setType("Spa");
-        spa.setName("Massage Appointment");
+                Activity result = activityService.updateActivitySession(
+                                tripId,
+                                activityId,
+                                sessionId,
+                                updatedSession);
 
-        when(tripRepository.existsById(tripId)).thenReturn(true);
+                assertEquals(30, result.getSessions().get(0).getMaxCapacity());
+                verify(activityRepository).save(activity);
+        }
 
-        when(activityRepository.findByTripId(tripId))
-                .thenReturn(List.of(excursion, spa));
+        @Test
+        void rejectsActivityCreationWhenTripDoesNotExist() {
+                String tripId = "missingTrip";
 
-        List<Activity> result = activityService.getActivitiesByTripId(tripId);
+                CreateActivityRequest request = new CreateActivityRequest();
+                request.setType("Excursion");
+                request.setName("Catamaran & Snorkeling");
 
-        assertEquals(2, result.size());
-        assertEquals("Catamaran & Snorkeling", result.get(0).getName());
-        assertEquals("Massage Appointment", result.get(1).getName());
+                when(tripRepository.existsById(tripId)).thenReturn(false);
 
-        verify(tripRepository).existsById(tripId);
-        verify(activityRepository).findByTripId(tripId);
-    }
+                NoSuchElementException exception = assertThrows(
+                                NoSuchElementException.class,
+                                () -> activityService.createActivity(tripId, request));
 
-    @Test
-    void rejectsActivityRetrievalWhenTripDoesNotExist() {
-        String tripId = "missingTrip";
+                assertEquals("Trip not found: missingTrip", exception.getMessage());
 
-        when(tripRepository.existsById(tripId)).thenReturn(false);
+                verify(tripRepository).existsById(tripId);
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
 
-        NoSuchElementException exception = assertThrows(
-                NoSuchElementException.class,
-                () -> activityService.getActivitiesByTripId(tripId));
+        @Test
+        void getsActivitiesForExistingTrip() {
+                String tripId = "trip123";
 
-        assertEquals("Trip not found: missingTrip", exception.getMessage());
+                Activity excursion = new Activity();
+                excursion.setId("activity123");
+                excursion.setTripId(tripId);
+                excursion.setType("Excursion");
+                excursion.setName("Catamaran & Snorkeling");
 
-        verify(tripRepository).existsById(tripId);
-        verify(activityRepository, never()).findByTripId(anyString());
-    }
+                Activity spa = new Activity();
+                spa.setId("activity456");
+                spa.setTripId(tripId);
+                spa.setType("Spa");
+                spa.setName("Massage Appointment");
 
-    @Test
-    void createsSessionForExistingActivity() {
-        String tripId = "trip123";
-        String activityId = "activity456";
+                when(tripRepository.existsById(tripId)).thenReturn(true);
 
-        Activity activity = new Activity();
-        activity.setId(activityId);
-        activity.setTripId(tripId);
-        activity.setName("Catamaran & Snorkeling");
+                when(activityRepository.findByTripId(tripId))
+                                .thenReturn(List.of(excursion, spa));
 
-        CreateActivitySessionRequest request = new CreateActivitySessionRequest();
+                List<Activity> result = activityService.getActivitiesByTripId(tripId);
 
-        request.setDate(LocalDate.of(2027, 3, 9));
-        request.setTime(LocalTime.of(10, 0));
-        request.setMaxCapacity(25);
+                assertEquals(2, result.size());
+                assertEquals("Catamaran & Snorkeling", result.get(0).getName());
+                assertEquals("Massage Appointment", result.get(1).getName());
 
-        when(tripRepository.existsById(tripId)).thenReturn(true);
-        when(activityRepository.findById(activityId))
-                .thenReturn(Optional.of(activity));
-        when(sessionIdService.getNextSessionId()).thenReturn(101);
-        when(activityRepository.save(activity)).thenReturn(activity);
+                verify(tripRepository).existsById(tripId);
+                verify(activityRepository).findByTripId(tripId);
+        }
 
-        ActivitySession result = activityService.createActivitySession(
-                tripId, activityId, request);
+        @Test
+        void rejectsActivityRetrievalWhenTripDoesNotExist() {
+                String tripId = "missingTrip";
 
-        assertEquals(101, result.getId());
-        assertEquals(LocalDate.of(2027, 3, 9), result.getDate());
-        assertEquals(LocalTime.of(10, 0), result.getTime());
-        assertEquals(25, result.getMaxCapacity());
-        assertTrue(result.isActive());
+                when(tripRepository.existsById(tripId)).thenReturn(false);
 
-        assertEquals(1, activity.getSessions().size());
-        assertSame(result, activity.getSessions().getFirst());
+                NoSuchElementException exception = assertThrows(
+                                NoSuchElementException.class,
+                                () -> activityService.getActivitiesByTripId(tripId));
 
-        verify(sessionIdService).getNextSessionId();
-        verify(activityRepository).save(activity);
-    }
+                assertEquals("Trip not found: missingTrip", exception.getMessage());
 
-    @Test
-    void rejectsSessionCreationWhenActivityDoesNotExist() {
-        String tripId = "trip123";
-        String activityId = "missingActivity";
+                verify(tripRepository).existsById(tripId);
+                verify(activityRepository, never()).findByTripId(anyString());
+        }
 
-        CreateActivitySessionRequest request = new CreateActivitySessionRequest();
+        @Test
+        void createsSessionForExistingActivity() {
+                String tripId = "trip123";
+                String activityId = "activity456";
 
-        request.setDate(LocalDate.of(2027, 3, 9));
-        request.setTime(LocalTime.of(10, 0));
-        request.setMaxCapacity(25);
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+                activity.setName("Catamaran & Snorkeling");
 
-        when(tripRepository.existsById(tripId)).thenReturn(true);
-        when(activityRepository.findById(activityId))
-                .thenReturn(Optional.empty());
+                CreateActivitySessionRequest request = new CreateActivitySessionRequest();
 
-        NoSuchElementException exception = assertThrows(
-                NoSuchElementException.class,
-                () -> activityService.createActivitySession(
-                        tripId, activityId, request));
+                request.setDate(LocalDate.of(2027, 3, 9));
+                request.setTime(LocalTime.of(10, 0));
+                request.setMaxCapacity(25);
 
-        assertEquals(
-                "Activity not found: missingActivity",
-                exception.getMessage());
+                when(tripRepository.existsById(tripId)).thenReturn(true);
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+                when(sessionIdService.getNextSessionId()).thenReturn(101);
+                when(activityRepository.save(activity)).thenReturn(activity);
 
-        verify(tripRepository).existsById(tripId);
-        verify(activityRepository).findById(activityId);
+                ActivitySession result = activityService.createActivitySession(
+                                tripId, activityId, request);
 
-        verify(sessionIdService, never()).getNextSessionId();
-        verify(activityRepository, never()).save(any(Activity.class));
-    }
+                assertEquals(101, result.getId());
+                assertEquals(LocalDate.of(2027, 3, 9), result.getDate());
+                assertEquals(LocalTime.of(10, 0), result.getTime());
+                assertEquals(25, result.getMaxCapacity());
+                assertTrue(result.isActive());
 
-    @Test
-    void rejectsSessionCreationWhenActivityBelongsToDifferentTrip() {
-        String tripId = "trip123";
-        String activityId = "activity456";
+                assertEquals(1, activity.getSessions().size());
+                assertSame(result, activity.getSessions().getFirst());
 
-        Activity activity = new Activity();
-        activity.setId(activityId);
-        activity.setTripId("anotherTrip");
-        activity.setName("Catamaran & Snorkeling");
+                verify(sessionIdService).getNextSessionId();
+                verify(activityRepository).save(activity);
+        }
 
-        CreateActivitySessionRequest request = new CreateActivitySessionRequest();
+        @Test
+        void rejectsSessionCreationWhenActivityDoesNotExist() {
+                String tripId = "trip123";
+                String activityId = "missingActivity";
 
-        request.setDate(LocalDate.of(2027, 3, 9));
-        request.setTime(LocalTime.of(10, 0));
-        request.setMaxCapacity(25);
+                CreateActivitySessionRequest request = new CreateActivitySessionRequest();
 
-        when(tripRepository.existsById(tripId)).thenReturn(true);
-        when(activityRepository.findById(activityId))
-                .thenReturn(Optional.of(activity));
+                request.setDate(LocalDate.of(2027, 3, 9));
+                request.setTime(LocalTime.of(10, 0));
+                request.setMaxCapacity(25);
 
-        NoSuchElementException exception = assertThrows(
-                NoSuchElementException.class,
-                () -> activityService.createActivitySession(
-                        tripId, activityId, request));
+                when(tripRepository.existsById(tripId)).thenReturn(true);
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.empty());
 
-        assertEquals(
-                "Activity not found for trip: trip123",
-                exception.getMessage());
+                NoSuchElementException exception = assertThrows(
+                                NoSuchElementException.class,
+                                () -> activityService.createActivitySession(
+                                                tripId, activityId, request));
 
-        verify(tripRepository).existsById(tripId);
-        verify(activityRepository).findById(activityId);
+                assertEquals(
+                                "Activity not found: missingActivity",
+                                exception.getMessage());
 
-        verify(sessionIdService, never()).getNextSessionId();
-        verify(activityRepository, never()).save(any(Activity.class));
-    }
+                verify(tripRepository).existsById(tripId);
+                verify(activityRepository).findById(activityId);
 
-    @Test
-    void rejectsSessionCreationWhenTripDoesNotExist() {
-        String tripId = "missingTrip";
-        String activityId = "activity456";
+                verify(sessionIdService, never()).getNextSessionId();
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
 
-        CreateActivitySessionRequest request = new CreateActivitySessionRequest();
+        @Test
+        void rejectsSessionCreationWhenActivityBelongsToDifferentTrip() {
+                String tripId = "trip123";
+                String activityId = "activity456";
 
-        request.setDate(LocalDate.of(2027, 3, 9));
-        request.setTime(LocalTime.of(10, 0));
-        request.setMaxCapacity(25);
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId("anotherTrip");
+                activity.setName("Catamaran & Snorkeling");
 
-        when(tripRepository.existsById(tripId)).thenReturn(false);
+                CreateActivitySessionRequest request = new CreateActivitySessionRequest();
 
-        NoSuchElementException exception = assertThrows(
-                NoSuchElementException.class,
-                () -> activityService.createActivitySession(
-                        tripId, activityId, request));
+                request.setDate(LocalDate.of(2027, 3, 9));
+                request.setTime(LocalTime.of(10, 0));
+                request.setMaxCapacity(25);
 
-        assertEquals(
-                "Trip not found: missingTrip",
-                exception.getMessage());
+                when(tripRepository.existsById(tripId)).thenReturn(true);
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
 
-        verify(tripRepository).existsById(tripId);
+                NoSuchElementException exception = assertThrows(
+                                NoSuchElementException.class,
+                                () -> activityService.createActivitySession(
+                                                tripId, activityId, request));
 
-        verify(activityRepository, never()).findById(anyString());
-        verify(sessionIdService, never()).getNextSessionId();
-        verify(activityRepository, never()).save(any(Activity.class));
-    }
+                assertEquals(
+                                "Activity not found for trip: trip123",
+                                exception.getMessage());
+
+                verify(tripRepository).existsById(tripId);
+                verify(activityRepository).findById(activityId);
+
+                verify(sessionIdService, never()).getNextSessionId();
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsSessionCreationWhenTripDoesNotExist() {
+                String tripId = "missingTrip";
+                String activityId = "activity456";
+
+                CreateActivitySessionRequest request = new CreateActivitySessionRequest();
+
+                request.setDate(LocalDate.of(2027, 3, 9));
+                request.setTime(LocalTime.of(10, 0));
+                request.setMaxCapacity(25);
+
+                when(tripRepository.existsById(tripId)).thenReturn(false);
+
+                NoSuchElementException exception = assertThrows(
+                                NoSuchElementException.class,
+                                () -> activityService.createActivitySession(
+                                                tripId, activityId, request));
+
+                assertEquals(
+                                "Trip not found: missingTrip",
+                                exception.getMessage());
+
+                verify(tripRepository).existsById(tripId);
+
+                verify(activityRepository, never()).findById(anyString());
+                verify(sessionIdService, never()).getNextSessionId();
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsSessionCapacityBelowExistingRegistrations() {
+
+                String tripId = "trip123";
+                String activityId = "activity456";
+                int sessionId = 1;
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(sessionId);
+                session.setMaxCapacity(20);
+
+                activity.setSessions(List.of(session));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(5);
+
+                Registration registration = new Registration();
+
+                ActivitySelection selection = new ActivitySelection();
+
+                selection.setActivityId(activityId);
+
+                selection.setSessionId(sessionId);
+                registration.setActivities(List.of(selection));
+
+                List<Registration> registrations = new ArrayList<>();
+
+                for (int i = 0; i < 10; i++) {
+                        Registration registeredTraveler = new Registration();
+                        registeredTraveler.setActivities(List.of(selection));
+                        registrations.add(registeredTraveler);
+                }
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(registrations);
+
+                assertThrows(IllegalArgumentException.class, () -> activityService.updateActivitySession(
+                                tripId,
+                                activityId,
+                                sessionId,
+                                updatedSession));
+
+                verify(activityRepository, never()).save(any(Activity.class));
+
+        }
+
+        @Test
+        void rejectsSessionCapacityBelowTravelerAndGuestCount() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+                int sessionId = 1;
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(sessionId);
+                session.setMaxCapacity(20);
+                activity.setSessions(List.of(session));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(6);
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activityId);
+                selection.setSessionId(sessionId);
+
+                List<Registration> registrations = new ArrayList<>();
+
+                for (int i = 0; i < 4; i++) {
+                        Registration registration = new Registration();
+                        registration.setActivities(List.of(selection));
+
+                        Guest guest = new Guest();
+                        guest.setActivities(List.of(selection));
+                        registration.setGuest(guest);
+
+                        registrations.add(registration);
+                }
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(registrations);
+
+                assertThrows(IllegalArgumentException.class, () -> activityService.updateActivitySession(
+                                tripId,
+                                activityId,
+                                sessionId,
+                                updatedSession));
+
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void allowsSessionCapacityEqualToRegisteredCount() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+                int sessionId = 1;
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(sessionId);
+                session.setMaxCapacity(20);
+                activity.setSessions(List.of(session));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(8);
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activityId);
+                selection.setSessionId(sessionId);
+
+                List<Registration> registrations = new ArrayList<>();
+
+                for (int i = 0; i < 4; i++) {
+                        Registration registration = new Registration();
+                        registration.setActivities(List.of(selection));
+
+                        Guest guest = new Guest();
+                        guest.setActivities(List.of(selection));
+                        registration.setGuest(guest);
+
+                        registrations.add(registration);
+                }
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(registrations);
+
+                when(activityRepository.save(any(Activity.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                Activity result = activityService.updateActivitySession(
+                                tripId, activityId, sessionId, updatedSession);
+
+                assertEquals(8, result.getSessions().get(0).getMaxCapacity());
+                verify(activityRepository).save(activity);
+        }
+
+        @Test
+        void deletesSessionWhenNoTravelersAreRegistered() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession firstSession = new ActivitySession();
+                firstSession.setId(101);
+
+                ActivitySession secondSession = new ActivitySession();
+                secondSession.setId(102);
+
+                activity.setSessions(
+                                new ArrayList<>(List.of(firstSession, secondSession)));
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of());
+
+                activityService.deleteActivitySession(
+                                tripId, activityId, 101);
+
+                assertEquals(1, activity.getSessions().size());
+                assertEquals(102, activity.getSessions().get(0).getId());
+
+                verify(activityRepository).save(activity);
+        }
+
+        @Test
+        void rejectsDeletionWhenTravelerIsRegistered() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(101);
+
+                activity.setSessions(new ArrayList<>(List.of(session)));
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activityId);
+                selection.setSessionId(101);
+
+                Registration registration = new Registration();
+                registration.setActivities(List.of(selection));
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of(registration));
+
+                assertThrows(
+                                IllegalStateException.class,
+                                () -> activityService.deleteActivitySession(
+                                                tripId, activityId, 101));
+
+                assertEquals(1, activity.getSessions().size());
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsDeletionWhenGuestIsRegistered() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(101);
+
+                activity.setSessions(new ArrayList<>(List.of(session)));
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activityId);
+                selection.setSessionId(101);
+
+                Guest guest = new Guest();
+                guest.setActivities(List.of(selection));
+
+                Registration registration = new Registration();
+                registration.setGuest(guest);
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of(registration));
+
+                assertThrows(
+                                IllegalStateException.class,
+                                () -> activityService.deleteActivitySession(
+                                                tripId, activityId, 101));
+
+                assertEquals(1, activity.getSessions().size());
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
 }

@@ -7,6 +7,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import tripsReducer from "../../store/tripsSlice";
 import registrationsReducer from "../../store/registrationsSlice";
 import TripManagement from "../../pages/TripManagement";
+import activitiesReducer from "../../store/activitiesSlice";
+import selectionsByTrip from "../../data/mockTripSelections";
 
 const trip = {
   id: 1,
@@ -31,9 +33,10 @@ const renderTripManagement = ({
   initialEntry = "/trips/1/manage",
   mutationResponse = {},
 } = {}) => {
+  let savedActivities = structuredClone(selectionsByTrip[1] || []);
   vi.stubGlobal(
     "fetch",
-    vi.fn((url) => {
+    vi.fn((url, options) => {
       const requestUrl = String(url);
 
       if (requestUrl === "http://localhost:8080/api/trips") {
@@ -50,6 +53,109 @@ const renderTripManagement = ({
         });
       }
 
+      if (requestUrl.endsWith("/activities") && !options?.method) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(savedActivities),
+        });
+      }
+
+      if (requestUrl.endsWith("/activities") && options?.method === "POST") {
+        const body = JSON.parse(options.body);
+
+        const activity = {
+          id: "new-activity-1",
+          tripId: 1,
+          type: body.type,
+          name: body.name,
+          sessions: [],
+        };
+
+        savedActivities = [...savedActivities, activity];
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(activity),
+        });
+      }
+
+      if (
+        requestUrl.includes("/activities/") &&
+        requestUrl.endsWith("/sessions") &&
+        options?.method === "POST"
+      ) {
+        const body = JSON.parse(options.body);
+        const activityId = requestUrl.split("/activities/")[1].split("/")[0];
+
+        const session = {
+          id: 201,
+          ...body,
+        };
+
+        savedActivities = savedActivities.map((activity) =>
+          String(activity.id) === activityId
+            ? { ...activity, sessions: [...activity.sessions, session] }
+            : activity,
+        );
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(session),
+        });
+      }
+
+      if (requestUrl.includes("/activities/") && options?.method === "PUT") {
+        const body = JSON.parse(options.body);
+
+        const activityId = requestUrl.split("/activities/")[1].split("/")[0];
+
+        const sessionId = requestUrl.split("/sessions/")[1];
+
+        savedActivities = savedActivities.map((activity) =>
+          String(activity.id) === activityId
+            ? {
+                ...activity,
+                sessions: activity.sessions.map((session) =>
+                  String(session.id) === sessionId
+                    ? { ...session, ...body }
+                    : session,
+                ),
+              }
+            : activity,
+        );
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(body),
+        });
+      }
+
+      if (
+        requestUrl.includes("/activities/") &&
+        requestUrl.includes("/sessions/") &&
+        options?.method === "DELETE"
+      ) {
+        const activityId = requestUrl.split("/activities/")[1].split("/")[0];
+
+        const sessionId = requestUrl.split("/sessions/")[1];
+
+        savedActivities = savedActivities.map((activity) =>
+          String(activity.id) === activityId
+            ? {
+                ...activity,
+                sessions: activity.sessions.filter(
+                  (session) => String(session.id) !== sessionId,
+                ),
+              }
+            : activity,
+        );
+
+        return Promise.resolve({
+          ok: true,
+          status: 204,
+        });
+      }
+
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mutationResponse),
@@ -60,6 +166,7 @@ const renderTripManagement = ({
     reducer: {
       trips: tripsReducer,
       registrations: registrationsReducer,
+      activities: activitiesReducer,
     },
     preloadedState: {
       trips: {
@@ -68,6 +175,13 @@ const renderTripManagement = ({
       registrations: {
         byTrip: testRegistrationsByTrip,
         status: "idle",
+        error: null,
+      },
+      activities: {
+        byTrip: {
+          1: selectionsByTrip[1] || [],
+        },
+        loading: false,
         error: null,
       },
     },
@@ -548,7 +662,9 @@ describe("TripManagement", () => {
       }),
     );
 
-    expect(screen.getByText("Pirate Ship Adventure")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Pirate Ship Adventure"),
+    ).toBeInTheDocument();
 
     expect(typeInput).toHaveValue("");
     expect(nameInput).toHaveValue("");
@@ -618,7 +734,7 @@ describe("TripManagement", () => {
     await user.click(deleteButtons[0]);
 
     expect(confirmSpy).toHaveBeenCalledWith(
-      "Are you sure you want to delete this session?",
+      "Are you sure you want to permanently delete this session?",
     );
 
     expect(screen.getByText("2027-03-09 — 10:00")).toBeInTheDocument();
@@ -642,10 +758,19 @@ describe("TripManagement", () => {
     await user.click(deleteButtons[0]);
 
     expect(confirmSpy).toHaveBeenCalledWith(
-      "Are you sure you want to delete this session?",
+      "Are you sure you want to permanently delete this session?",
     );
 
-    expect(screen.queryByText("2027-03-09 — 10:00")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("2027-03-09 — 10:00")).not.toBeInTheDocument();
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/activities\/.+\/sessions\/.+$/),
+      expect.objectContaining({
+        method: "DELETE",
+      }),
+    );
 
     expect(screen.getByText("2027-03-09 — 14:00")).toBeInTheDocument();
 
@@ -743,6 +868,17 @@ describe("TripManagement", () => {
     const capacityDisplays = screen.getAllByText("Capacity:");
 
     expect(capacityDisplays[0].parentElement).toHaveTextContent("Capacity: 30");
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/activities\/.+\/sessions\/.+$/),
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: expect.any(String),
+      }),
+    );
 
     expect(
       screen.queryByRole("button", {

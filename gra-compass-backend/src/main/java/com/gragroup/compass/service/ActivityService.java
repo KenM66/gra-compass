@@ -5,7 +5,9 @@ import com.gragroup.compass.model.Activity;
 import com.gragroup.compass.repository.ActivityRepository;
 import com.gragroup.compass.repository.TripRepository;
 import org.springframework.stereotype.Service;
-
+import com.gragroup.compass.repository.RegistrationRepository;
+import com.gragroup.compass.model.Registration;
+import com.gragroup.compass.model.ActivitySelection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -17,15 +19,141 @@ public class ActivityService {
 
     private final ActivityRepository activityRepository;
     private final TripRepository tripRepository;
+    private final RegistrationRepository registrationRepository;
     private final SessionIdService sessionIdService;
 
     public ActivityService(
             ActivityRepository activityRepository,
             TripRepository tripRepository,
+            RegistrationRepository registrationRepository,
             SessionIdService sessionIdService) {
         this.activityRepository = activityRepository;
         this.tripRepository = tripRepository;
+        this.registrationRepository = registrationRepository;
         this.sessionIdService = sessionIdService;
+    }
+
+    private List<Registration> getRegistrationsForTrip(String tripId) {
+        return registrationRepository.findByTripId(tripId);
+    }
+
+    private boolean matchesSession(
+            ActivitySelection selection,
+            String activityId,
+            int sessionId) {
+
+        return activityId.equals(selection.getActivityId())
+                && selection.getSessionId() == sessionId;
+    }
+
+    private long countSessionRegistrations(
+            String tripId,
+            String activityId,
+            int sessionId) {
+
+        return getRegistrationsForTrip(tripId).stream()
+                .filter(registration -> registration.getActivities() != null)
+                .flatMap(registration -> registration.getActivities().stream())
+                .filter(selection -> matchesSession(selection, activityId, sessionId))
+                .count()
+                + countGuestSessionRegistrations(tripId, activityId, sessionId);
+    }
+
+    private long countGuestSessionRegistrations(
+            String tripId,
+            String activityId,
+            int sessionId) {
+
+        return getRegistrationsForTrip(tripId).stream()
+                .filter(registration -> registration.getGuest() != null)
+                .filter(registration -> registration.getGuest().getActivities() != null)
+                .flatMap(registration -> registration.getGuest().getActivities().stream())
+                .filter(selection -> matchesSession(selection, activityId, sessionId))
+                .count();
+    }
+
+    private void validateSessionCapacity(
+            String tripId,
+            String activityId,
+            int sessionId,
+            int newCapacity) {
+
+        long registeredCount = countSessionRegistrations(tripId, activityId, sessionId);
+
+        if (newCapacity < registeredCount) {
+            throw new IllegalArgumentException(
+                    "Session capacity cannot be less than the number of registered travelers.");
+        }
+    }
+
+    private ActivitySession findSession(Activity activity, int sessionId) {
+        return activity.getSessions().stream()
+                .filter(session -> session.getId() == sessionId)
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Activity session not found: " + sessionId));
+    }
+
+    public Activity updateActivitySession(
+            String tripId,
+            String activityId,
+            int sessionId,
+            ActivitySession updatedSession) {
+
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Activity not found: " + activityId));
+
+        if (!activity.getTripId().equals(tripId)) {
+            throw new NoSuchElementException(
+                    "Activity not found for trip: " + tripId);
+        }
+
+        ActivitySession session = findSession(activity, sessionId);
+
+        validateSessionCapacity(
+                tripId,
+                activityId,
+                sessionId,
+                updatedSession.getMaxCapacity());
+
+        session.setMaxCapacity(updatedSession.getMaxCapacity());
+        session.setDate(updatedSession.getDate());
+        session.setTime(updatedSession.getTime());
+        session.setActive(updatedSession.isActive());
+
+        return activityRepository.save(activity);
+    }
+
+    public void deleteActivitySession(
+            String tripId,
+            String activityId,
+            int sessionId) {
+
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Activity not found: " + activityId));
+
+        if (!activity.getTripId().equals(tripId)) {
+            throw new NoSuchElementException(
+                    "Activity not found for trip: " + tripId);
+        }
+
+        ActivitySession session = findSession(activity, sessionId);
+
+        long registeredCount = countSessionRegistrations(
+                tripId,
+                activityId,
+                sessionId);
+
+        if (registeredCount > 0) {
+            throw new IllegalStateException(
+                    "Cannot delete a session with registered travelers.");
+        }
+
+        activity.getSessions().remove(session);
+
+        activityRepository.save(activity);
     }
 
     public List<Activity> getActivitiesByTripId(String tripId) {
