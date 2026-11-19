@@ -16,7 +16,7 @@ public class ActivitySession {
 
     private LocalDate date;
     private LocalTime time;
-
     private int maxCapacity;
+    private int reservedCount;
     private boolean active;
 }

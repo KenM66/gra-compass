@@ -42,9 +42,15 @@ public class RegistrationController {
             @PathVariable int travelerNumber,
             @RequestBody Registration updatedRegistration) {
 
-        return registrationService
-                .updateRegistration(tripId, travelerNumber, updatedRegistration)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            return registrationService
+                    .updateRegistration(tripId, travelerNumber, updatedRegistration)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        }
     }
+
 }
