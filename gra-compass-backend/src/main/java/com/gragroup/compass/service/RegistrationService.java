@@ -76,7 +76,6 @@ public class RegistrationService {
                                 "Guest activity reservations must be changed through the reservation API");
                     }
                     if (!updatedRegistration.isBringingGuest()
-                            && existingRegistration.isBringingGuest()
                             && !activitySelectionKeys(existingGuestActivities).isEmpty()) {
 
                         throw new IllegalArgumentException(
@@ -99,6 +98,13 @@ public class RegistrationService {
                     existingRegistration.setSex(updatedRegistration.getSex());
 
                     existingRegistration.setBringingGuest(updatedRegistration.isBringingGuest());
+                    if (updatedRegistration.getGuest() != null
+                            && existingRegistration.getGuest() != null) {
+
+                        updatedRegistration.getGuest().setActivities(
+                                existingRegistration.getGuest().getActivities());
+                    }
+
                     existingRegistration.setGuest(updatedRegistration.getGuest());
 
                     existingRegistration.setEmergencyContact(
