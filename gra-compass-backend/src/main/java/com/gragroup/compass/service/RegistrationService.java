@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Objects;
 import com.gragroup.compass.model.ActivitySelection;
-import java.util.List;
+
 import java.util.Map;
 import java.util.HashMap;
 
@@ -133,7 +133,7 @@ public class RegistrationService {
 
         for (ActivitySelection selection : selections) {
             if (selection == null) {
-                counts.merge("<null-selection>", 1, Integer::sum);
+                counts.merge("<null-selection>", 1, (oldCount, newCount) -> oldCount + newCount);
                 continue;
             }
 
@@ -142,7 +142,7 @@ public class RegistrationService {
                     + "\u0000" + String.valueOf(selection.getType())
                     + "\u0000" + String.valueOf(selection.getName());
 
-            counts.merge(key, 1, Integer::sum);
+            counts.merge(key, 1, (oldCount, newCount) -> oldCount + newCount);
         }
 
         return counts;
