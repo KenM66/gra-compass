@@ -3,6 +3,7 @@ package com.gragroup.compass.service;
 import org.springframework.stereotype.Service;
 import com.gragroup.compass.model.Registration;
 import org.springframework.dao.DataIntegrityViolationException;
+import com.mongodb.MongoException;
 
 @Service
 public class GuestActivityReservationRetryService {
@@ -29,8 +30,18 @@ public class GuestActivityReservationRetryService {
 
             } catch (DataIntegrityViolationException exception) {
 
-                boolean writeConflict = exception.getMessage() != null
-                        && exception.getMessage().contains("WriteConflict");
+                boolean writeConflict = false;
+
+                Throwable cause = exception;
+
+                while (cause != null) {
+                    if (cause instanceof MongoException mongoException) {
+                        writeConflict = mongoException.getCode() == 112;
+                        break;
+                    }
+
+                    cause = cause.getCause();
+                }
 
                 if (!writeConflict || attempt == maxAttempts) {
                     throw exception;
