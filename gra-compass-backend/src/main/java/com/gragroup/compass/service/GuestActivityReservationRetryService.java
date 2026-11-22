@@ -35,8 +35,9 @@ public class GuestActivityReservationRetryService {
                 Throwable cause = exception;
 
                 while (cause != null) {
-                    if (cause instanceof MongoException mongoException) {
-                        writeConflict = mongoException.getCode() == 112;
+                    if (cause instanceof MongoException mongoException
+                            && mongoException.getCode() == 112) {
+                        writeConflict = true;
                         break;
                     }
 
