@@ -43,6 +43,50 @@ export const updateRegistration = createAsyncThunk(
   },
 );
 
+export const reserveGuestActivity = createAsyncThunk(
+  "registrations/reserveGuestActivity",
+  async ({ tripId, travelerNumber, activityId, sessionId }) => {
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${tripId}/registrations/${travelerNumber}/guest/activities/${activityId}/sessions/${sessionId}`,
+      {
+        method: "PUT",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to reserve guest activity (${response.status})`);
+    }
+
+    return {
+      tripId,
+      registration: await response.json(),
+    };
+  },
+);
+
+export const reserveTravelerActivity = createAsyncThunk(
+  "registrations/reserveTravelerActivity",
+  async ({ tripId, travelerNumber, activityId, sessionId }) => {
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${tripId}/registrations/${travelerNumber}/activities/${activityId}/sessions/${sessionId}`,
+      {
+        method: "PUT",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to reserve traveler activity (${response.status})`,
+      );
+    }
+
+    return {
+      tripId,
+      registration: await response.json(),
+    };
+  },
+);
+
 const initialState = {
   byTrip: {},
   status: "idle",
@@ -69,22 +113,28 @@ const registrationsSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message;
       })
-      .addCase(updateRegistration.fulfilled, (state, action) => {
-        const { tripId, registration } = action.payload;
-        const registrations = state.byTrip[tripId];
+      .addMatcher(
+        (action) =>
+          updateRegistration.fulfilled.match(action) ||
+          reserveGuestActivity.fulfilled.match(action) ||
+          reserveTravelerActivity.fulfilled.match(action),
+        (state, action) => {
+          const { tripId, registration } = action.payload;
+          const registrations = state.byTrip[tripId];
 
-        if (!registrations) {
-          return;
-        }
+          if (!registrations) {
+            return;
+          }
 
-        const index = registrations.findIndex(
-          (item) => item.travelerNumber === registration.travelerNumber,
-        );
+          const index = registrations.findIndex(
+            (item) => item.travelerNumber === registration.travelerNumber,
+          );
 
-        if (index !== -1) {
-          registrations[index] = registration;
-        }
-      });
+          if (index !== -1) {
+            registrations[index] = registration;
+          }
+        },
+      );
   },
 });
 
