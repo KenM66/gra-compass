@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchRegistrationsByTrip,
   updateRegistration,
+  reserveGuestActivity,
 } from "../store/registrationsSlice";
 import { useParams, useNavigate } from "react-router-dom";
 
 import "../styles/RegistrationDetails.css";
-import selectionsByTrip from "../data/mockTripSelections";
+
+import { fetchActivities } from "../store/activitiesSlice";
 
 const GuestDetails = () => {
   const { tripId, id } = useParams();
@@ -20,6 +22,7 @@ const GuestDetails = () => {
 
   useEffect(() => {
     dispatch(fetchRegistrationsByTrip(tripId));
+    dispatch(fetchActivities(tripId));
   }, [dispatch, tripId]);
   const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
 
@@ -57,23 +60,12 @@ const GuestDetails = () => {
   );
 
   const guest = registration?.guest;
-  const availableSelections = selectionsByTrip[tripId] ?? [];
-  const getSessionRegistrationCount = (sessionId) =>
-    registrations.reduce((count, currentRegistration) => {
-      const primaryCount = (currentRegistration.activities ?? []).some(
-        (activity) => activity.sessionId === sessionId,
-      )
-        ? 1
-        : 0;
 
-      const guestCount = (currentRegistration.guest?.activities ?? []).some(
-        (activity) => activity.sessionId === sessionId,
-      )
-        ? 1
-        : 0;
+  const activities = useSelector(
+    (state) => state.activities.byTrip[tripId] ?? [],
+  );
 
-      return count + primaryCount + guestCount;
-    }, 0);
+  const availableSelections = activities;
 
   const formatSessionDateTime = (date, time) => {
     const sessionDateTime = new Date(`${date}T${time}`);
@@ -618,7 +610,7 @@ const GuestDetails = () => {
                                 activity.sessionId === session.id,
                             ) &&
                             (!session.active ||
-                              getSessionRegistrationCount(session.id) >=
+                              (session.reservedCount ?? 0) >=
                                 session.maxCapacity)
                           }
                           onChange={() => {
@@ -641,10 +633,10 @@ const GuestDetails = () => {
                         <span>
                           {!session.active
                             ? "Unavailable"
-                            : getSessionRegistrationCount(session.id) >=
+                            : (session.reservedCount ?? 0) >=
                                 session.maxCapacity
                               ? "Full"
-                              : `${session.maxCapacity - getSessionRegistrationCount(session.id)} spots left`}
+                              : `${session.maxCapacity - (session.reservedCount ?? 0)} spots left`}
                         </span>
                       </label>
                     ))}
@@ -664,21 +656,55 @@ const GuestDetails = () => {
                     alert("Please select a session for each trip selection.");
                     return;
                   }
-                  const updatedRegistration = {
-                    ...registration,
-                    guest: {
-                      ...registration.guest,
-                      activities: editSelections,
-                    },
-                  };
 
-                  await dispatch(
-                    updateRegistration({
-                      tripId,
-                      travelerNumber: registration.travelerNumber,
-                      registration: updatedRegistration,
-                    }),
-                  ).unwrap();
+                  const newSelections = editSelections.filter(
+                    (selection) =>
+                      !(guest.activities ?? []).some(
+                        (existing) =>
+                          existing.id === selection.id &&
+                          existing.sessionId === selection.sessionId,
+                      ),
+                  );
+                  const hasUnsupportedChanges = (guest.activities ?? []).some(
+                    (existing) =>
+                      !editSelections.some(
+                        (selection) =>
+                          selection.id === existing.id &&
+                          selection.sessionId === existing.sessionId,
+                      ),
+                  );
+
+                  if (hasUnsupportedChanges) {
+                    alert(
+                      "Removing activities or changing sessions is not supported yet.",
+                    );
+                    return;
+                  }
+
+                  if (newSelections.length > 1) {
+                    alert("Please reserve one new activity at a time for now.");
+                    return;
+                  }
+
+                  if (newSelections.length === 1) {
+                    const selection = newSelections[0];
+
+                    try {
+                      await dispatch(
+                        reserveGuestActivity({
+                          tripId,
+                          travelerNumber: registration.travelerNumber,
+                          activityId: selection.id,
+                          sessionId: selection.sessionId,
+                        }),
+                      ).unwrap();
+                    } catch (error) {
+                      alert(
+                        error.message || "Unable to reserve this activity.",
+                      );
+                      return;
+                    }
+                  }
 
                   setIsEditingSelections(false);
                 }}

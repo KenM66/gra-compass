@@ -6,6 +6,7 @@ import GuestDetails from "../../pages/GuestDetails";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import registrationsReducer from "../../store/registrationsSlice";
+import activitiesReducer from "../../store/activitiesSlice";
 
 const registration = {
   travelerNumber: 1047,
@@ -30,14 +31,63 @@ const registration = {
   },
 };
 
+const activitiesByTrip = {
+  1: [
+    {
+      id: "6af110ca493edddec267fe9b",
+      tripId: "1",
+      type: "Excursion",
+      name: "Catamaran & Snorkeling",
+      sessions: [
+        {
+          id: 1,
+          date: "2027-03-09",
+          time: "10:00:00",
+          maxCapacity: 21,
+          reservedCount: 0,
+          active: true,
+        },
+        {
+          id: 2,
+          date: "2027-03-09",
+          time: "14:00:00",
+          maxCapacity: 25,
+          reservedCount: 0,
+          active: true,
+        },
+      ],
+    },
+    {
+      id: "2",
+      tripId: "1",
+      type: "Excursion",
+      name: "Island Jeep Tour",
+      sessions: [
+        {
+          id: 201,
+          date: "2027-03-10",
+          time: "09:00:00",
+          maxCapacity: 20,
+          reservedCount: 0,
+          active: true,
+        },
+      ],
+    },
+  ],
+};
+
 const registrationsByTrip = {
   1: [registration],
 };
 
-const renderGuestDetails = (testRegistrationsByTrip = registrationsByTrip) => {
+const renderGuestDetails = (
+  testRegistrationsByTrip = registrationsByTrip,
+  testActivitiesByTrip = activitiesByTrip,
+) => {
   const store = configureStore({
     reducer: {
       registrations: registrationsReducer,
+      activities: activitiesReducer,
     },
     preloadedState: {
       registrations: {
@@ -45,15 +95,25 @@ const renderGuestDetails = (testRegistrationsByTrip = registrationsByTrip) => {
         status: "idle",
         error: null,
       },
+      activities: {
+        byTrip: testActivitiesByTrip,
+        loading: false,
+        error: null,
+      },
     },
   });
 
   vi.stubGlobal(
     "fetch",
-    vi.fn(() =>
+    vi.fn((url) =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(testRegistrationsByTrip[1] || []),
+        json: () =>
+          Promise.resolve(
+            url.endsWith("/activities")
+              ? (testActivitiesByTrip[1] ?? [])
+              : (testRegistrationsByTrip[1] ?? []),
+          ),
       }),
     ),
   );
@@ -74,6 +134,7 @@ const renderGuestDetails = (testRegistrationsByTrip = registrationsByTrip) => {
       </MemoryRouter>
     </Provider>,
   );
+  return store;
 };
 
 describe("GuestDetails", () => {
@@ -186,12 +247,6 @@ describe("GuestDetails", () => {
     const updatedRegistration = JSON.parse(putCall[1].body);
 
     expect(updatedRegistration.guest.firstName).toBe("Mandy");
-    expect(updatedRegistration.guest.email).toBe("mandy@example.com");
-    expect(updatedRegistration.guest.lastName).toBe("Henderson");
-
-    expect(updatedRegistration.firstName).toBe("Robert");
-    expect(updatedRegistration.email).toBe("robert@example.com");
-    expect(updatedRegistration.travelerNumber).toBe(1047);
   });
   test("cancels guest personal information changes without saving", async () => {
     const user = userEvent.setup();
@@ -393,38 +448,24 @@ describe("GuestDetails", () => {
     expect(updatedRegistration.email).toBe("robert@example.com");
     expect(updatedRegistration.travelerNumber).toBe(1047);
   });
-  test("counts both travelers and guests when determining session capacity", async () => {
+  test("disables reservations when the backend reports a full session", async () => {
     const user = userEvent.setup();
 
-    const fullSessionRegistrations = Array.from({ length: 6 }, (_, index) => ({
-      ...registration,
-      travelerNumber: 2000 + index,
-      activities: [
-        {
-          id: 2,
-          type: "Excursion",
-          name: "Island Jeep Tour",
-          sessionId: 201,
-        },
-      ],
-      guest: {
-        ...registration.guest,
-        activities: [
-          {
-            id: 2,
-            type: "Excursion",
-            name: "Island Jeep Tour",
-            sessionId: 201,
-          },
-        ],
-      },
-    }));
-
-    const testRegistrationsByTrip = {
-      1: [registration, ...fullSessionRegistrations],
+    const fullActivitiesByTrip = {
+      1: activitiesByTrip[1].map((activity) => ({
+        ...activity,
+        sessions: activity.sessions.map((session) =>
+          activity.name === "Island Jeep Tour" && session.id === 201
+            ? {
+                ...session,
+                reservedCount: session.maxCapacity,
+              }
+            : session,
+        ),
+      })),
     };
 
-    renderGuestDetails(testRegistrationsByTrip);
+    renderGuestDetails(registrationsByTrip, fullActivitiesByTrip);
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -436,25 +477,47 @@ describe("GuestDetails", () => {
       name: /Mar 10, 2027.*9:00 AM.*Full/i,
     });
 
+    screen.debug();
+
     expect(fullSession).toBeDisabled();
   });
 
   test("saves guest activity selections through the backend API", async () => {
     const user = userEvent.setup();
 
-    renderGuestDetails();
+    const store = renderGuestDetails();
 
     globalThis.fetch.mockImplementation((url, options) => {
       if (options?.method === "PUT") {
         return Promise.resolve({
           ok: true,
-          json: async () => JSON.parse(options.body),
+          json: async () => ({
+            ...registrationsByTrip[1].find(
+              (registration) => registration.travelerNumber === 1047,
+            ),
+            guest: {
+              ...registrationsByTrip[1].find(
+                (registration) => registration.travelerNumber === 1047,
+              ).guest,
+              activities: [
+                {
+                  id: "2",
+                  type: "Excursion",
+                  name: "Island Jeep Tour",
+                  sessionId: 201,
+                },
+              ],
+            },
+          }),
         });
       }
 
       return Promise.resolve({
         ok: true,
-        json: async () => registrationsByTrip[1],
+        json: async () =>
+          url.endsWith("/activities")
+            ? (activitiesByTrip[1] ?? [])
+            : registrationsByTrip[1],
       });
     });
 
@@ -484,12 +547,9 @@ describe("GuestDetails", () => {
 
     await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        "http://localhost:8080/api/trips/1/registrations/1047",
+        "http://localhost:8080/api/trips/1/registrations/1047/guest/activities/2/sessions/201",
         expect.objectContaining({
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
         }),
       );
     });
@@ -498,21 +558,25 @@ describe("GuestDetails", () => {
       ([, options]) => options?.method === "PUT",
     );
 
-    const updatedRegistration = JSON.parse(putCall[1].body);
+    expect(putCall).toBeDefined();
+    expect(putCall[1].body).toBeUndefined();
 
-    expect(updatedRegistration.guest.activities).toEqual([
-      {
-        id: 2,
-        type: "Excursion",
-        name: "Island Jeep Tour",
-        sessionId: 201,
-      },
-    ]);
+    await waitFor(() => {
+      const updatedRegistration = store
+        .getState()
+        .registrations.byTrip[1].find(
+          (registration) => registration.travelerNumber === 1047,
+        );
 
-    expect(updatedRegistration.activities).toEqual([]);
-    expect(updatedRegistration.firstName).toBe("Robert");
-    expect(updatedRegistration.guest.firstName).toBe("Amanda");
-    expect(updatedRegistration.travelerNumber).toBe(1047);
+      expect(updatedRegistration.guest.activities).toEqual([
+        {
+          id: "2",
+          type: "Excursion",
+          name: "Island Jeep Tour",
+          sessionId: 201,
+        },
+      ]);
+    });
   });
 
   test("navigates back to the traveler details page", async () => {

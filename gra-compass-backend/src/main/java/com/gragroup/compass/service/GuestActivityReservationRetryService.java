@@ -52,4 +52,42 @@ public class GuestActivityReservationRetryService {
 
         throw new IllegalStateException("Reservation retry attempts exhausted");
     }
+
+    public Registration cancelGuestActivity(
+            String tripId,
+            int travelerNumber,
+            String activityId,
+            int sessionId) {
+
+        final int maxAttempts = 3;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return reservationService.cancelGuestActivity(
+                        tripId, travelerNumber, activityId, sessionId);
+
+            } catch (DataIntegrityViolationException exception) {
+
+                boolean writeConflict = false;
+                Throwable cause = exception;
+
+                while (cause != null) {
+                    if (cause instanceof MongoException mongoException
+                            && mongoException.getCode() == 112) {
+                        writeConflict = true;
+                        break;
+                    }
+
+                    cause = cause.getCause();
+                }
+
+                if (!writeConflict || attempt == maxAttempts) {
+                    throw exception;
+                }
+            }
+        }
+
+        throw new IllegalStateException(
+                "Cancellation retry attempts exhausted");
+    }
 }
