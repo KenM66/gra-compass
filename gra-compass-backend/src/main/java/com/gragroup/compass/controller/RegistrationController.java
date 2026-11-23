@@ -9,6 +9,7 @@ import com.gragroup.compass.service.GuestActivityReservationRetryService;
 import java.util.List;
 import java.util.NoSuchElementException;
 import org.springframework.http.HttpStatus;
+import com.gragroup.compass.service.TravelerActivityReservationRetryService;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -17,13 +18,16 @@ public class RegistrationController {
 
     private final RegistrationService registrationService;
     private final GuestActivityReservationRetryService guestActivityReservationRetryService;
+    private final TravelerActivityReservationRetryService travelerActivityReservationRetryService;
 
     public RegistrationController(
             RegistrationService registrationService,
-            GuestActivityReservationRetryService guestActivityReservationRetryService) {
+            GuestActivityReservationRetryService guestActivityReservationRetryService,
+            TravelerActivityReservationRetryService travelerActivityReservationRetryService) {
 
         this.registrationService = registrationService;
         this.guestActivityReservationRetryService = guestActivityReservationRetryService;
+        this.travelerActivityReservationRetryService = travelerActivityReservationRetryService;
     }
 
     @GetMapping
@@ -58,6 +62,30 @@ public class RegistrationController {
 
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/{travelerNumber}/activities/{activityId}/sessions/{sessionId}")
+    public ResponseEntity<Registration> reserveTravelerActivity(
+            @PathVariable String tripId,
+            @PathVariable int travelerNumber,
+            @PathVariable String activityId,
+            @PathVariable int sessionId) {
+
+        try {
+            Registration registration = travelerActivityReservationRetryService.reserveTravelerActivity(
+                    tripId, travelerNumber, activityId, sessionId);
+
+            return ResponseEntity.ok(registration);
+
+        } catch (NoSuchElementException exception) {
+            return ResponseEntity.notFound().build();
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+
+        } catch (IllegalStateException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 

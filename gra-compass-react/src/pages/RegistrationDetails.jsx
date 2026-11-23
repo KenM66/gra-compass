@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/RegistrationDetails.css";
-import selectionsByTrip from "../data/mockTripSelections";
+import { fetchActivities } from "../store/activitiesSlice";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchRegistrationsByTrip,
   updateRegistration,
+  reserveTravelerActivity,
 } from "../store/registrationsSlice";
 
 const RegistrationDetails = () => {
@@ -19,6 +20,7 @@ const RegistrationDetails = () => {
 
   useEffect(() => {
     dispatch(fetchRegistrationsByTrip(tripId));
+    dispatch(fetchActivities(tripId));
   }, [dispatch, tripId]);
 
   const getSessionRegistrationCount = (sessionId) =>
@@ -79,6 +81,9 @@ const RegistrationDetails = () => {
   const registration = tripRegistrations.find(
     (registration) => registration.travelerNumber === Number(id),
   );
+  const activities = useSelector(
+    (state) => state.activities.byTrip[tripId] ?? [],
+  );
   if (!registration) {
     return (
       <main className="registration-details-page">
@@ -87,7 +92,7 @@ const RegistrationDetails = () => {
     );
   }
 
-  const availableSelections = selectionsByTrip[tripId] || [];
+  const availableSelections = activities;
 
   const hasGuest = registration?.bringingGuest ?? false;
   const guestInfo = registration?.guest ?? null;
@@ -951,17 +956,17 @@ const RegistrationDetails = () => {
                   <input
                     type="checkbox"
                     checked={editSelections.some(
-                      (activity) => activity.id === selection.id,
+                      (activity) => activity.activityId === selection.id,
                     )}
                     onChange={() => {
                       setEditSelections((currentSelections) => {
                         const isSelected = currentSelections.some(
-                          (activity) => activity.id === selection.id,
+                          (activity) => activity.activityId === selection.id,
                         );
 
                         if (isSelected) {
                           return currentSelections.filter(
-                            (activity) => activity.id !== selection.id,
+                            (activity) => activity.activityId !== selection.id,
                           );
                         }
 

@@ -561,17 +561,21 @@ const GuestDetails = () => {
                 <input
                   type="checkbox"
                   checked={editSelections.some(
-                    (activity) => activity.id === selection.id,
+                    (activity) =>
+                      (activity.activityId ?? activity.id) === selection.id,
                   )}
                   onChange={() => {
                     setEditSelections((currentSelections) => {
                       const isSelected = currentSelections.some(
-                        (activity) => activity.id === selection.id,
+                        (activity) =>
+                          (activity.activityId ?? activity.id) === selection.id,
                       );
 
                       if (isSelected) {
                         return currentSelections.filter(
-                          (activity) => activity.id !== selection.id,
+                          (activity) =>
+                            (activity.activityId ?? activity.id) !==
+                            selection.id,
                         );
                       }
 
@@ -600,13 +604,15 @@ const GuestDetails = () => {
                           name={`selection-${selection.id}`}
                           checked={editSelections.some(
                             (activity) =>
-                              activity.id === selection.id &&
+                              (activity.activityId ?? activity.id) ===
+                                selection.id &&
                               activity.sessionId === session.id,
                           )}
                           disabled={
                             !(guest.activities ?? []).some(
                               (activity) =>
-                                activity.id === selection.id &&
+                                (activity.activityId ?? activity.id) ===
+                                  selection.id &&
                                 activity.sessionId === session.id,
                             ) &&
                             (!session.active ||
@@ -616,7 +622,8 @@ const GuestDetails = () => {
                           onChange={() => {
                             setEditSelections((currentSelections) =>
                               currentSelections.map((activity) =>
-                                activity.id === selection.id
+                                (activity.activityId ?? activity.id) ===
+                                selection.id
                                   ? {
                                       ...activity,
                                       sessionId: session.id,
@@ -661,7 +668,8 @@ const GuestDetails = () => {
                     (selection) =>
                       !(guest.activities ?? []).some(
                         (existing) =>
-                          existing.id === selection.id &&
+                          (existing.activityId ?? existing.id) ===
+                            (selection.activityId ?? selection.id) &&
                           existing.sessionId === selection.sessionId,
                       ),
                   );
@@ -669,7 +677,8 @@ const GuestDetails = () => {
                     (existing) =>
                       !editSelections.some(
                         (selection) =>
-                          selection.id === existing.id &&
+                          (selection.activityId ?? selection.id) ===
+                            (existing.activityId ?? existing.id) &&
                           selection.sessionId === existing.sessionId,
                       ),
                   );
@@ -694,7 +703,7 @@ const GuestDetails = () => {
                         reserveGuestActivity({
                           tripId,
                           travelerNumber: registration.travelerNumber,
-                          activityId: selection.id,
+                          activityId: selection.activityId ?? selection.id,
                           sessionId: selection.sessionId,
                         }),
                       ).unwrap();
@@ -724,12 +733,36 @@ const GuestDetails = () => {
             </div>
           </div>
         ) : (guest.activities ?? []).length > 0 ? (
-          (guest.activities ?? []).map((activity) => (
-            <div className="detail-row" key={activity.id}>
-              <span>{activity.type}</span>
-              <strong>{activity.name}</strong>
-            </div>
-          ))
+          (guest.activities ?? []).map((activity) => {
+            const activityDetails = activities.find(
+              (item) => item.id === activity.activityId,
+            );
+
+            const sessionDetails = activityDetails?.sessions?.find(
+              (session) => session.id === activity.sessionId,
+            );
+
+            return (
+              <div
+                className="detail-row"
+                key={`${activity.activityId}-${activity.sessionId}`}
+              >
+                <span>{activityDetails?.type ?? "Activity"}</span>
+                <strong>
+                  {activityDetails?.name ?? "Unknown Activity"}
+                  {sessionDetails && (
+                    <>
+                      {" — "}
+                      {formatSessionDateTime(
+                        sessionDetails.date,
+                        sessionDetails.time,
+                      )}
+                    </>
+                  )}
+                </strong>
+              </div>
+            );
+          })
         ) : (
           <p>No trip selections.</p>
         )}
