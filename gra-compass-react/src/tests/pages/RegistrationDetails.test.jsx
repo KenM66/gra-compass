@@ -6,6 +6,7 @@ import RegistrationDetails from "../../pages/RegistrationDetails";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import registrationsReducer from "../../store/registrationsSlice";
+import activitiesReducer from "../../store/activitiesSlice";
 
 const registration = {
   travelerNumber: 1047,
@@ -40,13 +41,13 @@ const registration = {
   dietaryRequirements: "Vegetarian",
   activities: [
     {
-      id: 1,
+      activityId: 1,
       type: "Excursion",
       name: "Catamaran & Snorkeling",
       sessionId: 101,
     },
     {
-      id: 4,
+      activityId: 4,
       type: "Spa",
       name: "Massage Appointment",
       sessionId: 401,
@@ -54,16 +55,89 @@ const registration = {
   ],
 };
 
+const activities = [
+  {
+    id: 1,
+    type: "Excursion",
+    name: "Catamaran & Snorkeling",
+    sessions: [
+      {
+        id: 101,
+        date: "2027-03-09",
+        time: "10:00:00",
+        maxCapacity: 25,
+        reservedCount: 1,
+        active: true,
+      },
+      {
+        id: 102,
+        date: "2027-03-09",
+        time: "14:00:00",
+        maxCapacity: 25,
+        reservedCount: 0,
+        active: true,
+      },
+    ],
+  },
+  {
+    id: 2,
+    type: "Excursion",
+    name: "Island Jeep Tour",
+    sessions: [
+      {
+        id: 201,
+        date: "2027-03-10",
+        time: "09:00:00",
+        maxCapacity: 12,
+        reservedCount: 0,
+        active: true,
+      },
+    ],
+  },
+  {
+    id: 3,
+    type: "Dining",
+    name: "Sunset Dinner",
+    sessions: [
+      {
+        id: 301,
+        date: "2027-03-11",
+        time: "18:30:00",
+        maxCapacity: 20,
+        reservedCount: 0,
+        active: false,
+      },
+    ],
+  },
+  {
+    id: 4,
+    type: "Spa",
+    name: "Massage Appointment",
+    sessions: [
+      {
+        id: 401,
+        date: "2027-03-12",
+        time: "11:00:00",
+        maxCapacity: 10,
+        reservedCount: 1,
+        active: true,
+      },
+    ],
+  },
+];
+
 const registrationsByTrip = {
   1: [registration],
 };
 
 const renderRegistrationDetails = (
   testRegistrationsByTrip = registrationsByTrip,
+  testActivities = activities,
 ) => {
   const store = configureStore({
     reducer: {
       registrations: registrationsReducer,
+      activities: activitiesReducer,
     },
     preloadedState: {
       registrations: {
@@ -71,16 +145,35 @@ const renderRegistrationDetails = (
         status: "idle",
         error: null,
       },
+      activities: {
+        byTrip: {
+          1: testActivities,
+        },
+        status: "idle",
+        error: null,
+      },
     },
   });
+
   vi.stubGlobal(
     "fetch",
-    vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(testRegistrationsByTrip[1] || []),
-      }),
-    ),
+    vi.fn(async (url) => {
+      if (url === "http://localhost:8080/api/trips/1/activities") {
+        return {
+          ok: true,
+          json: async () => testActivities,
+        };
+      }
+
+      if (url === "http://localhost:8080/api/trips/1/registrations") {
+        return {
+          ok: true,
+          json: async () => testRegistrationsByTrip[1] || [],
+        };
+      }
+
+      throw new Error(`Unexpected API request: ${url}`);
+    }),
   );
 
   render(
@@ -95,6 +188,8 @@ const renderRegistrationDetails = (
       </MemoryRouter>
     </Provider>,
   );
+
+  return store;
 };
 describe("RegistrationDetails", () => {
   test("displays the correct traveler from the URL", () => {
@@ -189,9 +284,12 @@ describe("RegistrationDetails", () => {
       }),
     );
 
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     expect(globalThis.fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/trips/1/registrations",
+    );
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/trips/1/activities",
     );
 
     expect(screen.queryByDisplayValue("Bob")).not.toBeInTheDocument();
@@ -303,9 +401,12 @@ describe("RegistrationDetails", () => {
 
     expect(confirmSpy).toHaveBeenCalledTimes(1);
 
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     expect(globalThis.fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/trips/1/registrations",
+    );
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/trips/1/activities",
     );
 
     expect(screen.getByText("Amanda Henderson")).toBeInTheDocument();
@@ -449,9 +550,12 @@ describe("RegistrationDetails", () => {
       "Please select a session for each trip selection.",
     );
 
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     expect(globalThis.fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/trips/1/registrations",
+    );
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/trips/1/activities",
     );
 
     alertSpy.mockRestore();
@@ -459,7 +563,7 @@ describe("RegistrationDetails", () => {
   test("adds a trip selection with its selected session", async () => {
     const user = userEvent.setup();
 
-    renderRegistrationDetails();
+    const store = renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -480,7 +584,7 @@ describe("RegistrationDetails", () => {
     await user.click(jeepTourSession);
 
     const jeepTour = {
-      id: 2,
+      activityId: 2,
       type: "Excursion",
       name: "Island Jeep Tour",
       sessionId: 201,
@@ -496,27 +600,34 @@ describe("RegistrationDetails", () => {
       json: async () => updatedRegistration,
     });
 
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => activities,
+    });
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [updatedRegistration],
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
       }),
     );
 
-    expect(globalThis.fetch).toHaveBeenLastCalledWith(
-      "http://localhost:8080/api/trips/1/registrations/1047",
-      expect.objectContaining({
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047/activities/2/sessions/201",
+      {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }),
+      },
     );
 
-    const request = globalThis.fetch.mock.calls.at(-1)[1];
-    const requestBody = JSON.parse(request.body);
+    expect(
+      store.getState().registrations.byTrip[1][0].activities,
+    ).toContainEqual(jeepTour);
 
-    expect(requestBody.activities).toContainEqual(jeepTour);
-    expect(requestBody.travelerNumber).toBe(1047);
+    expect(screen.getByText("Island Jeep Tour")).toBeInTheDocument();
   });
   test("disables an unavailable trip selection session", async () => {
     const user = userEvent.setup();
@@ -538,24 +649,19 @@ describe("RegistrationDetails", () => {
   test("disables a trip selection session when it is full", async () => {
     const user = userEvent.setup();
 
-    const fullSessionRegistrations = Array.from({ length: 12 }, (_, index) => ({
-      ...registration,
-      travelerNumber: 2000 + index,
-      activities: [
-        {
-          id: 2,
-          type: "Excursion",
-          name: "Island Jeep Tour",
-          sessionId: 201,
-        },
-      ],
+    const fullSessionActivities = activities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === 2 && session.id === 201
+          ? {
+              ...session,
+              reservedCount: session.maxCapacity,
+            }
+          : session,
+      ),
     }));
 
-    const testRegistrationsByTrip = {
-      1: [registration, ...fullSessionRegistrations],
-    };
-
-    renderRegistrationDetails(testRegistrationsByTrip);
+    renderRegistrationDetails(registrationsByTrip, fullSessionActivities);
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -572,25 +678,19 @@ describe("RegistrationDetails", () => {
   test("allows the traveler to keep their current session when it is full", async () => {
     const user = userEvent.setup();
 
-    const fullSessionRegistrations = Array.from({ length: 24 }, (_, index) => ({
-      ...registration,
-      travelerNumber: 2000 + index,
-      activities: [
-        {
-          id: 1,
-          type: "Excursion",
-          name: "Catamaran & Snorkeling",
-          sessionId: 101,
-        },
-      ],
+    const fullSessionActivities = activities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === 1 && session.id === 101
+          ? {
+              ...session,
+              reservedCount: session.maxCapacity,
+            }
+          : session,
+      ),
     }));
 
-    const testRegistrationsByTrip = {
-      1: [registration, ...fullSessionRegistrations],
-    };
-
-    renderRegistrationDetails(testRegistrationsByTrip);
-
+    renderRegistrationDetails(registrationsByTrip, fullSessionActivities);
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
     });
@@ -607,24 +707,19 @@ describe("RegistrationDetails", () => {
   test("allows the traveler to switch from their current full session", async () => {
     const user = userEvent.setup();
 
-    const fullSessionRegistrations = Array.from({ length: 24 }, (_, index) => ({
-      ...registration,
-      travelerNumber: 2000 + index,
-      activities: [
-        {
-          id: 1,
-          type: "Excursion",
-          name: "Catamaran & Snorkeling",
-          sessionId: 101,
-        },
-      ],
+    const fullSessionActivities = activities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === 1 && session.id === 101
+          ? {
+              ...session,
+              reservedCount: session.maxCapacity,
+            }
+          : session,
+      ),
     }));
 
-    const testRegistrationsByTrip = {
-      1: [registration, ...fullSessionRegistrations],
-    };
-
-    renderRegistrationDetails(testRegistrationsByTrip);
+    renderRegistrationDetails(registrationsByTrip, fullSessionActivities);
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -687,7 +782,7 @@ describe("RegistrationDetails", () => {
   test("removes an existing trip selection", async () => {
     const user = userEvent.setup();
 
-    renderRegistrationDetails();
+    const store = renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -704,18 +799,28 @@ describe("RegistrationDetails", () => {
     const updatedRegistration = {
       ...registration,
       activities: registration.activities.filter(
-        (activity) => activity.id !== 1,
+        (activity) => activity.activityId !== 1,
       ),
     };
+
+    await user.click(catamaranCheckbox);
+
+    expect(catamaranCheckbox).not.toBeChecked();
 
     globalThis.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => updatedRegistration,
     });
 
-    await user.click(catamaranCheckbox);
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => activities,
+    });
 
-    expect(catamaranCheckbox).not.toBeChecked();
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [updatedRegistration],
+    });
 
     await user.click(
       screen.getByRole("button", {
@@ -723,33 +828,35 @@ describe("RegistrationDetails", () => {
       }),
     );
 
-    expect(globalThis.fetch).toHaveBeenLastCalledWith(
-      "http://localhost:8080/api/trips/1/registrations/1047",
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/101",
+      {
+        method: "DELETE",
+      },
+    );
+
+    const savedRegistration = store.getState().registrations.byTrip[1][0];
+
+    expect(savedRegistration.activities).not.toContainEqual(
       expect.objectContaining({
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        activityId: 1,
       }),
     );
 
-    const request = globalThis.fetch.mock.calls.at(-1)[1];
-    const requestBody = JSON.parse(request.body);
-
-    expect(requestBody.activities).not.toContainEqual(
-      expect.objectContaining({
-        id: 1,
-      }),
-    );
-
-    expect(requestBody.activities).toContainEqual({
-      id: 4,
+    expect(savedRegistration.activities).toContainEqual({
+      activityId: 4,
       type: "Spa",
       name: "Massage Appointment",
       sessionId: 401,
     });
 
-    expect(requestBody.travelerNumber).toBe(1047);
+    expect(savedRegistration.guest).toEqual(registration.guest);
+
+    expect(
+      screen.queryByText("Catamaran & Snorkeling"),
+    ).not.toBeInTheDocument();
+
+    expect(screen.getByText("Massage Appointment")).toBeInTheDocument();
   });
   test("allows emergency contact information to be edited and saved", async () => {
     const user = userEvent.setup();

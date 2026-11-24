@@ -9,12 +9,14 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.gragroup.compass.service.GuestActivityReservationRetryService;
+import com.gragroup.compass.service.TravelerActivityReservationRetryService;
 
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import java.util.NoSuchElementException;
@@ -30,6 +32,9 @@ class RegistrationControllerTest {
 
         @MockitoBean
         private GuestActivityReservationRetryService guestActivityReservationRetryService;
+
+        @MockitoBean
+        private TravelerActivityReservationRetryService travelerActivityReservationRetryService;
 
         @Test
         void updatesRegistration() throws Exception {
@@ -119,6 +124,124 @@ class RegistrationControllerTest {
 
                 mockMvc.perform(put(
                                 "/api/trips/trip123/registrations/1047/guest/activities/activity123/sessions/1"))
+                                .andExpect(status().isConflict());
+        }
+
+        @Test
+        void reservesTravelerActivity() throws Exception {
+                Registration registration = new Registration();
+                registration.setId("registration123");
+                registration.setTripId("trip123");
+                registration.setTravelerNumber(1047);
+
+                when(travelerActivityReservationRetryService.reserveTravelerActivity(
+                                "trip123", 1047, "activity123", 1))
+                                .thenReturn(registration);
+
+                mockMvc.perform(put(
+                                "/api/trips/trip123/registrations/1047/activities/activity123/sessions/1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value("registration123"))
+                                .andExpect(jsonPath("$.tripId").value("trip123"))
+                                .andExpect(jsonPath("$.travelerNumber").value(1047));
+        }
+
+        @Test
+        void returnsNotFoundWhenTravelerActivityDoesNotExist() throws Exception {
+
+                when(travelerActivityReservationRetryService.reserveTravelerActivity(
+                                "trip123", 1047, "missingActivity", 1))
+                                .thenThrow(new NoSuchElementException("Activity not found"));
+
+                mockMvc.perform(put(
+                                "/api/trips/trip123/registrations/1047/activities/missingActivity/sessions/1"))
+                                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void returnsBadRequestWhenTravelerReservationIsInvalid() throws Exception {
+
+                when(travelerActivityReservationRetryService.reserveTravelerActivity(
+                                "trip123", 1047, "activity123", 1))
+                                .thenThrow(new IllegalArgumentException("Invalid reservation"));
+
+                mockMvc.perform(put(
+                                "/api/trips/trip123/registrations/1047/activities/activity123/sessions/1"))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void returnsConflictWhenTravelerActivitySessionIsUnavailable() throws Exception {
+
+                when(travelerActivityReservationRetryService.reserveTravelerActivity(
+                                "trip123", 1047, "activity123", 1))
+                                .thenThrow(new IllegalStateException(
+                                                "Activity session is full, inactive, or unavailable"));
+
+                mockMvc.perform(put(
+                                "/api/trips/trip123/registrations/1047/activities/activity123/sessions/1"))
+                                .andExpect(status().isConflict());
+        }
+
+        @Test
+        void cancelsTravelerActivity() throws Exception {
+
+                Registration registration = new Registration();
+                registration.setId("registration123");
+                registration.setTripId("trip123");
+                registration.setTravelerNumber(1047);
+
+                when(travelerActivityReservationRetryService.cancelTravelerActivity(
+                                "trip123", 1047, "activity123", 1))
+                                .thenReturn(registration);
+
+                mockMvc.perform(delete(
+                                "/api/trips/trip123/registrations/1047/activities/activity123/sessions/1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value("registration123"))
+                                .andExpect(jsonPath("$.tripId").value("trip123"))
+                                .andExpect(jsonPath("$.travelerNumber").value(1047));
+        }
+
+        @Test
+        void returnsNotFoundWhenTravelerCancellationReservationDoesNotExist()
+                        throws Exception {
+
+                when(travelerActivityReservationRetryService.cancelTravelerActivity(
+                                "trip123", 1047, "activity123", 1))
+                                .thenThrow(new NoSuchElementException(
+                                                "Traveler activity reservation not found"));
+
+                mockMvc.perform(delete(
+                                "/api/trips/trip123/registrations/1047/activities/activity123/sessions/1"))
+                                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void returnsBadRequestWhenTravelerCancellationIsInvalid()
+                        throws Exception {
+
+                when(travelerActivityReservationRetryService.cancelTravelerActivity(
+                                "trip123", 1047, "activity123", 1))
+                                .thenThrow(new IllegalArgumentException(
+                                                "Invalid cancellation"));
+
+                mockMvc.perform(delete(
+                                "/api/trips/trip123/registrations/1047/activities/activity123/sessions/1"))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void returnsConflictWhenTravelerCancellationFails()
+                        throws Exception {
+
+                when(travelerActivityReservationRetryService.cancelTravelerActivity(
+                                "trip123", 1047, "activity123", 1))
+                                .thenThrow(new IllegalStateException(
+                                                "Reserved seat could not be released"));
+
+                mockMvc.perform(delete(
+                                "/api/trips/trip123/registrations/1047/activities/activity123/sessions/1"))
                                 .andExpect(status().isConflict());
         }
 }

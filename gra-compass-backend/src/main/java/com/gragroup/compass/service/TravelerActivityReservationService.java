@@ -7,6 +7,7 @@ import com.gragroup.compass.model.Registration;
 import com.gragroup.compass.repository.ActivityRepository;
 import com.gragroup.compass.repository.RegistrationRepository;
 import com.mongodb.client.result.UpdateResult;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -115,5 +116,59 @@ public class TravelerActivityReservationService {
         return registrationRepository.findById(registration.getId())
                 .orElseThrow(() -> new IllegalStateException(
                         "Registration disappeared after reservation"));
+    }
+
+    @Transactional
+    public Registration cancelTravelerActivity(
+            String tripId,
+            int travelerNumber,
+            String activityId,
+            int sessionId) {
+
+        Registration registration = registrationRepository
+                .findByTripIdAndTravelerNumber(tripId, travelerNumber)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Registration not found"));
+
+        boolean hasReservation = registration.getActivities() != null
+                && registration.getActivities().stream()
+                        .anyMatch(selection -> activityId.equals(selection.getActivityId())
+                                && sessionId == selection.getSessionId());
+
+        if (!hasReservation) {
+            throw new NoSuchElementException(
+                    "Traveler activity reservation not found");
+        }
+
+        Query query = new Query(
+                Criteria.where("_id").is(registration.getId())
+                        .and("activities").elemMatch(
+                                Criteria.where("activityId").is(activityId)
+                                        .and("sessionId").is(sessionId)));
+
+        Update update = new Update()
+                .pull("activities",
+                        new Document("activityId", activityId)
+                                .append("sessionId", sessionId));
+
+        UpdateResult result = mongoTemplate.updateFirst(
+                query, update, Registration.class);
+
+        if (result.getModifiedCount() != 1) {
+            throw new IllegalStateException(
+                    "Traveler reservation could not be removed");
+        }
+
+        boolean seatReleased = activityReservationService.releaseSeat(
+                tripId, activityId, sessionId);
+
+        if (!seatReleased) {
+            throw new IllegalStateException(
+                    "Reserved seat could not be released");
+        }
+
+        return registrationRepository.findById(registration.getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Registration disappeared after cancellation"));
     }
 }

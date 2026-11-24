@@ -4,6 +4,7 @@ import {
   fetchRegistrationsByTrip,
   updateRegistration,
   reserveGuestActivity,
+  cancelGuestActivity,
 } from "../store/registrationsSlice";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -54,6 +55,7 @@ const GuestDetails = () => {
 
   const [isEditingSelections, setIsEditingSelections] = useState(false);
   const [editSelections, setEditSelections] = useState([]);
+  const [isSavingSelections, setIsSavingSelections] = useState(false);
 
   const registration = registrations.find(
     (registration) => registration.travelerNumber === Number(id),
@@ -71,9 +73,9 @@ const GuestDetails = () => {
     const sessionDateTime = new Date(`${date}T${time}`);
 
     return sessionDateTime.toLocaleString("en-US", {
-      month: "short",
+      weekday: "long",
+      month: "long",
       day: "numeric",
-      year: "numeric",
       hour: "numeric",
       minute: "2-digit",
     });
@@ -95,6 +97,76 @@ const GuestDetails = () => {
       </main>
     );
   }
+  const handleSaveSelections = async () => {
+    if (isSavingSelections) {
+      return;
+    }
+
+    const hasMissingSession = editSelections.some(
+      (activity) => !activity.sessionId,
+    );
+
+    if (hasMissingSession) {
+      alert("Please select a session for each trip selection.");
+      return;
+    }
+
+    const existingSelections = guest.activities ?? [];
+
+    const matchesSelection = (first, second) =>
+      (first.activityId ?? first.id) === (second.activityId ?? second.id) &&
+      first.sessionId === second.sessionId;
+
+    const selectionsToCancel = existingSelections.filter(
+      (existing) =>
+        !editSelections.some((edited) => matchesSelection(existing, edited)),
+    );
+
+    const selectionsToReserve = editSelections.filter(
+      (edited) =>
+        !existingSelections.some((existing) =>
+          matchesSelection(existing, edited),
+        ),
+    );
+
+    setIsSavingSelections(true);
+
+    try {
+      for (const selection of selectionsToCancel) {
+        await dispatch(
+          cancelGuestActivity({
+            tripId,
+            travelerNumber: registration.travelerNumber,
+            activityId: selection.activityId ?? selection.id,
+            sessionId: selection.sessionId,
+          }),
+        ).unwrap();
+      }
+
+      for (const selection of selectionsToReserve) {
+        await dispatch(
+          reserveGuestActivity({
+            tripId,
+            travelerNumber: registration.travelerNumber,
+            activityId: selection.activityId ?? selection.id,
+            sessionId: selection.sessionId,
+          }),
+        ).unwrap();
+      }
+
+      setIsEditingSelections(false);
+    } catch (error) {
+      alert(error.message || "Failed to save guest trip selections.");
+    } finally {
+      try {
+        await dispatch(fetchActivities(tripId));
+        await dispatch(fetchRegistrationsByTrip(tripId));
+      } finally {
+        setIsSavingSelections(false);
+      }
+    }
+  };
+
   const handleSavePersonalInfo = async () => {
     const updatedRegistration = {
       ...registration,
@@ -544,6 +616,7 @@ const GuestDetails = () => {
           {!isEditingSelections && (
             <button
               type="button"
+              disabled={isSavingSelections}
               onClick={() => {
                 setEditSelections(guest.activities ?? []);
                 setIsEditingSelections(true);
@@ -560,6 +633,7 @@ const GuestDetails = () => {
               <label key={selection.id}>
                 <input
                   type="checkbox"
+                  disabled={isSavingSelections}
                   checked={editSelections.some(
                     (activity) =>
                       (activity.activityId ?? activity.id) === selection.id,
@@ -582,7 +656,7 @@ const GuestDetails = () => {
                       return [
                         ...currentSelections,
                         {
-                          id: selection.id,
+                          activityId: selection.id,
                           type: selection.type,
                           name: selection.name,
                         },
@@ -609,15 +683,16 @@ const GuestDetails = () => {
                               activity.sessionId === session.id,
                           )}
                           disabled={
-                            !(guest.activities ?? []).some(
+                            isSavingSelections ||
+                            (!(guest.activities ?? []).some(
                               (activity) =>
                                 (activity.activityId ?? activity.id) ===
                                   selection.id &&
                                 activity.sessionId === session.id,
                             ) &&
-                            (!session.active ||
-                              (session.reservedCount ?? 0) >=
-                                session.maxCapacity)
+                              (!session.active ||
+                                (session.reservedCount ?? 0) >=
+                                  session.maxCapacity))
                           }
                           onChange={() => {
                             setEditSelections((currentSelections) =>
@@ -654,75 +729,15 @@ const GuestDetails = () => {
             <div className="selection-edit-actions">
               <button
                 type="button"
-                onClick={async () => {
-                  const hasMissingSession = editSelections.some(
-                    (activity) => !activity.sessionId,
-                  );
-
-                  if (hasMissingSession) {
-                    alert("Please select a session for each trip selection.");
-                    return;
-                  }
-
-                  const newSelections = editSelections.filter(
-                    (selection) =>
-                      !(guest.activities ?? []).some(
-                        (existing) =>
-                          (existing.activityId ?? existing.id) ===
-                            (selection.activityId ?? selection.id) &&
-                          existing.sessionId === selection.sessionId,
-                      ),
-                  );
-                  const hasUnsupportedChanges = (guest.activities ?? []).some(
-                    (existing) =>
-                      !editSelections.some(
-                        (selection) =>
-                          (selection.activityId ?? selection.id) ===
-                            (existing.activityId ?? existing.id) &&
-                          selection.sessionId === existing.sessionId,
-                      ),
-                  );
-
-                  if (hasUnsupportedChanges) {
-                    alert(
-                      "Removing activities or changing sessions is not supported yet.",
-                    );
-                    return;
-                  }
-
-                  if (newSelections.length > 1) {
-                    alert("Please reserve one new activity at a time for now.");
-                    return;
-                  }
-
-                  if (newSelections.length === 1) {
-                    const selection = newSelections[0];
-
-                    try {
-                      await dispatch(
-                        reserveGuestActivity({
-                          tripId,
-                          travelerNumber: registration.travelerNumber,
-                          activityId: selection.activityId ?? selection.id,
-                          sessionId: selection.sessionId,
-                        }),
-                      ).unwrap();
-                    } catch (error) {
-                      alert(
-                        error.message || "Unable to reserve this activity.",
-                      );
-                      return;
-                    }
-                  }
-
-                  setIsEditingSelections(false);
-                }}
+                onClick={handleSaveSelections}
+                disabled={isSavingSelections}
               >
-                Save
+                {isSavingSelections ? "Saving..." : "Save"}
               </button>
 
               <button
                 type="button"
+                disabled={isSavingSelections}
                 onClick={() => {
                   setEditSelections([]);
                   setIsEditingSelections(false);
@@ -748,18 +763,18 @@ const GuestDetails = () => {
                 key={`${activity.activityId}-${activity.sessionId}`}
               >
                 <span>{activityDetails?.type ?? "Activity"}</span>
-                <strong>
-                  {activityDetails?.name ?? "Unknown Activity"}
+                <div className="selection-display-content">
+                  <strong>{activityDetails?.name ?? "Unknown Activity"}</strong>
+
                   {sessionDetails && (
-                    <>
-                      {" — "}
+                    <span>
                       {formatSessionDateTime(
                         sessionDetails.date,
                         sessionDetails.time,
                       )}
-                    </>
+                    </span>
                   )}
-                </strong>
+                </div>
               </div>
             );
           })

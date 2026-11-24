@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import com.mongodb.client.model.UpdateOptions;
@@ -263,6 +264,158 @@ class TravelerActivityReservationServiceIntegrationTest {
 
         } finally {
             executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void shouldCancelTravelerActivityAndReleaseSeat() {
+
+        travelerReservationService.reserveTravelerActivity(
+                TEST_TRIP_ID,
+                testTravelerNumber,
+                TEST_ACTIVITY_ID,
+                TEST_SESSION_ID);
+
+        assertEquals(1, getReservedCount());
+
+        Registration updatedRegistration = travelerReservationService.cancelTravelerActivity(
+                TEST_TRIP_ID,
+                testTravelerNumber,
+                TEST_ACTIVITY_ID,
+                TEST_SESSION_ID);
+
+        assertNotNull(updatedRegistration.getActivities());
+        assertTrue(updatedRegistration.getActivities().isEmpty());
+
+        assertEquals(0, getReservedCount());
+
+        Registration persistedRegistration = mongoTemplate.findById(
+                testRegistrationId,
+                Registration.class);
+
+        assertNotNull(persistedRegistration);
+        assertNotNull(persistedRegistration.getActivities());
+        assertTrue(persistedRegistration.getActivities().isEmpty());
+    }
+
+    @Test
+    void shouldRejectCancellationWhenReservationDoesNotExist() {
+
+        int originalReservedCount = getReservedCount();
+
+        assertThrows(
+                NoSuchElementException.class,
+                () -> travelerReservationService.cancelTravelerActivity(
+                        TEST_TRIP_ID,
+                        testTravelerNumber,
+                        TEST_ACTIVITY_ID,
+                        TEST_SESSION_ID));
+
+        assertEquals(originalReservedCount, getReservedCount());
+    }
+
+    @Test
+    void shouldNotReleaseSeatTwiceWhenCancellationIsRepeated() {
+
+        travelerReservationService.reserveTravelerActivity(
+                TEST_TRIP_ID,
+                testTravelerNumber,
+                TEST_ACTIVITY_ID,
+                TEST_SESSION_ID);
+
+        travelerReservationService.cancelTravelerActivity(
+                TEST_TRIP_ID,
+                testTravelerNumber,
+                TEST_ACTIVITY_ID,
+                TEST_SESSION_ID);
+
+        assertEquals(0, getReservedCount());
+
+        assertThrows(
+                NoSuchElementException.class,
+                () -> travelerReservationService.cancelTravelerActivity(
+                        TEST_TRIP_ID,
+                        testTravelerNumber,
+                        TEST_ACTIVITY_ID,
+                        TEST_SESSION_ID));
+
+        assertEquals(0, getReservedCount());
+    }
+
+    private int getReservedCount() {
+
+        Document activity = mongoTemplate.getCollection("activities")
+                .find(new Document(
+                        "_id",
+                        new ObjectId(TEST_ACTIVITY_ID)))
+                .first();
+
+        assertNotNull(activity);
+
+        Document session = activity.getList("sessions", Document.class)
+                .stream()
+                .filter(item -> TEST_SESSION_ID == item.getInteger("_id"))
+                .findFirst()
+                .orElseThrow();
+
+        return session.getInteger("reservedCount");
+    }
+
+    @Test
+    void shouldRollbackCancellationWhenSeatReleaseFails() {
+
+        travelerReservationService.reserveTravelerActivity(
+                TEST_TRIP_ID,
+                testTravelerNumber,
+                TEST_ACTIVITY_ID,
+                TEST_SESSION_ID);
+
+        assertEquals(1, getReservedCount());
+
+        Document activityFilter = new Document(
+                "_id", new ObjectId(TEST_ACTIVITY_ID));
+
+        Document sessionFilter = new Document(
+                "session._id", TEST_SESSION_ID);
+
+        try {
+            mongoTemplate.getCollection("activities").updateOne(
+                    activityFilter,
+                    new Document("$set",
+                            new Document("sessions.$[session].reservedCount", 0)),
+                    new UpdateOptions().arrayFilters(
+                            List.of(sessionFilter)));
+
+            assertThrows(
+                    IllegalStateException.class,
+                    () -> travelerReservationService.cancelTravelerActivity(
+                            TEST_TRIP_ID,
+                            testTravelerNumber,
+                            TEST_ACTIVITY_ID,
+                            TEST_SESSION_ID));
+
+            Registration persistedRegistration = mongoTemplate.findById(
+                    testRegistrationId,
+                    Registration.class);
+
+            assertNotNull(persistedRegistration);
+            assertNotNull(persistedRegistration.getActivities());
+            assertEquals(1, persistedRegistration.getActivities().size());
+
+            ActivitySelection selection = persistedRegistration.getActivities().get(0);
+
+            assertEquals(TEST_ACTIVITY_ID, selection.getActivityId());
+            assertEquals(TEST_SESSION_ID, selection.getSessionId());
+
+            assertEquals(0, getReservedCount());
+
+        } finally {
+            mongoTemplate.getCollection("activities").updateOne(
+                    activityFilter,
+                    new Document("$set",
+                            new Document("sessions.$[session].reservedCount", 1)),
+                    new UpdateOptions().arrayFilters(
+                            List.of(sessionFilter)));
         }
     }
 

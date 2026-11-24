@@ -35,6 +35,9 @@ class GuestActivityReservationServiceIntegrationTest {
         private GuestActivityReservationRetryService retryService;
 
         @Autowired
+        private TravelerActivityReservationService travelerReservationService;
+
+        @Autowired
         private MongoTemplate mongoTemplate;
         private static final String TEST_TRIP_ID = "reservation-test-trip";
 
@@ -285,4 +288,121 @@ class GuestActivityReservationServiceIntegrationTest {
                 assertEquals(0, session.getInteger("reservedCount"));
         }
 
+        @Test
+        void shouldPreserveGuestReservationWhenTravelerCancels() {
+
+                Document activityFilter = new Document(
+                                "_id", new ObjectId(TEST_ACTIVITY_ID));
+
+                Document sessionFilter = new Document(
+                                "session._id", TEST_SESSION_ID);
+
+                Document originalActivity = mongoTemplate
+                                .getCollection("activities")
+                                .find(activityFilter)
+                                .first();
+
+                assertNotNull(originalActivity);
+
+                Document originalSession = originalActivity
+                                .getList("sessions", Document.class)
+                                .stream()
+                                .filter(item -> TEST_SESSION_ID == item.getInteger("_id"))
+                                .findFirst()
+                                .orElseThrow();
+
+                int originalCapacity = originalSession.getInteger("maxCapacity");
+
+                try {
+                        mongoTemplate.getCollection("activities").updateOne(
+                                        activityFilter,
+                                        new Document("$set",
+                                                        new Document("sessions.$[session].maxCapacity", 2)),
+                                        new UpdateOptions().arrayFilters(
+                                                        List.of(sessionFilter)));
+
+                        travelerReservationService.reserveTravelerActivity(
+                                        TEST_TRIP_ID,
+                                        testTravelerNumber,
+                                        TEST_ACTIVITY_ID,
+                                        TEST_SESSION_ID);
+
+                        guestReservationService.reserveGuestActivity(
+                                        TEST_TRIP_ID,
+                                        testTravelerNumber,
+                                        TEST_ACTIVITY_ID,
+                                        TEST_SESSION_ID);
+
+                        Document activityBefore = mongoTemplate
+                                        .getCollection("activities")
+                                        .find(activityFilter)
+                                        .first();
+
+                        assertNotNull(activityBefore);
+
+                        Document sessionBefore = activityBefore
+                                        .getList("sessions", Document.class)
+                                        .stream()
+                                        .filter(item -> TEST_SESSION_ID == item.getInteger("_id"))
+                                        .findFirst()
+                                        .orElseThrow();
+
+                        assertEquals(2, sessionBefore.getInteger("reservedCount"));
+
+                        travelerReservationService.cancelTravelerActivity(
+                                        TEST_TRIP_ID,
+                                        testTravelerNumber,
+                                        TEST_ACTIVITY_ID,
+                                        TEST_SESSION_ID);
+
+                        Registration persistedRegistration = mongoTemplate.findById(
+                                        savedRegistrationId,
+                                        Registration.class);
+
+                        assertNotNull(persistedRegistration);
+
+                        assertNotNull(persistedRegistration.getActivities());
+                        assertTrue(persistedRegistration.getActivities().isEmpty());
+
+                        assertTrue(persistedRegistration.isBringingGuest());
+                        assertNotNull(persistedRegistration.getGuest());
+                        assertNotNull(persistedRegistration.getGuest().getActivities());
+
+                        assertEquals(
+                                        1,
+                                        persistedRegistration.getGuest().getActivities().size());
+
+                        ActivitySelection guestSelection = persistedRegistration
+                                        .getGuest().getActivities().get(0);
+
+                        assertEquals(TEST_ACTIVITY_ID, guestSelection.getActivityId());
+                        assertEquals(TEST_SESSION_ID, guestSelection.getSessionId());
+
+                        Document activityAfter = mongoTemplate
+                                        .getCollection("activities")
+                                        .find(activityFilter)
+                                        .first();
+
+                        assertNotNull(activityAfter);
+
+                        Document sessionAfter = activityAfter
+                                        .getList("sessions", Document.class)
+                                        .stream()
+                                        .filter(item -> TEST_SESSION_ID == item.getInteger("_id"))
+                                        .findFirst()
+                                        .orElseThrow();
+
+                        assertEquals(1, sessionAfter.getInteger("reservedCount"));
+
+                } finally {
+                        mongoTemplate.getCollection("activities").updateOne(
+                                        activityFilter,
+                                        new Document("$set",
+                                                        new Document(
+                                                                        "sessions.$[session].maxCapacity",
+                                                                        originalCapacity)),
+                                        new UpdateOptions().arrayFilters(
+                                                        List.of(sessionFilter)));
+                }
+        }
 }

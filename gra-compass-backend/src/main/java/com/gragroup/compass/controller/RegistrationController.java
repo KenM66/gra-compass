@@ -113,6 +113,30 @@ public class RegistrationController {
         }
     }
 
+    @DeleteMapping("/{travelerNumber}/activities/{activityId}/sessions/{sessionId}")
+    public ResponseEntity<Registration> cancelTravelerActivity(
+            @PathVariable String tripId,
+            @PathVariable int travelerNumber,
+            @PathVariable String activityId,
+            @PathVariable int sessionId) {
+
+        try {
+            Registration registration = travelerActivityReservationRetryService.cancelTravelerActivity(
+                    tripId, travelerNumber, activityId, sessionId);
+
+            return ResponseEntity.ok(registration);
+
+        } catch (NoSuchElementException exception) {
+            return ResponseEntity.notFound().build();
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+
+        } catch (IllegalStateException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
     @DeleteMapping("/{travelerNumber}/guest/activities/{activityId}/sessions/{sessionId}")
     public ResponseEntity<Registration> cancelGuestActivity(
             @PathVariable String tripId,
