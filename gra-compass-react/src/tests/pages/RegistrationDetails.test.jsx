@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
@@ -719,7 +719,10 @@ describe("RegistrationDetails", () => {
       ),
     }));
 
-    renderRegistrationDetails(registrationsByTrip, fullSessionActivities);
+    const store = renderRegistrationDetails(
+      registrationsByTrip,
+      fullSessionActivities,
+    );
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -734,10 +737,17 @@ describe("RegistrationDetails", () => {
     await user.click(afternoonSession);
 
     expect(afternoonSession).toBeChecked();
+    const canceledRegistration = {
+      ...registration,
+      activities: registration.activities.filter(
+        (activity) => activity.activityId !== 1,
+      ),
+    };
+
     const updatedRegistration = {
       ...registration,
       activities: registration.activities.map((activity) =>
-        activity.id === 1
+        activity.activityId === 1
           ? {
               ...activity,
               sessionId: 102,
@@ -746,10 +756,44 @@ describe("RegistrationDetails", () => {
       ),
     };
 
-    globalThis.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => updatedRegistration,
-    });
+    const updatedActivities = fullSessionActivities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) => {
+        if (activity.id === 1 && session.id === 101) {
+          return {
+            ...session,
+            reservedCount: session.reservedCount - 1,
+          };
+        }
+
+        if (activity.id === 1 && session.id === 102) {
+          return {
+            ...session,
+            reservedCount: session.reservedCount + 1,
+          };
+        }
+
+        return session;
+      }),
+    }));
+
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => canceledRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedActivities,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [updatedRegistration],
+      });
 
     await user.click(
       screen.getByRole("button", {
@@ -757,27 +801,33 @@ describe("RegistrationDetails", () => {
       }),
     );
 
-    expect(globalThis.fetch).toHaveBeenLastCalledWith(
-      "http://localhost:8080/api/trips/1/registrations/1047",
-      expect.objectContaining({
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }),
-    );
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/101",
+        { method: "DELETE" },
+      );
 
-    const request = globalThis.fetch.mock.calls.at(-1)[1];
-    const requestBody = JSON.parse(request.body);
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/102",
+        { method: "PUT" },
+      );
 
-    expect(requestBody.activities).toContainEqual({
-      id: 1,
-      type: "Excursion",
-      name: "Catamaran & Snorkeling",
-      sessionId: 102,
+      expect(globalThis.fetch).toHaveBeenLastCalledWith(
+        "http://localhost:8080/api/trips/1/registrations",
+      );
+
+      const savedRegistration = store
+        .getState()
+        .registrations.byTrip[1].find((item) => item.travelerNumber === 1047);
+
+      expect(savedRegistration.activities).toEqual(
+        updatedRegistration.activities,
+      );
+
+      expect(savedRegistration.guest).toEqual(registration.guest);
+
+      expect(store.getState().activities.byTrip[1]).toEqual(updatedActivities);
     });
-
-    expect(requestBody.travelerNumber).toBe(1047);
   });
   test("removes an existing trip selection", async () => {
     const user = userEvent.setup();

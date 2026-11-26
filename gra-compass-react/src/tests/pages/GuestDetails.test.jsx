@@ -474,10 +474,8 @@ describe("GuestDetails", () => {
     await user.click(editButtons[3]);
 
     const fullSession = screen.getByRole("radio", {
-      name: /Mar 10, 2027.*9:00 AM.*Full/i,
+      name: /Wednesday, March 10.*9:00 AM.*Full/i,
     });
-
-    screen.debug();
 
     expect(fullSession).toBeDisabled();
   });
@@ -487,38 +485,76 @@ describe("GuestDetails", () => {
 
     const store = renderGuestDetails();
 
-    globalThis.fetch.mockImplementation((url, options) => {
-      if (options?.method === "PUT") {
-        return Promise.resolve({
+    const originalRegistration = registrationsByTrip[1].find(
+      (registration) => registration.travelerNumber === 1047,
+    );
+
+    const updatedRegistration = {
+      ...originalRegistration,
+      guest: {
+        ...originalRegistration.guest,
+        activities: [
+          {
+            activityId: "2",
+            type: "Excursion",
+            name: "Island Jeep Tour",
+            sessionId: 201,
+          },
+        ],
+      },
+    };
+
+    const updatedActivities = activitiesByTrip[1].map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === "2" && session.id === 201
+          ? {
+              ...session,
+              reservedCount: session.reservedCount + 1,
+            }
+          : session,
+      ),
+    }));
+
+    let reservationSaved = false;
+
+    globalThis.fetch.mockImplementation(async (url, options) => {
+      if (
+        url ===
+          "http://localhost:8080/api/trips/1/registrations/1047/guest/activities/2/sessions/201" &&
+        options?.method === "PUT"
+      ) {
+        reservationSaved = true;
+
+        return {
           ok: true,
-          json: async () => ({
-            ...registrationsByTrip[1].find(
-              (registration) => registration.travelerNumber === 1047,
-            ),
-            guest: {
-              ...registrationsByTrip[1].find(
-                (registration) => registration.travelerNumber === 1047,
-              ).guest,
-              activities: [
-                {
-                  id: "2",
-                  type: "Excursion",
-                  name: "Island Jeep Tour",
-                  sessionId: 201,
-                },
-              ],
-            },
-          }),
-        });
+          json: async () => updatedRegistration,
+        };
       }
 
-      return Promise.resolve({
-        ok: true,
-        json: async () =>
-          url.endsWith("/activities")
-            ? (activitiesByTrip[1] ?? [])
-            : registrationsByTrip[1],
-      });
+      if (url === "http://localhost:8080/api/trips/1/activities") {
+        return {
+          ok: true,
+          json: async () =>
+            reservationSaved ? updatedActivities : activitiesByTrip[1],
+        };
+      }
+
+      if (url === "http://localhost:8080/api/trips/1/registrations") {
+        return {
+          ok: true,
+          json: async () =>
+            reservationSaved
+              ? registrationsByTrip[1].map((registration) =>
+                  registration.travelerNumber === 1047
+                    ? updatedRegistration
+                    : registration,
+                )
+              : registrationsByTrip[1],
+        };
+      }
+
+      throw new Error(`Unexpected API request: ${url}`);
     });
 
     const editButtons = screen.getAllByRole("button", {
@@ -534,7 +570,7 @@ describe("GuestDetails", () => {
     await user.click(activityCheckbox);
 
     const sessionRadio = screen.getByRole("radio", {
-      name: /Mar 10, 2027.*9:00 AM/i,
+      name: /Wednesday, March 10.*9:00 AM/i,
     });
 
     await user.click(sessionRadio);
@@ -562,20 +598,420 @@ describe("GuestDetails", () => {
     expect(putCall[1].body).toBeUndefined();
 
     await waitFor(() => {
-      const updatedRegistration = store
+      const savedRegistration = store
         .getState()
         .registrations.byTrip[1].find(
           (registration) => registration.travelerNumber === 1047,
         );
 
-      expect(updatedRegistration.guest.activities).toEqual([
+      expect(savedRegistration.guest.activities).toEqual([
         {
-          id: "2",
+          activityId: "2",
           type: "Excursion",
           name: "Island Jeep Tour",
           sessionId: 201,
         },
       ]);
+
+      expect(savedRegistration.activities).toEqual(
+        originalRegistration.activities,
+      );
+
+      expect(store.getState().activities.byTrip[1]).toEqual(updatedActivities);
+
+      expect(globalThis.fetch).toHaveBeenLastCalledWith(
+        "http://localhost:8080/api/trips/1/registrations",
+      );
+    });
+  });
+
+  test("cancels an existing guest activity reservation", async () => {
+    const user = userEvent.setup();
+
+    const catamaranSelection = {
+      activityId: "6af110ca493edddec267fe9b",
+      type: "Excursion",
+      name: "Catamaran & Snorkeling",
+      sessionId: 1,
+    };
+
+    const existingRegistration = {
+      ...registration,
+      activities: [catamaranSelection],
+      guest: {
+        ...registration.guest,
+        activities: [catamaranSelection],
+      },
+    };
+
+    const existingActivities = activitiesByTrip[1].map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === catamaranSelection.activityId && session.id === 1
+          ? { ...session, reservedCount: 2 }
+          : session,
+      ),
+    }));
+
+    const store = renderGuestDetails(
+      { 1: [existingRegistration] },
+      { 1: existingActivities },
+    );
+
+    const updatedRegistration = {
+      ...existingRegistration,
+      guest: {
+        ...existingRegistration.guest,
+        activities: [],
+      },
+    };
+
+    const updatedActivities = existingActivities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === catamaranSelection.activityId && session.id === 1
+          ? { ...session, reservedCount: 1 }
+          : session,
+      ),
+    }));
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[3]);
+
+    const activityCheckbox = screen.getByRole("checkbox", {
+      name: /Excursion: Catamaran & Snorkeling/i,
+    });
+
+    expect(activityCheckbox).toBeChecked();
+
+    await user.click(activityCheckbox);
+
+    expect(activityCheckbox).not.toBeChecked();
+
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedActivities,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [updatedRegistration],
+      });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Save",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        "http://localhost:8080/api/trips/1/registrations/1047/guest/activities/6af110ca493edddec267fe9b/sessions/1",
+        { method: "DELETE" },
+      );
+
+      const savedRegistration = store
+        .getState()
+        .registrations.byTrip[1].find((item) => item.travelerNumber === 1047);
+
+      expect(savedRegistration.guest.activities).toEqual([]);
+
+      expect(savedRegistration.activities).toEqual([catamaranSelection]);
+
+      expect(store.getState().activities.byTrip[1]).toEqual(updatedActivities);
+
+      expect(globalThis.fetch).toHaveBeenLastCalledWith(
+        "http://localhost:8080/api/trips/1/registrations",
+      );
+
+      expect(screen.getByText("No trip selections.")).toBeInTheDocument();
+    });
+  });
+
+  test("switches an existing guest activity reservation to another session", async () => {
+    const user = userEvent.setup();
+
+    const originalSelection = {
+      activityId: "6af110ca493edddec267fe9b",
+      type: "Excursion",
+      name: "Catamaran & Snorkeling",
+      sessionId: 1,
+    };
+
+    const existingRegistration = {
+      ...registration,
+      activities: [originalSelection],
+      guest: {
+        ...registration.guest,
+        activities: [originalSelection],
+      },
+    };
+
+    const existingActivities = activitiesByTrip[1].map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === originalSelection.activityId && session.id === 1
+          ? { ...session, reservedCount: 2 }
+          : session,
+      ),
+    }));
+
+    const store = renderGuestDetails(
+      { 1: [existingRegistration] },
+      { 1: existingActivities },
+    );
+
+    const canceledRegistration = {
+      ...existingRegistration,
+      guest: {
+        ...existingRegistration.guest,
+        activities: [],
+      },
+    };
+
+    const updatedSelection = {
+      ...originalSelection,
+      sessionId: 2,
+    };
+
+    const updatedRegistration = {
+      ...existingRegistration,
+      guest: {
+        ...existingRegistration.guest,
+        activities: [updatedSelection],
+      },
+    };
+
+    const updatedActivities = existingActivities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === originalSelection.activityId
+          ? {
+              ...session,
+              reservedCount: 1,
+            }
+          : session,
+      ),
+    }));
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[3]);
+
+    const morningSession = screen.getByRole("radio", {
+      name: /Tuesday, March 9.*10:00 AM/i,
+    });
+
+    const afternoonSession = screen.getByRole("radio", {
+      name: /Tuesday, March 9.*2:00 PM/i,
+    });
+
+    expect(morningSession).toBeChecked();
+    expect(afternoonSession).not.toBeChecked();
+
+    await user.click(afternoonSession);
+
+    expect(morningSession).not.toBeChecked();
+    expect(afternoonSession).toBeChecked();
+
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => canceledRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedActivities,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [updatedRegistration],
+      });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Save",
+      }),
+    );
+
+    await waitFor(() => {
+      const mutationCalls = globalThis.fetch.mock.calls.filter(
+        ([, options]) =>
+          options?.method === "DELETE" || options?.method === "PUT",
+      );
+
+      expect(mutationCalls).toEqual([
+        [
+          "http://localhost:8080/api/trips/1/registrations/1047/guest/activities/6af110ca493edddec267fe9b/sessions/1",
+          { method: "DELETE" },
+        ],
+        [
+          "http://localhost:8080/api/trips/1/registrations/1047/guest/activities/6af110ca493edddec267fe9b/sessions/2",
+          { method: "PUT" },
+        ],
+      ]);
+
+      const savedRegistration = store
+        .getState()
+        .registrations.byTrip[1].find((item) => item.travelerNumber === 1047);
+
+      expect(savedRegistration.guest.activities).toEqual([updatedSelection]);
+
+      expect(savedRegistration.activities).toEqual([originalSelection]);
+
+      expect(store.getState().activities.byTrip[1]).toEqual(updatedActivities);
+
+      expect(globalThis.fetch).toHaveBeenLastCalledWith(
+        "http://localhost:8080/api/trips/1/registrations",
+      );
+    });
+  });
+
+  test("saves multiple guest activity reservations in one operation", async () => {
+    const user = userEvent.setup();
+
+    const catamaranSelection = {
+      activityId: "6af110ca493edddec267fe9b",
+      type: "Excursion",
+      name: "Catamaran & Snorkeling",
+      sessionId: 1,
+    };
+
+    const jeepSelection = {
+      activityId: "2",
+      type: "Excursion",
+      name: "Island Jeep Tour",
+      sessionId: 201,
+    };
+
+    const store = renderGuestDetails();
+
+    const firstUpdatedRegistration = {
+      ...registration,
+      guest: {
+        ...registration.guest,
+        activities: [catamaranSelection],
+      },
+    };
+
+    const finalUpdatedRegistration = {
+      ...registration,
+      guest: {
+        ...registration.guest,
+        activities: [catamaranSelection, jeepSelection],
+      },
+    };
+
+    const updatedActivities = activitiesByTrip[1].map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        (activity.id === catamaranSelection.activityId && session.id === 1) ||
+        (activity.id === jeepSelection.activityId && session.id === 201)
+          ? { ...session, reservedCount: 1 }
+          : session,
+      ),
+    }));
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Edit",
+    });
+
+    await user.click(editButtons[3]);
+
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: /Excursion: Catamaran & Snorkeling/i,
+      }),
+    );
+
+    await user.click(
+      screen.getByRole("radio", {
+        name: /Tuesday, March 9.*10:00 AM/i,
+      }),
+    );
+
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: /Excursion: Island Jeep Tour/i,
+      }),
+    );
+
+    await user.click(
+      screen.getByRole("radio", {
+        name: /Wednesday, March 10.*9:00 AM/i,
+      }),
+    );
+
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => firstUpdatedRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => finalUpdatedRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedActivities,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [finalUpdatedRegistration],
+      });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Save",
+      }),
+    );
+
+    await waitFor(() => {
+      const mutationCalls = globalThis.fetch.mock.calls.filter(
+        ([, options]) =>
+          options?.method === "PUT" || options?.method === "DELETE",
+      );
+
+      expect(mutationCalls).toEqual([
+        [
+          "http://localhost:8080/api/trips/1/registrations/1047/guest/activities/6af110ca493edddec267fe9b/sessions/1",
+          { method: "PUT" },
+        ],
+        [
+          "http://localhost:8080/api/trips/1/registrations/1047/guest/activities/2/sessions/201",
+          { method: "PUT" },
+        ],
+      ]);
+
+      const savedRegistration = store
+        .getState()
+        .registrations.byTrip[1].find((item) => item.travelerNumber === 1047);
+
+      expect(savedRegistration.guest.activities).toEqual([
+        catamaranSelection,
+        jeepSelection,
+      ]);
+
+      expect(savedRegistration.activities).toEqual(registration.activities);
+
+      expect(store.getState().activities.byTrip[1]).toEqual(updatedActivities);
+
+      expect(globalThis.fetch).toHaveBeenLastCalledWith(
+        "http://localhost:8080/api/trips/1/registrations",
+      );
     });
   });
 
