@@ -1003,7 +1003,7 @@ const RegistrationDetails = () => {
                 disabled={isSavingSelections}
                 type="button"
                 onClick={() => {
-                  setEditSelections(registration.activities);
+                  setEditSelections(registration.activities ?? []);
                   setIsEditingSelections(true);
                 }}
               >
@@ -1062,14 +1062,15 @@ const RegistrationDetails = () => {
                                 activity.sessionId === session.id,
                             )}
                             disabled={
-                              !registration.activities.some(
+                              isSavingSelections ||
+                              (!(registration.activities ?? []).some(
                                 (activity) =>
                                   activity.activityId === selection.id &&
                                   activity.sessionId === session.id,
                               ) &&
-                              (!session.active ||
-                                (session.reservedCount ?? 0) >=
-                                  session.maxCapacity)
+                                (!session.active ||
+                                  (session.reservedCount ?? 0) >=
+                                    session.maxCapacity))
                             }
                             onChange={() => {
                               setEditSelections((currentSelections) =>
