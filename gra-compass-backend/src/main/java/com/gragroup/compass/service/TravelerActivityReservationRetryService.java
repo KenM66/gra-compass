@@ -39,6 +39,22 @@ public class TravelerActivityReservationRetryService {
                 tripId, travelerNumber, activityId, sessionId));
     }
 
+    public Registration switchTravelerActivitySession(
+            String tripId,
+            int travelerNumber,
+            String activityId,
+            int currentSessionId,
+            int newSessionId) {
+
+        return executeWithRetry(
+                () -> reservationService.switchTravelerActivitySession(
+                        tripId,
+                        travelerNumber,
+                        activityId,
+                        currentSessionId,
+                        newSessionId));
+    }
+
     private Registration executeWithRetry(
             Supplier<Registration> operation) {
 
@@ -74,4 +90,5 @@ public class TravelerActivityReservationRetryService {
 
         return false;
     }
+
 }

@@ -19,217 +19,386 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TravelerActivityReservationRetryServiceTest {
 
-    private static final String TRIP_ID = "test-trip";
-    private static final int TRAVELER_NUMBER = 123;
-    private static final String ACTIVITY_ID = "test-activity";
-    private static final int SESSION_ID = 1;
+        private static final String TRIP_ID = "test-trip";
+        private static final int TRAVELER_NUMBER = 123;
+        private static final String ACTIVITY_ID = "test-activity";
+        private static final int SESSION_ID = 1;
+        private static final int REPLACEMENT_SESSION_ID = 2;
 
-    @Mock
-    private TravelerActivityReservationService reservationService;
+        @Mock
+        private TravelerActivityReservationService reservationService;
 
-    @InjectMocks
-    private TravelerActivityReservationRetryService retryService;
+        @InjectMocks
+        private TravelerActivityReservationRetryService retryService;
 
-    @Test
-    void shouldReserveWithoutRetry() {
+        @Test
+        void shouldReserveWithoutRetry() {
 
-        Registration expected = new Registration();
+                Registration expected = new Registration();
 
-        when(reservationService.reserveTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenReturn(expected);
+                when(reservationService.reserveTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenReturn(expected);
 
-        Registration actual = retryService.reserveTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+                Registration actual = retryService.reserveTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
 
-        assertSame(expected, actual);
+                assertSame(expected, actual);
 
-        verify(reservationService, times(1))
-                .reserveTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(1))
+                                .reserveTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldCancelWithoutRetry() {
+        @Test
+        void shouldCancelWithoutRetry() {
 
-        Registration expected = new Registration();
+                Registration expected = new Registration();
 
-        when(reservationService.cancelTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenReturn(expected);
+                when(reservationService.cancelTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenReturn(expected);
 
-        Registration actual = retryService.cancelTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+                Registration actual = retryService.cancelTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
 
-        assertSame(expected, actual);
+                assertSame(expected, actual);
 
-        verify(reservationService, times(1))
-                .cancelTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(1))
+                                .cancelTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldRetryReservationAfterMongoWriteConflict() {
+        @Test
+        void shouldRetryReservationAfterMongoWriteConflict() {
 
-        Registration expected = new Registration();
+                Registration expected = new Registration();
 
-        when(reservationService.reserveTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenThrow(createWriteConflict())
-                .thenReturn(expected);
+                when(reservationService.reserveTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenThrow(createWriteConflict())
+                                .thenReturn(expected);
 
-        Registration actual = retryService.reserveTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+                Registration actual = retryService.reserveTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
 
-        assertSame(expected, actual);
+                assertSame(expected, actual);
 
-        verify(reservationService, times(2))
-                .reserveTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(2))
+                                .reserveTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldRetryCancellationAfterMongoWriteConflict() {
+        @Test
+        void shouldRetryCancellationAfterMongoWriteConflict() {
 
-        Registration expected = new Registration();
+                Registration expected = new Registration();
 
-        when(reservationService.cancelTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenThrow(createWriteConflict())
-                .thenReturn(expected);
+                when(reservationService.cancelTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenThrow(createWriteConflict())
+                                .thenReturn(expected);
 
-        Registration actual = retryService.cancelTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+                Registration actual = retryService.cancelTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
 
-        assertSame(expected, actual);
+                assertSame(expected, actual);
 
-        verify(reservationService, times(2))
-                .cancelTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(2))
+                                .cancelTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldStopReservationAfterThreeWriteConflicts() {
+        @Test
+        void shouldStopReservationAfterThreeWriteConflicts() {
 
-        DataIntegrityViolationException exception = createWriteConflict();
+                DataIntegrityViolationException exception = createWriteConflict();
 
-        when(reservationService.reserveTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenThrow(exception);
+                when(reservationService.reserveTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenThrow(exception);
 
-        assertSame(exception, assertThrows(
-                DataIntegrityViolationException.class,
-                () -> retryService.reserveTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
+                assertSame(exception, assertThrows(
+                                DataIntegrityViolationException.class,
+                                () -> retryService.reserveTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
 
-        verify(reservationService, times(3))
-                .reserveTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(3))
+                                .reserveTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldStopCancellationAfterThreeWriteConflicts() {
+        @Test
+        void shouldStopCancellationAfterThreeWriteConflicts() {
 
-        DataIntegrityViolationException exception = createWriteConflict();
+                DataIntegrityViolationException exception = createWriteConflict();
 
-        when(reservationService.cancelTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenThrow(exception);
+                when(reservationService.cancelTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenThrow(exception);
 
-        assertSame(exception, assertThrows(
-                DataIntegrityViolationException.class,
-                () -> retryService.cancelTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
+                assertSame(exception, assertThrows(
+                                DataIntegrityViolationException.class,
+                                () -> retryService.cancelTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
 
-        verify(reservationService, times(3))
-                .cancelTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(3))
+                                .cancelTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldNotRetryReservationForNonWriteConflict() {
+        @Test
+        void shouldNotRetryReservationForNonWriteConflict() {
 
-        DataIntegrityViolationException exception = new DataIntegrityViolationException(
-                "Database constraint failed");
+                DataIntegrityViolationException exception = new DataIntegrityViolationException(
+                                "Database constraint failed");
 
-        when(reservationService.reserveTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenThrow(exception);
+                when(reservationService.reserveTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenThrow(exception);
 
-        assertSame(exception, assertThrows(
-                DataIntegrityViolationException.class,
-                () -> retryService.reserveTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
+                assertSame(exception, assertThrows(
+                                DataIntegrityViolationException.class,
+                                () -> retryService.reserveTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
 
-        verify(reservationService, times(1))
-                .reserveTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(1))
+                                .reserveTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldNotRetryCancellationForNonWriteConflict() {
+        @Test
+        void shouldNotRetryCancellationForNonWriteConflict() {
 
-        DataIntegrityViolationException exception = new DataIntegrityViolationException(
-                "Database constraint failed");
+                DataIntegrityViolationException exception = new DataIntegrityViolationException(
+                                "Database constraint failed");
 
-        when(reservationService.cancelTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenThrow(exception);
+                when(reservationService.cancelTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenThrow(exception);
 
-        assertSame(exception, assertThrows(
-                DataIntegrityViolationException.class,
-                () -> retryService.cancelTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
+                assertSame(exception, assertThrows(
+                                DataIntegrityViolationException.class,
+                                () -> retryService.cancelTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
 
-        verify(reservationService, times(1))
-                .cancelTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(1))
+                                .cancelTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldNotRetryWhenSessionIsFull() {
+        @Test
+        void shouldNotRetryWhenSessionIsFull() {
 
-        IllegalStateException exception = new IllegalStateException("Activity session is full");
+                IllegalStateException exception = new IllegalStateException("Activity session is full");
 
-        when(reservationService.reserveTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenThrow(exception);
+                when(reservationService.reserveTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenThrow(exception);
 
-        assertSame(exception, assertThrows(
-                IllegalStateException.class,
-                () -> retryService.reserveTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
+                assertSame(exception, assertThrows(
+                                IllegalStateException.class,
+                                () -> retryService.reserveTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
 
-        verify(reservationService, times(1))
-                .reserveTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(1))
+                                .reserveTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    @Test
-    void shouldNotRetryWhenCancellationReservationDoesNotExist() {
+        @Test
+        void shouldNotRetryWhenCancellationReservationDoesNotExist() {
 
-        NoSuchElementException exception = new NoSuchElementException(
-                "Traveler activity reservation not found");
+                NoSuchElementException exception = new NoSuchElementException(
+                                "Traveler activity reservation not found");
 
-        when(reservationService.cancelTravelerActivity(
-                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
-                .thenThrow(exception);
+                when(reservationService.cancelTravelerActivity(
+                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID))
+                                .thenThrow(exception);
 
-        assertSame(exception, assertThrows(
-                NoSuchElementException.class,
-                () -> retryService.cancelTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
+                assertSame(exception, assertThrows(
+                                NoSuchElementException.class,
+                                () -> retryService.cancelTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID)));
 
-        verify(reservationService, times(1))
-                .cancelTravelerActivity(
-                        TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
-    }
+                verify(reservationService, times(1))
+                                .cancelTravelerActivity(
+                                                TRIP_ID, TRAVELER_NUMBER, ACTIVITY_ID, SESSION_ID);
+        }
 
-    private DataIntegrityViolationException createWriteConflict() {
+        @Test
+        void shouldSwitchSessionWithoutRetry() {
 
-        MongoException mongoException = new MongoException(112, "WriteConflict");
+                Registration expected = new Registration();
 
-        return new DataIntegrityViolationException(
-                "Activity transaction failed", mongoException);
-    }
+                when(reservationService.switchTravelerActivitySession(
+                                TRIP_ID,
+                                TRAVELER_NUMBER,
+                                ACTIVITY_ID,
+                                SESSION_ID,
+                                REPLACEMENT_SESSION_ID))
+                                .thenReturn(expected);
+
+                Registration actual = retryService.switchTravelerActivitySession(
+                                TRIP_ID,
+                                TRAVELER_NUMBER,
+                                ACTIVITY_ID,
+                                SESSION_ID,
+                                REPLACEMENT_SESSION_ID);
+
+                assertSame(expected, actual);
+
+                verify(reservationService, times(1))
+                                .switchTravelerActivitySession(
+                                                TRIP_ID,
+                                                TRAVELER_NUMBER,
+                                                ACTIVITY_ID,
+                                                SESSION_ID,
+                                                REPLACEMENT_SESSION_ID);
+
+                verifyNoMoreInteractions(reservationService);
+        }
+
+        @Test
+        void shouldRetrySessionSwitchAfterMongoWriteConflict() {
+
+                Registration expected = new Registration();
+
+                when(reservationService.switchTravelerActivitySession(
+                                TRIP_ID,
+                                TRAVELER_NUMBER,
+                                ACTIVITY_ID,
+                                SESSION_ID,
+                                REPLACEMENT_SESSION_ID))
+                                .thenThrow(createWriteConflict())
+                                .thenReturn(expected);
+
+                Registration actual = retryService.switchTravelerActivitySession(
+                                TRIP_ID,
+                                TRAVELER_NUMBER,
+                                ACTIVITY_ID,
+                                SESSION_ID,
+                                REPLACEMENT_SESSION_ID);
+
+                assertSame(expected, actual);
+
+                verify(reservationService, times(2))
+                                .switchTravelerActivitySession(
+                                                TRIP_ID,
+                                                TRAVELER_NUMBER,
+                                                ACTIVITY_ID,
+                                                SESSION_ID,
+                                                REPLACEMENT_SESSION_ID);
+
+                verifyNoMoreInteractions(reservationService);
+        }
+
+        @Test
+        void shouldStopSessionSwitchAfterThreeWriteConflicts() {
+
+                DataIntegrityViolationException exception = createWriteConflict();
+
+                when(reservationService.switchTravelerActivitySession(
+                                TRIP_ID,
+                                TRAVELER_NUMBER,
+                                ACTIVITY_ID,
+                                SESSION_ID,
+                                REPLACEMENT_SESSION_ID))
+                                .thenThrow(exception);
+
+                assertSame(exception, assertThrows(
+                                DataIntegrityViolationException.class,
+                                () -> retryService.switchTravelerActivitySession(
+                                                TRIP_ID,
+                                                TRAVELER_NUMBER,
+                                                ACTIVITY_ID,
+                                                SESSION_ID,
+                                                REPLACEMENT_SESSION_ID)));
+
+                verify(reservationService, times(3))
+                                .switchTravelerActivitySession(
+                                                TRIP_ID,
+                                                TRAVELER_NUMBER,
+                                                ACTIVITY_ID,
+                                                SESSION_ID,
+                                                REPLACEMENT_SESSION_ID);
+
+                verifyNoMoreInteractions(reservationService);
+        }
+
+        @Test
+        void shouldNotRetrySessionSwitchForNonWriteConflict() {
+
+                DataIntegrityViolationException exception = new DataIntegrityViolationException(
+                                "Database constraint failed");
+
+                when(reservationService.switchTravelerActivitySession(
+                                TRIP_ID,
+                                TRAVELER_NUMBER,
+                                ACTIVITY_ID,
+                                SESSION_ID,
+                                REPLACEMENT_SESSION_ID))
+                                .thenThrow(exception);
+
+                assertSame(exception, assertThrows(
+                                DataIntegrityViolationException.class,
+                                () -> retryService.switchTravelerActivitySession(
+                                                TRIP_ID,
+                                                TRAVELER_NUMBER,
+                                                ACTIVITY_ID,
+                                                SESSION_ID,
+                                                REPLACEMENT_SESSION_ID)));
+
+                verify(reservationService, times(1))
+                                .switchTravelerActivitySession(
+                                                TRIP_ID,
+                                                TRAVELER_NUMBER,
+                                                ACTIVITY_ID,
+                                                SESSION_ID,
+                                                REPLACEMENT_SESSION_ID);
+
+                verifyNoMoreInteractions(reservationService);
+        }
+
+        @Test
+        void shouldNotRetrySessionSwitchWhenReplacementSessionIsFull() {
+
+                IllegalStateException exception = new IllegalStateException(
+                                "Activity session is full, inactive, or unavailable");
+
+                when(reservationService.switchTravelerActivitySession(
+                                TRIP_ID,
+                                TRAVELER_NUMBER,
+                                ACTIVITY_ID,
+                                SESSION_ID,
+                                REPLACEMENT_SESSION_ID))
+                                .thenThrow(exception);
+
+                assertSame(exception, assertThrows(
+                                IllegalStateException.class,
+                                () -> retryService.switchTravelerActivitySession(
+                                                TRIP_ID,
+                                                TRAVELER_NUMBER,
+                                                ACTIVITY_ID,
+                                                SESSION_ID,
+                                                REPLACEMENT_SESSION_ID)));
+
+                verify(reservationService, times(1))
+                                .switchTravelerActivitySession(
+                                                TRIP_ID,
+                                                TRAVELER_NUMBER,
+                                                ACTIVITY_ID,
+                                                SESSION_ID,
+                                                REPLACEMENT_SESSION_ID);
+
+                verifyNoMoreInteractions(reservationService);
+        }
+
+        private DataIntegrityViolationException createWriteConflict() {
+
+                MongoException mongoException = new MongoException(112, "WriteConflict");
+
+                return new DataIntegrityViolationException(
+                                "Activity transaction failed", mongoException);
+        }
 }
