@@ -64,6 +64,27 @@ export const reserveGuestActivity = createAsyncThunk(
   },
 );
 
+export const cancelGuestActivity = createAsyncThunk(
+  "registrations/cancelGuestActivity",
+  async ({ tripId, travelerNumber, activityId, sessionId }) => {
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${tripId}/registrations/${travelerNumber}/guest/activities/${activityId}/sessions/${sessionId}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to cancel guest activity");
+    }
+
+    return {
+      tripId,
+      registration: await response.json(),
+    };
+  },
+);
+
 export const reserveTravelerActivity = createAsyncThunk(
   "registrations/reserveTravelerActivity",
   async ({ tripId, travelerNumber, activityId, sessionId }) => {
@@ -77,6 +98,87 @@ export const reserveTravelerActivity = createAsyncThunk(
     if (!response.ok) {
       throw new Error(
         `Failed to reserve traveler activity (${response.status})`,
+      );
+    }
+
+    return {
+      tripId,
+      registration: await response.json(),
+    };
+  },
+);
+
+export const cancelTravelerActivity = createAsyncThunk(
+  "registrations/cancelTravelerActivity",
+  async ({ tripId, travelerNumber, activityId, sessionId }) => {
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${tripId}/registrations/${travelerNumber}/activities/${activityId}/sessions/${sessionId}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to cancel traveler activity (${response.status})`,
+      );
+    }
+
+    return {
+      tripId,
+      registration: await response.json(),
+    };
+  },
+);
+
+export const switchTravelerActivitySession = createAsyncThunk(
+  "registrations/switchTravelerActivitySession",
+  async ({
+    tripId,
+    travelerNumber,
+    activityId,
+    currentSessionId,
+    newSessionId,
+  }) => {
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${tripId}/registrations/${travelerNumber}/activities/${activityId}/sessions/${currentSessionId}/switch/${newSessionId}`,
+      {
+        method: "PUT",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to switch traveler activity session (${response.status})`,
+      );
+    }
+
+    return {
+      tripId,
+      registration: await response.json(),
+    };
+  },
+);
+
+export const switchGuestActivitySession = createAsyncThunk(
+  "registrations/switchGuestActivitySession",
+  async ({
+    tripId,
+    travelerNumber,
+    activityId,
+    currentSessionId,
+    newSessionId,
+  }) => {
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${tripId}/registrations/${travelerNumber}/guest/activities/${activityId}/sessions/${currentSessionId}/switch/${newSessionId}`,
+      {
+        method: "PUT",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to switch guest activity session (${response.status})`,
       );
     }
 
@@ -117,7 +219,11 @@ const registrationsSlice = createSlice({
         (action) =>
           updateRegistration.fulfilled.match(action) ||
           reserveGuestActivity.fulfilled.match(action) ||
-          reserveTravelerActivity.fulfilled.match(action),
+          cancelGuestActivity.fulfilled.match(action) ||
+          reserveTravelerActivity.fulfilled.match(action) ||
+          cancelTravelerActivity.fulfilled.match(action) ||
+          switchTravelerActivitySession.fulfilled.match(action) ||
+          switchGuestActivitySession.fulfilled.match(action),
         (state, action) => {
           const { tripId, registration } = action.payload;
           const registrations = state.byTrip[tripId];

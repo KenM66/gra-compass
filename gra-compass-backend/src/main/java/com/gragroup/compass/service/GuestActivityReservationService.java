@@ -125,6 +125,32 @@ public class GuestActivityReservationService {
                                                 "Registration disappeared after cancellation"));
         }
 
+        @Transactional
+        public Registration switchGuestActivitySession(
+                        String tripId,
+                        int travelerNumber,
+                        String activityId,
+                        int currentSessionId,
+                        int newSessionId) {
+
+                if (currentSessionId == newSessionId) {
+                        throw new IllegalArgumentException(
+                                        "Replacement session must differ from current session");
+                }
+
+                cancelGuestActivity(
+                                tripId,
+                                travelerNumber,
+                                activityId,
+                                currentSessionId);
+
+                return reserveGuestActivity(
+                                tripId,
+                                travelerNumber,
+                                activityId,
+                                newSessionId);
+        }
+
         private void validateSessionActive(Activity activity, int sessionId) {
                 boolean sessionActive = activity.getSessions().stream()
                                 .filter(session -> session.getId() == sessionId)

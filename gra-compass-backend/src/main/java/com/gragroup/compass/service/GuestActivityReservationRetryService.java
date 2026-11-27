@@ -1,12 +1,16 @@
 package com.gragroup.compass.service;
 
-import org.springframework.stereotype.Service;
 import com.gragroup.compass.model.Registration;
-import org.springframework.dao.DataIntegrityViolationException;
 import com.mongodb.MongoException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+
+import java.util.function.Supplier;
 
 @Service
 public class GuestActivityReservationRetryService {
+
+    private static final int MAX_ATTEMPTS = 3;
 
     private final GuestActivityReservationService reservationService;
 
@@ -21,36 +25,11 @@ public class GuestActivityReservationRetryService {
             String activityId,
             int sessionId) {
 
-        final int maxAttempts = 3;
-
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-            try {
-                return reservationService.reserveGuestActivity(
-                        tripId, travelerNumber, activityId, sessionId);
-
-            } catch (DataIntegrityViolationException exception) {
-
-                boolean writeConflict = false;
-
-                Throwable cause = exception;
-
-                while (cause != null) {
-                    if (cause instanceof MongoException mongoException
-                            && mongoException.getCode() == 112) {
-                        writeConflict = true;
-                        break;
-                    }
-
-                    cause = cause.getCause();
-                }
-
-                if (!writeConflict || attempt == maxAttempts) {
-                    throw exception;
-                }
-            }
-        }
-
-        throw new IllegalStateException("Reservation retry attempts exhausted");
+        return executeWithRetry(() -> reservationService.reserveGuestActivity(
+                tripId,
+                travelerNumber,
+                activityId,
+                sessionId));
     }
 
     public Registration cancelGuestActivity(
@@ -59,35 +38,61 @@ public class GuestActivityReservationRetryService {
             String activityId,
             int sessionId) {
 
-        final int maxAttempts = 3;
+        return executeWithRetry(() -> reservationService.cancelGuestActivity(
+                tripId,
+                travelerNumber,
+                activityId,
+                sessionId));
+    }
 
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+    public Registration switchGuestActivitySession(
+            String tripId,
+            int travelerNumber,
+            String activityId,
+            int currentSessionId,
+            int newSessionId) {
+
+        return executeWithRetry(() -> reservationService.switchGuestActivitySession(
+                tripId,
+                travelerNumber,
+                activityId,
+                currentSessionId,
+                newSessionId));
+    }
+
+    private Registration executeWithRetry(
+            Supplier<Registration> operation) {
+
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
-                return reservationService.cancelGuestActivity(
-                        tripId, travelerNumber, activityId, sessionId);
+                return operation.get();
 
             } catch (DataIntegrityViolationException exception) {
 
-                boolean writeConflict = false;
-                Throwable cause = exception;
-
-                while (cause != null) {
-                    if (cause instanceof MongoException mongoException
-                            && mongoException.getCode() == 112) {
-                        writeConflict = true;
-                        break;
-                    }
-
-                    cause = cause.getCause();
-                }
-
-                if (!writeConflict || attempt == maxAttempts) {
+                if (!isWriteConflict(exception)
+                        || attempt == MAX_ATTEMPTS) {
                     throw exception;
                 }
             }
         }
 
         throw new IllegalStateException(
-                "Cancellation retry attempts exhausted");
+                "Reservation retry attempts exhausted");
+    }
+
+    private boolean isWriteConflict(Throwable exception) {
+
+        Throwable cause = exception;
+
+        while (cause != null) {
+            if (cause instanceof MongoException mongoException
+                    && mongoException.getCode() == 112) {
+                return true;
+            }
+
+            cause = cause.getCause();
+        }
+
+        return false;
     }
 }

@@ -7,6 +7,7 @@ import com.gragroup.compass.model.Registration;
 import com.gragroup.compass.repository.ActivityRepository;
 import com.gragroup.compass.repository.RegistrationRepository;
 import com.mongodb.client.result.UpdateResult;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -19,101 +20,181 @@ import java.util.NoSuchElementException;
 @Service
 public class TravelerActivityReservationService {
 
-    private final RegistrationRepository registrationRepository;
-    private final ActivityRepository activityRepository;
-    private final ActivityReservationService activityReservationService;
-    private final MongoTemplate mongoTemplate;
+        private final RegistrationRepository registrationRepository;
+        private final ActivityRepository activityRepository;
+        private final ActivityReservationService activityReservationService;
+        private final MongoTemplate mongoTemplate;
 
-    public TravelerActivityReservationService(
-            RegistrationRepository registrationRepository,
-            ActivityRepository activityRepository,
-            ActivityReservationService activityReservationService,
-            MongoTemplate mongoTemplate) {
+        public TravelerActivityReservationService(
+                        RegistrationRepository registrationRepository,
+                        ActivityRepository activityRepository,
+                        ActivityReservationService activityReservationService,
+                        MongoTemplate mongoTemplate) {
 
-        this.registrationRepository = registrationRepository;
-        this.activityRepository = activityRepository;
-        this.activityReservationService = activityReservationService;
-        this.mongoTemplate = mongoTemplate;
-    }
-
-    @Transactional
-    public Registration reserveTravelerActivity(
-            String tripId,
-            int travelerNumber,
-            String activityId,
-            int sessionId) {
-
-        Registration registration = registrationRepository
-                .findByTripIdAndTravelerNumber(tripId, travelerNumber)
-                .orElseThrow(() -> new NoSuchElementException("Registration not found"));
-
-        Activity activity = activityRepository.findById(activityId)
-                .orElseThrow(() -> new NoSuchElementException("Activity not found"));
-
-        if (!tripId.equals(activity.getTripId())) {
-            throw new NoSuchElementException(
-                    "Activity does not belong to this trip");
+                this.registrationRepository = registrationRepository;
+                this.activityRepository = activityRepository;
+                this.activityReservationService = activityReservationService;
+                this.mongoTemplate = mongoTemplate;
         }
 
-        boolean sessionExists = activity.getSessions() != null
-                && activity.getSessions().stream()
-                        .anyMatch(session -> session.getId() == sessionId);
+        @Transactional
+        public Registration reserveTravelerActivity(
+                        String tripId,
+                        int travelerNumber,
+                        String activityId,
+                        int sessionId) {
 
-        if (!sessionExists) {
-            throw new NoSuchElementException("Activity session not found");
+                Registration registration = registrationRepository
+                                .findByTripIdAndTravelerNumber(tripId, travelerNumber)
+                                .orElseThrow(() -> new NoSuchElementException("Registration not found"));
+
+                Activity activity = activityRepository.findById(activityId)
+                                .orElseThrow(() -> new NoSuchElementException("Activity not found"));
+
+                if (!tripId.equals(activity.getTripId())) {
+                        throw new NoSuchElementException(
+                                        "Activity does not belong to this trip");
+                }
+
+                boolean sessionExists = activity.getSessions() != null
+                                && activity.getSessions().stream()
+                                                .anyMatch(session -> session.getId() == sessionId);
+
+                if (!sessionExists) {
+                        throw new NoSuchElementException("Activity session not found");
+                }
+
+                boolean alreadyReserved = registration.getActivities() != null
+                                && registration.getActivities().stream()
+                                                .anyMatch(selection -> activityId.equals(selection.getActivityId())
+                                                                && sessionId == selection.getSessionId());
+
+                if (alreadyReserved) {
+                        return registration;
+                }
+
+                boolean sessionActive = activity.getSessions().stream()
+                                .filter(session -> session.getId() == sessionId)
+                                .findFirst()
+                                .orElseThrow()
+                                .isActive();
+
+                if (!sessionActive) {
+                        throw new IllegalStateException("Activity session is inactive");
+                }
+
+                ActivitySelection selection = new ActivitySelection();
+                selection.setActivityId(activity.getId());
+                selection.setSessionId(sessionId);
+                selection.setType(activity.getType());
+                selection.setName(activity.getName());
+
+                boolean seatReserved = activityReservationService.reserveSeat(
+                                tripId, activityId, sessionId);
+
+                if (!seatReserved) {
+                        throw new IllegalStateException(
+                                        "Activity session is full, inactive, or unavailable");
+                }
+
+                Query query = new Query(
+                                Criteria.where("_id").is(registration.getId())
+                                                .and("activities").not().elemMatch(
+                                                                Criteria.where("activityId").is(activityId)
+                                                                                .and("sessionId").is(sessionId)));
+
+                Update update = new Update().push("activities", selection);
+
+                UpdateResult result = mongoTemplate.updateFirst(
+                                query, update, Registration.class);
+
+                if (result.getModifiedCount() != 1) {
+                        throw new IllegalStateException(
+                                        "Traveler reservation could not be saved");
+                }
+
+                return registrationRepository.findById(registration.getId())
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Registration disappeared after reservation"));
         }
 
-        boolean alreadyReserved = registration.getActivities() != null
-                && registration.getActivities().stream()
-                        .anyMatch(selection -> activityId.equals(selection.getActivityId())
-                                && sessionId == selection.getSessionId());
+        @Transactional
+        public Registration cancelTravelerActivity(
+                        String tripId,
+                        int travelerNumber,
+                        String activityId,
+                        int sessionId) {
 
-        if (alreadyReserved) {
-            return registration;
+                Registration registration = registrationRepository
+                                .findByTripIdAndTravelerNumber(tripId, travelerNumber)
+                                .orElseThrow(() -> new NoSuchElementException(
+                                                "Registration not found"));
+
+                boolean hasReservation = registration.getActivities() != null
+                                && registration.getActivities().stream()
+                                                .anyMatch(selection -> activityId.equals(selection.getActivityId())
+                                                                && sessionId == selection.getSessionId());
+
+                if (!hasReservation) {
+                        throw new NoSuchElementException(
+                                        "Traveler activity reservation not found");
+                }
+
+                Query query = new Query(
+                                Criteria.where("_id").is(registration.getId())
+                                                .and("activities").elemMatch(
+                                                                Criteria.where("activityId").is(activityId)
+                                                                                .and("sessionId").is(sessionId)));
+
+                Update update = new Update()
+                                .pull("activities",
+                                                new Document("activityId", activityId)
+                                                                .append("sessionId", sessionId));
+
+                UpdateResult result = mongoTemplate.updateFirst(
+                                query, update, Registration.class);
+
+                if (result.getModifiedCount() != 1) {
+                        throw new IllegalStateException(
+                                        "Traveler reservation could not be removed");
+                }
+
+                boolean seatReleased = activityReservationService.releaseSeat(
+                                tripId, activityId, sessionId);
+
+                if (!seatReleased) {
+                        throw new IllegalStateException(
+                                        "Reserved seat could not be released");
+                }
+
+                return registrationRepository.findById(registration.getId())
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Registration disappeared after cancellation"));
         }
 
-        boolean sessionActive = activity.getSessions().stream()
-                .filter(session -> session.getId() == sessionId)
-                .findFirst()
-                .orElseThrow()
-                .isActive();
+        @Transactional
+        public Registration switchTravelerActivitySession(
+                        String tripId,
+                        int travelerNumber,
+                        String activityId,
+                        int currentSessionId,
+                        int newSessionId) {
 
-        if (!sessionActive) {
-            throw new IllegalStateException("Activity session is inactive");
+                if (currentSessionId == newSessionId) {
+                        throw new IllegalArgumentException(
+                                        "Replacement session must differ from current session");
+                }
+
+                cancelTravelerActivity(
+                                tripId,
+                                travelerNumber,
+                                activityId,
+                                currentSessionId);
+
+                return reserveTravelerActivity(
+                                tripId,
+                                travelerNumber,
+                                activityId,
+                                newSessionId);
         }
-
-        ActivitySelection selection = new ActivitySelection();
-        selection.setActivityId(activity.getId());
-        selection.setSessionId(sessionId);
-        selection.setType(activity.getType());
-        selection.setName(activity.getName());
-
-        boolean seatReserved = activityReservationService.reserveSeat(
-                tripId, activityId, sessionId);
-
-        if (!seatReserved) {
-            throw new IllegalStateException(
-                    "Activity session is full, inactive, or unavailable");
-        }
-
-        Query query = new Query(
-                Criteria.where("_id").is(registration.getId())
-                        .and("activities").not().elemMatch(
-                                Criteria.where("activityId").is(activityId)
-                                        .and("sessionId").is(sessionId)));
-
-        Update update = new Update().push("activities", selection);
-
-        UpdateResult result = mongoTemplate.updateFirst(
-                query, update, Registration.class);
-
-        if (result.getModifiedCount() != 1) {
-            throw new IllegalStateException(
-                    "Traveler reservation could not be saved");
-        }
-
-        return registrationRepository.findById(registration.getId())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Registration disappeared after reservation"));
-    }
 }
