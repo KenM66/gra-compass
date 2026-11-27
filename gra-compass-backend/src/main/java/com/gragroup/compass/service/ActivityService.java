@@ -21,16 +21,20 @@ public class ActivityService {
     private final TripRepository tripRepository;
     private final RegistrationRepository registrationRepository;
     private final SessionIdService sessionIdService;
+    private final ActivitySessionPersistenceService sessionPersistenceService;
 
     public ActivityService(
             ActivityRepository activityRepository,
             TripRepository tripRepository,
             RegistrationRepository registrationRepository,
-            SessionIdService sessionIdService) {
+            SessionIdService sessionIdService,
+            ActivitySessionPersistenceService sessionPersistenceService) {
+
         this.activityRepository = activityRepository;
         this.tripRepository = tripRepository;
         this.registrationRepository = registrationRepository;
         this.sessionIdService = sessionIdService;
+        this.sessionPersistenceService = sessionPersistenceService;
     }
 
     private List<Registration> getRegistrationsForTrip(String tripId) {
@@ -51,25 +55,24 @@ public class ActivityService {
             String activityId,
             int sessionId) {
 
-        return getRegistrationsForTrip(tripId).stream()
+        List<Registration> registrations = getRegistrationsForTrip(tripId);
+
+        long travelerCount = registrations.stream()
                 .filter(registration -> registration.getActivities() != null)
                 .flatMap(registration -> registration.getActivities().stream())
-                .filter(selection -> matchesSession(selection, activityId, sessionId))
-                .count()
-                + countGuestSessionRegistrations(tripId, activityId, sessionId);
-    }
+                .filter(selection -> matchesSession(
+                        selection, activityId, sessionId))
+                .count();
 
-    private long countGuestSessionRegistrations(
-            String tripId,
-            String activityId,
-            int sessionId) {
-
-        return getRegistrationsForTrip(tripId).stream()
+        long guestCount = registrations.stream()
                 .filter(registration -> registration.getGuest() != null)
                 .filter(registration -> registration.getGuest().getActivities() != null)
                 .flatMap(registration -> registration.getGuest().getActivities().stream())
-                .filter(selection -> matchesSession(selection, activityId, sessionId))
+                .filter(selection -> matchesSession(
+                        selection, activityId, sessionId))
                 .count();
+
+        return travelerCount + guestCount;
     }
 
     private void validateSessionCapacity(
@@ -109,7 +112,12 @@ public class ActivityService {
                     "Activity not found for trip: " + tripId);
         }
 
-        ActivitySession session = findSession(activity, sessionId);
+        findSession(activity, sessionId);
+
+        if (updatedSession.getMaxCapacity() < 1) {
+            throw new IllegalArgumentException(
+                    "Session capacity must be at least 1.");
+        }
 
         validateSessionCapacity(
                 tripId,
@@ -117,12 +125,28 @@ public class ActivityService {
                 sessionId,
                 updatedSession.getMaxCapacity());
 
-        session.setMaxCapacity(updatedSession.getMaxCapacity());
-        session.setDate(updatedSession.getDate());
-        session.setTime(updatedSession.getTime());
-        session.setActive(updatedSession.isActive());
+        return sessionPersistenceService.updateSession(
+                tripId,
+                activityId,
+                sessionId,
+                updatedSession)
+                .orElseThrow(() -> {
+                    Activity currentActivity = activityRepository
+                            .findById(activityId)
+                            .orElseThrow(() -> new NoSuchElementException(
+                                    "Activity not found: " + activityId));
 
-        return activityRepository.save(activity);
+                    if (!currentActivity.getTripId().equals(tripId)) {
+                        return new NoSuchElementException(
+                                "Activity not found for trip: " + tripId);
+                    }
+
+                    findSession(currentActivity, sessionId);
+
+                    return new IllegalArgumentException(
+                            "Session capacity cannot be less than "
+                                    + "the number of reserved seats.");
+                });
     }
 
     public void deleteActivitySession(
@@ -139,7 +163,7 @@ public class ActivityService {
                     "Activity not found for trip: " + tripId);
         }
 
-        ActivitySession session = findSession(activity, sessionId);
+        findSession(activity, sessionId);
 
         long registeredCount = countSessionRegistrations(
                 tripId,
@@ -148,12 +172,30 @@ public class ActivityService {
 
         if (registeredCount > 0) {
             throw new IllegalStateException(
-                    "Cannot delete a session with registered travelers.");
+                    "Cannot delete a session with registered travelers or guests.");
         }
 
-        activity.getSessions().remove(session);
+        boolean deleted = sessionPersistenceService.deleteSession(
+                tripId,
+                activityId,
+                sessionId);
 
-        activityRepository.save(activity);
+        if (!deleted) {
+            Activity currentActivity = activityRepository
+                    .findById(activityId)
+                    .orElseThrow(() -> new NoSuchElementException(
+                            "Activity not found: " + activityId));
+
+            if (!currentActivity.getTripId().equals(tripId)) {
+                throw new NoSuchElementException(
+                        "Activity not found for trip: " + tripId);
+            }
+
+            findSession(currentActivity, sessionId);
+
+            throw new IllegalStateException(
+                    "Cannot delete a session with reserved seats.");
+        }
     }
 
     public List<Activity> getActivitiesByTripId(String tripId) {
@@ -204,9 +246,17 @@ public class ActivityService {
         session.setMaxCapacity(request.getMaxCapacity());
         session.setActive(true);
 
-        activity.getSessions().add(session);
+        session.setReservedCount(0);
 
-        activityRepository.save(activity);
+        boolean added = sessionPersistenceService.addSession(
+                tripId,
+                activityId,
+                session);
+
+        if (!added) {
+            throw new NoSuchElementException(
+                    "Activity not found: " + activityId);
+        }
 
         return session;
     }

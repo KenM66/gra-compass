@@ -82,12 +82,11 @@ const TripManagement = () => {
     dispatch(fetchActivities(tripId));
   }, [dispatch, tripId]);
 
-  const getSessionRegistrationCount = (sessionId) =>
-    tripRegistrations.filter((registration) =>
-      registration.activities?.some(
-        (activity) => activity.sessionId === sessionId,
-      ),
-    ).length;
+  const getSessionRegistrationCount = (activityId, sessionId) =>
+    storedSelections
+      ?.find((activity) => activity.id === activityId)
+      ?.sessions?.find((session) => session.id === sessionId)?.reservedCount ??
+    0;
 
   const travelerCount = tripRegistrations.reduce(
     (total, registration) =>
@@ -439,7 +438,10 @@ const TripManagement = () => {
       return false;
     }
 
-    const registeredCount = getSessionRegistrationCount(session.id);
+    const registeredCount = getSessionRegistrationCount(
+      selectionId,
+      session.id,
+    );
 
     if (registeredCount > 0) {
       alert(
@@ -622,7 +624,10 @@ const TripManagement = () => {
       return false;
     }
 
-    const registeredCount = getSessionRegistrationCount(currentSession.id);
+    const registeredCount = getSessionRegistrationCount(
+      selectionId,
+      currentSession.id,
+    );
 
     if (newCapacity < registeredCount) {
       alert(

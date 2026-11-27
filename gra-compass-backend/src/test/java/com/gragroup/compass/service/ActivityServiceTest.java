@@ -21,6 +21,7 @@ import org.mockito.Mockito;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.NoSuchElementException;
@@ -34,6 +35,7 @@ class ActivityServiceTest {
         private SessionIdService sessionIdService;
         private ActivityService activityService;
         private RegistrationRepository registrationRepository;
+        private ActivitySessionPersistenceService sessionPersistenceService;
 
         @BeforeEach
         void setUp() {
@@ -42,11 +44,14 @@ class ActivityServiceTest {
                 registrationRepository = Mockito.mock(RegistrationRepository.class);
                 sessionIdService = Mockito.mock(SessionIdService.class);
 
+                sessionPersistenceService = Mockito.mock(ActivitySessionPersistenceService.class);
+
                 activityService = new ActivityService(
                                 activityRepository,
                                 tripRepository,
                                 registrationRepository,
-                                sessionIdService);
+                                sessionIdService,
+                                sessionPersistenceService);
         }
 
         @Test
@@ -88,11 +93,22 @@ class ActivityServiceTest {
                 ActivitySession session = new ActivitySession();
                 session.setId(sessionId);
                 session.setMaxCapacity(20);
+                session.setReservedCount(5);
 
                 activity.setSessions(List.of(session));
 
                 ActivitySession updatedSession = new ActivitySession();
                 updatedSession.setMaxCapacity(30);
+
+                ActivitySession persistedSession = new ActivitySession();
+                persistedSession.setId(sessionId);
+                persistedSession.setMaxCapacity(30);
+                persistedSession.setReservedCount(5);
+
+                Activity persistedActivity = new Activity();
+                persistedActivity.setId(activityId);
+                persistedActivity.setTripId(tripId);
+                persistedActivity.setSessions(List.of(persistedSession));
 
                 when(activityRepository.findById(activityId))
                                 .thenReturn(Optional.of(activity));
@@ -100,17 +116,20 @@ class ActivityServiceTest {
                 when(registrationRepository.findByTripId(tripId))
                                 .thenReturn(List.of());
 
-                when(activityRepository.save(any(Activity.class)))
-                                .thenAnswer(invocation -> invocation.getArgument(0));
+                when(sessionPersistenceService.updateSession(
+                                tripId, activityId, sessionId, updatedSession))
+                                .thenReturn(Optional.of(persistedActivity));
 
                 Activity result = activityService.updateActivitySession(
-                                tripId,
-                                activityId,
-                                sessionId,
-                                updatedSession);
+                                tripId, activityId, sessionId, updatedSession);
 
-                assertEquals(30, result.getSessions().get(0).getMaxCapacity());
-                verify(activityRepository).save(activity);
+                assertEquals(30, result.getSessions().getFirst().getMaxCapacity());
+                assertEquals(5, result.getSessions().getFirst().getReservedCount());
+
+                verify(sessionPersistenceService).updateSession(
+                                tripId, activityId, sessionId, updatedSession);
+
+                verify(activityRepository, never()).save(any(Activity.class));
         }
 
         @Test
@@ -197,10 +216,15 @@ class ActivityServiceTest {
                 request.setMaxCapacity(25);
 
                 when(tripRepository.existsById(tripId)).thenReturn(true);
+
                 when(activityRepository.findById(activityId))
                                 .thenReturn(Optional.of(activity));
+
                 when(sessionIdService.getNextSessionId()).thenReturn(101);
-                when(activityRepository.save(activity)).thenReturn(activity);
+
+                when(sessionPersistenceService.addSession(
+                                eq(tripId), eq(activityId), any(ActivitySession.class)))
+                                .thenReturn(true);
 
                 ActivitySession result = activityService.createActivitySession(
                                 tripId, activityId, request);
@@ -209,13 +233,15 @@ class ActivityServiceTest {
                 assertEquals(LocalDate.of(2027, 3, 9), result.getDate());
                 assertEquals(LocalTime.of(10, 0), result.getTime());
                 assertEquals(25, result.getMaxCapacity());
+                assertEquals(0, result.getReservedCount());
                 assertTrue(result.isActive());
 
-                assertEquals(1, activity.getSessions().size());
-                assertSame(result, activity.getSessions().getFirst());
-
                 verify(sessionIdService).getNextSessionId();
-                verify(activityRepository).save(activity);
+
+                verify(sessionPersistenceService).addSession(
+                                tripId, activityId, result);
+
+                verify(activityRepository, never()).save(any(Activity.class));
         }
 
         @Test
@@ -364,6 +390,7 @@ class ActivityServiceTest {
                                 updatedSession));
 
                 verify(activityRepository, never()).save(any(Activity.class));
+                verifyNoInteractions(sessionPersistenceService);
 
         }
 
@@ -415,6 +442,7 @@ class ActivityServiceTest {
                                 updatedSession));
 
                 verify(activityRepository, never()).save(any(Activity.class));
+                verifyNoInteractions(sessionPersistenceService);
         }
 
         @Test
@@ -430,6 +458,7 @@ class ActivityServiceTest {
                 ActivitySession session = new ActivitySession();
                 session.setId(sessionId);
                 session.setMaxCapacity(20);
+                session.setReservedCount(8);
                 activity.setSessions(List.of(session));
 
                 ActivitySession updatedSession = new ActivitySession();
@@ -452,20 +481,36 @@ class ActivityServiceTest {
                         registrations.add(registration);
                 }
 
+                ActivitySession persistedSession = new ActivitySession();
+                persistedSession.setId(sessionId);
+                persistedSession.setMaxCapacity(8);
+                persistedSession.setReservedCount(8);
+
+                Activity persistedActivity = new Activity();
+                persistedActivity.setId(activityId);
+                persistedActivity.setTripId(tripId);
+                persistedActivity.setSessions(List.of(persistedSession));
+
                 when(activityRepository.findById(activityId))
                                 .thenReturn(Optional.of(activity));
 
                 when(registrationRepository.findByTripId(tripId))
                                 .thenReturn(registrations);
 
-                when(activityRepository.save(any(Activity.class)))
-                                .thenAnswer(invocation -> invocation.getArgument(0));
+                when(sessionPersistenceService.updateSession(
+                                tripId, activityId, sessionId, updatedSession))
+                                .thenReturn(Optional.of(persistedActivity));
 
                 Activity result = activityService.updateActivitySession(
                                 tripId, activityId, sessionId, updatedSession);
 
-                assertEquals(8, result.getSessions().get(0).getMaxCapacity());
-                verify(activityRepository).save(activity);
+                assertEquals(8, result.getSessions().getFirst().getMaxCapacity());
+                assertEquals(8, result.getSessions().getFirst().getReservedCount());
+
+                verify(sessionPersistenceService).updateSession(
+                                tripId, activityId, sessionId, updatedSession);
+
+                verify(activityRepository, never()).save(any(Activity.class));
         }
 
         @Test
@@ -482,6 +527,7 @@ class ActivityServiceTest {
 
                 ActivitySession secondSession = new ActivitySession();
                 secondSession.setId(102);
+                secondSession.setReservedCount(7);
 
                 activity.setSessions(
                                 new ArrayList<>(List.of(firstSession, secondSession)));
@@ -492,13 +538,17 @@ class ActivityServiceTest {
                 when(registrationRepository.findByTripId(tripId))
                                 .thenReturn(List.of());
 
+                when(sessionPersistenceService.deleteSession(
+                                tripId, activityId, 101))
+                                .thenReturn(true);
+
                 activityService.deleteActivitySession(
                                 tripId, activityId, 101);
 
-                assertEquals(1, activity.getSessions().size());
-                assertEquals(102, activity.getSessions().get(0).getId());
+                verify(sessionPersistenceService).deleteSession(
+                                tripId, activityId, 101);
 
-                verify(activityRepository).save(activity);
+                verify(activityRepository, never()).save(any(Activity.class));
         }
 
         @Test
@@ -535,6 +585,8 @@ class ActivityServiceTest {
 
                 assertEquals(1, activity.getSessions().size());
                 verify(activityRepository, never()).save(any(Activity.class));
+                verifyNoInteractions(sessionPersistenceService);
+
         }
 
         @Test
@@ -573,6 +625,240 @@ class ActivityServiceTest {
                                                 tripId, activityId, 101));
 
                 assertEquals(1, activity.getSessions().size());
+                verify(activityRepository, never()).save(any(Activity.class));
+                verifyNoInteractions(sessionPersistenceService);
+        }
+
+        @Test
+        void rejectsSessionCapacityBelowOne() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(101);
+                session.setMaxCapacity(20);
+                activity.setSessions(List.of(session));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(0);
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> activityService.updateActivitySession(
+                                                tripId, activityId, 101, updatedSession));
+
+                assertEquals(
+                                "Session capacity must be at least 1.",
+                                exception.getMessage());
+
+                verifyNoInteractions(sessionPersistenceService);
+                verifyNoInteractions(registrationRepository);
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsCapacityReductionWhenAtomicConditionFails() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(101);
+                session.setMaxCapacity(20);
+                session.setReservedCount(5);
+                activity.setSessions(List.of(session));
+
+                Activity currentActivity = new Activity();
+                currentActivity.setId(activityId);
+                currentActivity.setTripId(tripId);
+
+                ActivitySession currentSession = new ActivitySession();
+                currentSession.setId(101);
+                currentSession.setMaxCapacity(20);
+                currentSession.setReservedCount(6);
+                currentActivity.setSessions(List.of(currentSession));
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(5);
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(
+                                                Optional.of(activity),
+                                                Optional.of(currentActivity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of());
+
+                when(sessionPersistenceService.updateSession(
+                                tripId, activityId, 101, updatedSession))
+                                .thenReturn(Optional.empty());
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> activityService.updateActivitySession(
+                                                tripId, activityId, 101, updatedSession));
+
+                assertEquals(
+                                "Session capacity cannot be less than the number of reserved seats.",
+                                exception.getMessage());
+
+                verify(sessionPersistenceService).updateSession(
+                                tripId, activityId, 101, updatedSession);
+
+                verify(activityRepository, times(2)).findById(activityId);
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsDeletionWhenAtomicConditionFails() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(101);
+                session.setReservedCount(0);
+                activity.setSessions(List.of(session));
+
+                Activity currentActivity = new Activity();
+                currentActivity.setId(activityId);
+                currentActivity.setTripId(tripId);
+
+                ActivitySession currentSession = new ActivitySession();
+                currentSession.setId(101);
+                currentSession.setReservedCount(1);
+                currentActivity.setSessions(List.of(currentSession));
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(
+                                                Optional.of(activity),
+                                                Optional.of(currentActivity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of());
+
+                when(sessionPersistenceService.deleteSession(
+                                tripId, activityId, 101))
+                                .thenReturn(false);
+
+                IllegalStateException exception = assertThrows(
+                                IllegalStateException.class,
+                                () -> activityService.deleteActivitySession(
+                                                tripId, activityId, 101));
+
+                assertEquals(
+                                "Cannot delete a session with reserved seats.",
+                                exception.getMessage());
+
+                verify(sessionPersistenceService).deleteSession(
+                                tripId, activityId, 101);
+
+                verify(activityRepository, times(2)).findById(activityId);
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsUpdateWhenSessionWasConcurrentlyDeleted() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                ActivitySession session = new ActivitySession();
+                session.setId(101);
+                session.setMaxCapacity(20);
+                activity.setSessions(List.of(session));
+
+                Activity currentActivity = new Activity();
+                currentActivity.setId(activityId);
+                currentActivity.setTripId(tripId);
+                currentActivity.setSessions(List.of());
+
+                ActivitySession updatedSession = new ActivitySession();
+                updatedSession.setMaxCapacity(30);
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(
+                                                Optional.of(activity),
+                                                Optional.of(currentActivity));
+
+                when(registrationRepository.findByTripId(tripId))
+                                .thenReturn(List.of());
+
+                when(sessionPersistenceService.updateSession(
+                                tripId, activityId, 101, updatedSession))
+                                .thenReturn(Optional.empty());
+
+                NoSuchElementException exception = assertThrows(
+                                NoSuchElementException.class,
+                                () -> activityService.updateActivitySession(
+                                                tripId, activityId, 101, updatedSession));
+
+                assertEquals(
+                                "Activity session not found: 101",
+                                exception.getMessage());
+
+                verify(sessionPersistenceService).updateSession(
+                                tripId, activityId, 101, updatedSession);
+
+                verify(activityRepository, never()).save(any(Activity.class));
+        }
+
+        @Test
+        void rejectsSessionCreationWhenActivityDisappearsBeforePersistence() {
+                String tripId = "trip123";
+                String activityId = "activity456";
+
+                Activity activity = new Activity();
+                activity.setId(activityId);
+                activity.setTripId(tripId);
+
+                CreateActivitySessionRequest request = new CreateActivitySessionRequest();
+
+                request.setDate(LocalDate.of(2027, 3, 9));
+                request.setTime(LocalTime.of(10, 0));
+                request.setMaxCapacity(25);
+
+                when(tripRepository.existsById(tripId))
+                                .thenReturn(true);
+
+                when(activityRepository.findById(activityId))
+                                .thenReturn(Optional.of(activity));
+
+                when(sessionIdService.getNextSessionId())
+                                .thenReturn(101);
+
+                when(sessionPersistenceService.addSession(
+                                eq(tripId), eq(activityId), any(ActivitySession.class)))
+                                .thenReturn(false);
+
+                NoSuchElementException exception = assertThrows(
+                                NoSuchElementException.class,
+                                () -> activityService.createActivitySession(
+                                                tripId, activityId, request));
+
+                assertEquals(
+                                "Activity not found: activity456",
+                                exception.getMessage());
+
+                verify(sessionPersistenceService).addSession(
+                                eq(tripId), eq(activityId), any(ActivitySession.class));
+
                 verify(activityRepository, never()).save(any(Activity.class));
         }
 
