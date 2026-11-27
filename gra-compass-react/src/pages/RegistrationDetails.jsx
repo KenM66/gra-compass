@@ -10,6 +10,7 @@ import {
   cancelTravelerActivity,
   switchTravelerActivitySession,
 } from "../store/registrationsSlice";
+import { formatDate } from "../utils/dateUtils";
 
 const RegistrationDetails = () => {
   const { tripId, id } = useParams();
@@ -355,8 +356,8 @@ const RegistrationDetails = () => {
             <span>Sex</span>
 
             {isEditingPersonalInfo ? (
-              <input
-                type="text"
+              <select
+                aria-label="Sex"
                 value={editPersonalInfo.sex}
                 onChange={(event) =>
                   setEditPersonalInfo({
@@ -364,7 +365,19 @@ const RegistrationDetails = () => {
                     sex: event.target.value,
                   })
                 }
-              />
+              >
+                <option value="">Select Sex</option>
+
+                {editPersonalInfo.sex &&
+                  !["Male", "Female"].includes(editPersonalInfo.sex) && (
+                    <option value={editPersonalInfo.sex}>
+                      {editPersonalInfo.sex}
+                    </option>
+                  )}
+
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
             ) : (
               <strong>{registration.sex || ""}</strong>
             )}
@@ -413,7 +426,8 @@ const RegistrationDetails = () => {
 
             {isEditingPersonalInfo ? (
               <input
-                type="text"
+                type="date"
+                aria-label="Date of Birth"
                 value={editPersonalInfo.dateOfBirth}
                 onChange={(event) =>
                   setEditPersonalInfo({
@@ -423,7 +437,7 @@ const RegistrationDetails = () => {
                 }
               />
             ) : (
-              <strong>{registration.dateOfBirth || ""}</strong>
+              <strong>{formatDate(registration.dateOfBirth)}</strong>
             )}
           </div>
           {isEditingPersonalInfo && (
@@ -541,7 +555,8 @@ const RegistrationDetails = () => {
 
             {isEditingTravelInfo ? (
               <input
-                type="text"
+                type="date"
+                aria-label="Passport Expiration"
                 value={editTravelInfo.passportExpiration}
                 onChange={(event) =>
                   setEditTravelInfo({
@@ -551,10 +566,9 @@ const RegistrationDetails = () => {
                 }
               />
             ) : (
-              <strong>{registration.passportExpiration}</strong>
+              <strong>{formatDate(registration.passportExpiration)}</strong>
             )}
           </div>
-
           {isEditingTravelInfo && (
             <div className="travel-info-edit-actions">
               <button

@@ -3,6 +3,7 @@ package com.gragroup.compass.controller;
 import com.gragroup.compass.model.Registration;
 import com.gragroup.compass.service.RegistrationService;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -71,6 +72,63 @@ class RegistrationControllerTest {
                                 .andExpect(jsonPath("$.firstName").value("Bob"))
                                 .andExpect(jsonPath("$.lastName").value("Henderson"))
                                 .andExpect(jsonPath("$.email").value("bob@example.com"));
+        }
+
+        @Test
+        void updatesGuestPreferredNameAndPhone() throws Exception {
+
+                when(registrationService.updateRegistration(
+                                org.mockito.ArgumentMatchers.eq("trip123"),
+                                org.mockito.ArgumentMatchers.eq(1047),
+                                any(Registration.class)))
+                                .thenAnswer(invocation -> {
+                                        Registration registration = invocation.getArgument(2);
+
+                                        assertEquals(
+                                                        "Mandy",
+                                                        registration.getGuest().getPreferredName());
+
+                                        assertEquals(
+                                                        "216-555-0199",
+                                                        registration.getGuest().getPhone());
+
+                                        registration.setId("registration123");
+                                        registration.setTripId("trip123");
+                                        registration.setTravelerNumber(1047);
+
+                                        return Optional.of(registration);
+                                });
+
+                mockMvc.perform(put("/api/trips/trip123/registrations/1047")
+                                .contentType("application/json")
+                                .content("""
+                                                {
+                                                    "firstName": "Robert",
+                                                    "lastName": "Henderson",
+                                                    "bringingGuest": true,
+                                                    "guest": {
+                                                        "firstName": "Amanda",
+                                                        "lastName": "Henderson",
+                                                        "preferredName": "Mandy",
+                                                        "email": "amanda@example.com",
+                                                        "phone": "216-555-0199"
+                                                    }
+                                                }
+                                                """))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value("registration123"))
+                                .andExpect(jsonPath("$.tripId").value("trip123"))
+                                .andExpect(jsonPath("$.travelerNumber").value(1047))
+                                .andExpect(jsonPath("$.guest.firstName").value("Amanda"))
+                                .andExpect(jsonPath("$.guest.lastName").value("Henderson"))
+                                .andExpect(jsonPath("$.guest.preferredName").value("Mandy"))
+                                .andExpect(jsonPath("$.guest.email").value("amanda@example.com"))
+                                .andExpect(jsonPath("$.guest.phone").value("216-555-0199"));
+
+                verify(registrationService).updateRegistration(
+                                org.mockito.ArgumentMatchers.eq("trip123"),
+                                org.mockito.ArgumentMatchers.eq(1047),
+                                any(Registration.class));
         }
 
         @Test
