@@ -161,4 +161,64 @@ public class RegistrationController {
         }
     }
 
+    @PutMapping("/{travelerNumber}/activities/{activityId}/sessions/{currentSessionId}/switch/{newSessionId}")
+    public ResponseEntity<Registration> switchTravelerActivitySession(
+            @PathVariable String tripId,
+            @PathVariable int travelerNumber,
+            @PathVariable String activityId,
+            @PathVariable int currentSessionId,
+            @PathVariable int newSessionId) {
+
+        try {
+            Registration registration = travelerActivityReservationRetryService
+                    .switchTravelerActivitySession(
+                            tripId,
+                            travelerNumber,
+                            activityId,
+                            currentSessionId,
+                            newSessionId);
+
+            return ResponseEntity.ok(registration);
+
+        } catch (NoSuchElementException exception) {
+            return ResponseEntity.notFound().build();
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+
+        } catch (IllegalStateException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    @PutMapping("/{travelerNumber}/guest/activities/{activityId}/sessions/{currentSessionId}/switch/{newSessionId}")
+    public ResponseEntity<Registration> switchGuestActivitySession(
+            @PathVariable String tripId,
+            @PathVariable int travelerNumber,
+            @PathVariable String activityId,
+            @PathVariable int currentSessionId,
+            @PathVariable int newSessionId) {
+
+        try {
+            Registration registration = guestActivityReservationRetryService
+                    .switchGuestActivitySession(
+                            tripId,
+                            travelerNumber,
+                            activityId,
+                            currentSessionId,
+                            newSessionId);
+
+            return ResponseEntity.ok(registration);
+
+        } catch (NoSuchElementException exception) {
+            return ResponseEntity.notFound().build();
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+
+        } catch (IllegalStateException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
 }

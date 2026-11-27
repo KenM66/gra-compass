@@ -521,12 +521,10 @@ describe("RegistrationDetails", () => {
     expect(requestBody.guest).toEqual(blankGuest);
     expect(requestBody.travelerNumber).toBe(1047);
   });
-  test("does not save a trip selection without a session", async () => {
+  test("allows multiple sessions of the same activity to be reserved", async () => {
     const user = userEvent.setup();
 
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
-
-    renderRegistrationDetails();
+    const store = renderRegistrationDetails();
 
     const editButtons = screen.getAllByRole("button", {
       name: "Edit",
@@ -534,11 +532,59 @@ describe("RegistrationDetails", () => {
 
     await user.click(editButtons[5]);
 
-    const jeepTourCheckbox = screen.getByRole("checkbox", {
-      name: /Island Jeep Tour/i,
+    const morningSession = screen.getByRole("checkbox", {
+      name: /Tuesday, March 9.*10:00 AM/i,
     });
 
-    await user.click(jeepTourCheckbox);
+    const afternoonSession = screen.getByRole("checkbox", {
+      name: /Tuesday, March 9.*2:00 PM/i,
+    });
+
+    expect(morningSession).toBeChecked();
+    expect(afternoonSession).not.toBeChecked();
+
+    await user.click(afternoonSession);
+
+    expect(morningSession).toBeChecked();
+    expect(afternoonSession).toBeChecked();
+
+    const additionalSelection = {
+      activityId: 1,
+      type: "Excursion",
+      name: "Catamaran & Snorkeling",
+      sessionId: 102,
+    };
+
+    const updatedRegistration = {
+      ...registration,
+      activities: [...registration.activities, additionalSelection],
+    };
+
+    const updatedActivities = activities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === 1 && session.id === 102
+          ? {
+              ...session,
+              reservedCount: session.reservedCount + 1,
+            }
+          : session,
+      ),
+    }));
+
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedActivities,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [updatedRegistration],
+      });
 
     await user.click(
       screen.getByRole("button", {
@@ -546,19 +592,35 @@ describe("RegistrationDetails", () => {
       }),
     );
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      "Please select a session for each trip selection.",
+    await waitFor(() => {
+      const savedRegistration = store.getState().registrations.byTrip[1][0];
+
+      expect(savedRegistration.activities).toEqual(
+        updatedRegistration.activities,
+      );
+
+      expect(savedRegistration.guest).toEqual(registration.guest);
+
+      expect(store.getState().activities.byTrip[1]).toEqual(updatedActivities);
+
+      expect(screen.getAllByText("Catamaran & Snorkeling")).toHaveLength(2);
+
+      expect(globalThis.fetch).toHaveBeenLastCalledWith(
+        "http://localhost:8080/api/trips/1/registrations",
+      );
+    });
+
+    const mutationCalls = globalThis.fetch.mock.calls.filter(
+      ([, options]) =>
+        options?.method === "PUT" || options?.method === "DELETE",
     );
 
-    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      "http://localhost:8080/api/trips/1/registrations",
-    );
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      "http://localhost:8080/api/trips/1/activities",
-    );
-
-    alertSpy.mockRestore();
+    expect(mutationCalls).toEqual([
+      [
+        "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/102",
+        { method: "PUT" },
+      ],
+    ]);
   });
   test("adds a trip selection with its selected session", async () => {
     const user = userEvent.setup();
@@ -571,13 +633,7 @@ describe("RegistrationDetails", () => {
 
     await user.click(editButtons[5]);
 
-    const jeepTourCheckbox = screen.getByRole("checkbox", {
-      name: /Island Jeep Tour/i,
-    });
-
-    await user.click(jeepTourCheckbox);
-
-    const jeepTourSession = screen.getByRole("radio", {
+    const jeepTourSession = screen.getByRole("checkbox", {
       name: /Wednesday, March 10.*9:00 AM/i,
     });
 
@@ -641,13 +697,7 @@ describe("RegistrationDetails", () => {
 
     await user.click(editButtons[5]);
 
-    const jeepTourCheckbox = screen.getByRole("checkbox", {
-      name: /Island Jeep Tour/i,
-    });
-
-    await user.click(jeepTourCheckbox);
-
-    const jeepTourSession = screen.getByRole("radio", {
+    const jeepTourSession = screen.getByRole("checkbox", {
       name: /Wednesday, March 10.*9:00 AM/i,
     });
 
@@ -711,23 +761,18 @@ describe("RegistrationDetails", () => {
     expect(savingButton).toBeDisabled();
     expect(cancelButton).toBeDisabled();
 
-    const activityCheckboxes = screen.getAllByRole("checkbox");
-    const sessionRadios = screen.getAllByRole("radio");
+    const sessionCheckboxes = screen.getAllByRole("checkbox");
 
-    activityCheckboxes.forEach((checkbox) => {
+    expect(sessionCheckboxes).toHaveLength(5);
+
+    sessionCheckboxes.forEach((checkbox) => {
       expect(checkbox).toBeDisabled();
-    });
-
-    sessionRadios.forEach((radio) => {
-      expect(radio).toBeDisabled();
     });
 
     await user.click(savingButton);
     await user.click(cancelButton);
-    await user.click(jeepTourCheckbox);
     await user.click(jeepTourSession);
 
-    expect(jeepTourCheckbox).toBeChecked();
     expect(jeepTourSession).toBeChecked();
 
     const mutationCalls = globalThis.fetch.mock.calls.filter(
@@ -785,13 +830,7 @@ describe("RegistrationDetails", () => {
 
       await user.click(editButtons[5]);
 
-      const jeepTourCheckbox = screen.getByRole("checkbox", {
-        name: /Island Jeep Tour/i,
-      });
-
-      await user.click(jeepTourCheckbox);
-
-      const jeepTourSession = screen.getByRole("radio", {
+      const jeepTourSession = screen.getByRole("checkbox", {
         name: /Wednesday, March 10.*9:00 AM/i,
       });
 
@@ -846,8 +885,9 @@ describe("RegistrationDetails", () => {
           }),
         ).toBeEnabled();
 
-        expect(jeepTourCheckbox).toBeEnabled();
-        expect(jeepTourSession).toBeDisabled();
+        expect(jeepTourSession).toBeEnabled();
+        expect(jeepTourSession).toBeChecked();
+        expect(jeepTourSession).toHaveAccessibleName(/Full/i);
 
         expect(store.getState().activities.byTrip[1]).toEqual(
           updatedActivities,
@@ -889,7 +929,7 @@ describe("RegistrationDetails", () => {
 
     await user.click(editButtons[5]);
 
-    const unavailableSession = screen.getByRole("radio", {
+    const unavailableSession = screen.getByRole("checkbox", {
       name: /Thursday, March 11.*6:30 PM.*Unavailable/i,
     });
 
@@ -918,7 +958,7 @@ describe("RegistrationDetails", () => {
 
     await user.click(editButtons[5]);
 
-    const fullSession = screen.getByRole("radio", {
+    const fullSession = screen.getByRole("checkbox", {
       name: /Wednesday, March 10.*9:00 AM.*Full/i,
     });
 
@@ -946,14 +986,14 @@ describe("RegistrationDetails", () => {
 
     await user.click(editButtons[5]);
 
-    const currentSession = screen.getByRole("radio", {
+    const currentSession = screen.getByRole("checkbox", {
       name: /Tuesday, March 9.*10:00 AM/i,
     });
 
     expect(currentSession).toBeChecked();
     expect(currentSession).not.toBeDisabled();
   });
-  test("allows the traveler to switch from their current full session", async () => {
+  test("allows the traveler to atomically switch from their current full session", async () => {
     const user = userEvent.setup();
 
     const fullSessionActivities = activities.map((activity) => ({
@@ -979,24 +1019,27 @@ describe("RegistrationDetails", () => {
 
     await user.click(editButtons[5]);
 
-    const afternoonSession = screen.getByRole("radio", {
+    const morningSession = screen.getByRole("checkbox", {
+      name: /Tuesday, March 9.*10:00 AM/i,
+    });
+
+    const afternoonSession = screen.getByRole("checkbox", {
       name: /Tuesday, March 9.*2:00 PM/i,
     });
 
+    expect(morningSession).toBeChecked();
+    expect(morningSession).toBeEnabled();
+
+    await user.click(morningSession);
     await user.click(afternoonSession);
 
+    expect(morningSession).not.toBeChecked();
     expect(afternoonSession).toBeChecked();
-    const canceledRegistration = {
-      ...registration,
-      activities: registration.activities.filter(
-        (activity) => activity.activityId !== 1,
-      ),
-    };
 
     const updatedRegistration = {
       ...registration,
       activities: registration.activities.map((activity) =>
-        activity.activityId === 1
+        activity.activityId === 1 && activity.sessionId === 101
           ? {
               ...activity,
               sessionId: 102,
@@ -1029,10 +1072,6 @@ describe("RegistrationDetails", () => {
     globalThis.fetch
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => canceledRegistration,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
         json: async () => updatedRegistration,
       })
       .mockResolvedValueOnce({
@@ -1051,23 +1090,7 @@ describe("RegistrationDetails", () => {
     );
 
     await waitFor(() => {
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/101",
-        { method: "DELETE" },
-      );
-
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/102",
-        { method: "PUT" },
-      );
-
-      expect(globalThis.fetch).toHaveBeenLastCalledWith(
-        "http://localhost:8080/api/trips/1/registrations",
-      );
-
-      const savedRegistration = store
-        .getState()
-        .registrations.byTrip[1].find((item) => item.travelerNumber === 1047);
+      const savedRegistration = store.getState().registrations.byTrip[1][0];
 
       expect(savedRegistration.activities).toEqual(
         updatedRegistration.activities,
@@ -1076,10 +1099,26 @@ describe("RegistrationDetails", () => {
       expect(savedRegistration.guest).toEqual(registration.guest);
 
       expect(store.getState().activities.byTrip[1]).toEqual(updatedActivities);
+
+      expect(globalThis.fetch).toHaveBeenLastCalledWith(
+        "http://localhost:8080/api/trips/1/registrations",
+      );
     });
+
+    const mutationCalls = globalThis.fetch.mock.calls.filter(
+      ([, options]) =>
+        options?.method === "PUT" || options?.method === "DELETE",
+    );
+
+    expect(mutationCalls).toEqual([
+      [
+        "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/101/switch/102",
+        { method: "PUT" },
+      ],
+    ]);
   });
 
-  test("recovers when a traveler session switch partially fails", async () => {
+  test("preserves existing traveler reservations when an atomic session switch fails", async () => {
     const user = userEvent.setup();
 
     const store = renderRegistrationDetails();
@@ -1093,53 +1132,36 @@ describe("RegistrationDetails", () => {
 
       await user.click(editButtons[5]);
 
-      const morningSession = screen.getByRole("radio", {
+      const morningSession = screen.getByRole("checkbox", {
         name: /Tuesday, March 9.*10:00 AM/i,
       });
 
-      const afternoonSession = screen.getByRole("radio", {
+      const afternoonSession = screen.getByRole("checkbox", {
         name: /Tuesday, March 9.*2:00 PM/i,
       });
 
       expect(morningSession).toBeChecked();
+      expect(afternoonSession).not.toBeChecked();
 
+      await user.click(morningSession);
       await user.click(afternoonSession);
 
+      expect(morningSession).not.toBeChecked();
       expect(afternoonSession).toBeChecked();
-
-      const canceledRegistration = {
-        ...registration,
-        activities: registration.activities.filter(
-          (activity) => activity.activityId !== 1,
-        ),
-      };
 
       const updatedActivities = activities.map((activity) => ({
         ...activity,
-        sessions: activity.sessions.map((session) => {
-          if (activity.id === 1 && session.id === 101) {
-            return {
-              ...session,
-              reservedCount: session.reservedCount - 1,
-            };
-          }
-
-          if (activity.id === 1 && session.id === 102) {
-            return {
-              ...session,
-              reservedCount: session.maxCapacity,
-            };
-          }
-
-          return session;
-        }),
+        sessions: activity.sessions.map((session) =>
+          activity.id === 1 && session.id === 102
+            ? {
+                ...session,
+                reservedCount: session.maxCapacity,
+              }
+            : session,
+        ),
       }));
 
       globalThis.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => canceledRegistration,
-        })
         .mockResolvedValueOnce({
           ok: false,
           status: 409,
@@ -1150,7 +1172,7 @@ describe("RegistrationDetails", () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => [canceledRegistration],
+          json: async () => [registration],
         });
 
       await user.click(
@@ -1161,7 +1183,7 @@ describe("RegistrationDetails", () => {
 
       await waitFor(() => {
         expect(alertSpy).toHaveBeenCalledWith(
-          "Failed to reserve traveler activity (409)",
+          "Failed to switch traveler activity session (409)",
         );
 
         expect(
@@ -1177,15 +1199,13 @@ describe("RegistrationDetails", () => {
         ).toBeEnabled();
 
         expect(morningSession).toBeEnabled();
-        expect(afternoonSession).toBeDisabled();
+        expect(afternoonSession).toBeEnabled();
 
-        const savedRegistration = store
-          .getState()
-          .registrations.byTrip[1].find((item) => item.travelerNumber === 1047);
+        expect(afternoonSession).toHaveAccessibleName(/Full/i);
 
-        expect(savedRegistration.activities).toEqual(
-          canceledRegistration.activities,
-        );
+        const savedRegistration = store.getState().registrations.byTrip[1][0];
+
+        expect(savedRegistration.activities).toEqual(registration.activities);
 
         expect(savedRegistration.guest).toEqual(registration.guest);
 
@@ -1205,24 +1225,45 @@ describe("RegistrationDetails", () => {
 
       expect(mutationCalls).toEqual([
         [
-          "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/101",
-          { method: "DELETE" },
-        ],
-        [
-          "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/102",
+          "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/101/switch/102",
           { method: "PUT" },
         ],
       ]);
 
+      await user.click(afternoonSession);
       await user.click(morningSession);
 
       expect(morningSession).toBeChecked();
       expect(afternoonSession).not.toBeChecked();
+      expect(afternoonSession).toBeDisabled();
+
+      await user.click(
+        screen.getByRole("button", {
+          name: "Cancel",
+        }),
+      );
+
+      await user.click(
+        screen.getAllByRole("button", {
+          name: "Edit",
+        })[5],
+      );
+
+      expect(
+        screen.getByRole("checkbox", {
+          name: /Tuesday, March 9.*10:00 AM/i,
+        }),
+      ).toBeChecked();
+
+      expect(
+        screen.getByRole("checkbox", {
+          name: /Tuesday, March 9.*2:00 PM/i,
+        }),
+      ).toBeDisabled();
     } finally {
       alertSpy.mockRestore();
     }
   });
-
   test("removes an existing trip selection", async () => {
     const user = userEvent.setup();
 
@@ -1235,7 +1276,7 @@ describe("RegistrationDetails", () => {
     await user.click(editButtons[5]);
 
     const catamaranCheckbox = screen.getByRole("checkbox", {
-      name: /Catamaran & Snorkeling/i,
+      name: /Tuesday, March 9.*10:00 AM/i,
     });
 
     expect(catamaranCheckbox).toBeChecked();
@@ -1302,6 +1343,204 @@ describe("RegistrationDetails", () => {
 
     expect(screen.getByText("Massage Appointment")).toBeInTheDocument();
   });
+
+  test("cancels one session without removing another reservation for the same activity", async () => {
+    const user = userEvent.setup();
+
+    const additionalSelection = {
+      activityId: 1,
+      type: "Excursion",
+      name: "Catamaran & Snorkeling",
+      sessionId: 102,
+    };
+
+    const registrationWithMultipleSessions = {
+      ...registration,
+      activities: [...registration.activities, additionalSelection],
+    };
+
+    const reservedActivities = activities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === 1 && session.id === 102
+          ? { ...session, reservedCount: 1 }
+          : session,
+      ),
+    }));
+
+    const store = renderRegistrationDetails(
+      { 1: [registrationWithMultipleSessions] },
+      reservedActivities,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[5]);
+
+    const morningSession = screen.getByRole("checkbox", {
+      name: /Tuesday, March 9.*10:00 AM/i,
+    });
+
+    const afternoonSession = screen.getByRole("checkbox", {
+      name: /Tuesday, March 9.*2:00 PM/i,
+    });
+
+    expect(morningSession).toBeChecked();
+    expect(afternoonSession).toBeChecked();
+
+    await user.click(morningSession);
+
+    expect(morningSession).not.toBeChecked();
+    expect(afternoonSession).toBeChecked();
+
+    const updatedRegistration = {
+      ...registrationWithMultipleSessions,
+      activities: registrationWithMultipleSessions.activities.filter(
+        (activity) =>
+          !(activity.activityId === 1 && activity.sessionId === 101),
+      ),
+    };
+
+    const updatedActivities = reservedActivities.map((activity) => ({
+      ...activity,
+      sessions: activity.sessions.map((session) =>
+        activity.id === 1 && session.id === 101
+          ? {
+              ...session,
+              reservedCount: session.reservedCount - 1,
+            }
+          : session,
+      ),
+    }));
+
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedRegistration,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedActivities,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [updatedRegistration],
+      });
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(store.getState().registrations.byTrip[1][0]).toEqual(
+        updatedRegistration,
+      );
+
+      expect(store.getState().activities.byTrip[1]).toEqual(updatedActivities);
+
+      expect(screen.getAllByText("Catamaran & Snorkeling")).toHaveLength(1);
+
+      expect(globalThis.fetch).toHaveBeenLastCalledWith(
+        "http://localhost:8080/api/trips/1/registrations",
+      );
+    });
+
+    const mutationCalls = globalThis.fetch.mock.calls.filter(
+      ([, options]) =>
+        options?.method === "PUT" || options?.method === "DELETE",
+    );
+
+    expect(mutationCalls).toEqual([
+      [
+        "http://localhost:8080/api/trips/1/registrations/1047/activities/1/sessions/101",
+        { method: "DELETE" },
+      ],
+    ]);
+  });
+
+  test("does not submit reservation mutations when trip selections are unchanged", async () => {
+    const user = userEvent.setup();
+
+    const store = renderRegistrationDetails();
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[5]);
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: "Save" }),
+      ).not.toBeInTheDocument();
+
+      expect(screen.getAllByRole("button", { name: "Edit" })[5]).toBeEnabled();
+
+      expect(store.getState().registrations.byTrip[1][0]).toEqual(registration);
+
+      expect(store.getState().activities.byTrip[1]).toEqual(activities);
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(4);
+    });
+
+    const mutationCalls = globalThis.fetch.mock.calls.filter(
+      ([, options]) =>
+        options?.method === "PUT" || options?.method === "DELETE",
+    );
+
+    expect(mutationCalls).toHaveLength(0);
+  });
+
+  test("discards unsaved trip selection changes when editing is cancelled", async () => {
+    const user = userEvent.setup();
+
+    const store = renderRegistrationDetails();
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[5]);
+
+    const morningSession = screen.getByRole("checkbox", {
+      name: /Tuesday, March 9.*10:00 AM/i,
+    });
+
+    const afternoonSession = screen.getByRole("checkbox", {
+      name: /Tuesday, March 9.*2:00 PM/i,
+    });
+
+    const jeepTourSession = screen.getByRole("checkbox", {
+      name: /Wednesday, March 10.*9:00 AM/i,
+    });
+
+    await user.click(morningSession);
+    await user.click(afternoonSession);
+    await user.click(jeepTourSession);
+
+    expect(morningSession).not.toBeChecked();
+    expect(afternoonSession).toBeChecked();
+    expect(jeepTourSession).toBeChecked();
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+
+    expect(store.getState().registrations.byTrip[1][0]).toEqual(registration);
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[5]);
+
+    expect(
+      screen.getByRole("checkbox", {
+        name: /Tuesday, March 9.*10:00 AM/i,
+      }),
+    ).toBeChecked();
+
+    expect(
+      screen.getByRole("checkbox", {
+        name: /Tuesday, March 9.*2:00 PM/i,
+      }),
+    ).not.toBeChecked();
+
+    expect(
+      screen.getByRole("checkbox", {
+        name: /Wednesday, March 10.*9:00 AM/i,
+      }),
+    ).not.toBeChecked();
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+  });
+
   test("allows emergency contact information to be edited and saved", async () => {
     const user = userEvent.setup();
 

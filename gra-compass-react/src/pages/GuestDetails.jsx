@@ -5,6 +5,7 @@ import {
   updateRegistration,
   reserveGuestActivity,
   cancelGuestActivity,
+  switchGuestActivitySession,
 } from "../store/registrationsSlice";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -102,43 +103,66 @@ const GuestDetails = () => {
       return;
     }
 
-    const hasMissingSession = editSelections.some(
-      (activity) => !activity.sessionId,
-    );
-
-    if (hasMissingSession) {
-      alert("Please select a session for each trip selection.");
-      return;
-    }
-
     const existingSelections = guest.activities ?? [];
 
     const matchesSelection = (first, second) =>
-      (first.activityId ?? first.id) === (second.activityId ?? second.id) &&
+      first.activityId === second.activityId &&
       first.sessionId === second.sessionId;
 
-    const selectionsToCancel = existingSelections.filter(
+    let selectionsToCancel = existingSelections.filter(
       (existing) =>
         !editSelections.some((edited) => matchesSelection(existing, edited)),
     );
 
-    const selectionsToReserve = editSelections.filter(
+    let selectionsToReserve = editSelections.filter(
       (edited) =>
         !existingSelections.some((existing) =>
           matchesSelection(existing, edited),
         ),
     );
 
+    const sessionSwitches = [];
+
+    const affectedActivityIds = new Set([
+      ...selectionsToCancel.map((selection) => selection.activityId),
+      ...selectionsToReserve.map((selection) => selection.activityId),
+    ]);
+
+    for (const activityId of affectedActivityIds) {
+      const removedSessions = selectionsToCancel.filter(
+        (selection) => selection.activityId === activityId,
+      );
+
+      const addedSessions = selectionsToReserve.filter(
+        (selection) => selection.activityId === activityId,
+      );
+
+      if (removedSessions.length === 1 && addedSessions.length === 1) {
+        sessionSwitches.push({
+          activityId,
+          currentSessionId: removedSessions[0].sessionId,
+          newSessionId: addedSessions[0].sessionId,
+        });
+
+        selectionsToCancel = selectionsToCancel.filter(
+          (selection) => selection.activityId !== activityId,
+        );
+
+        selectionsToReserve = selectionsToReserve.filter(
+          (selection) => selection.activityId !== activityId,
+        );
+      }
+    }
+
     setIsSavingSelections(true);
 
     try {
-      for (const selection of selectionsToCancel) {
+      for (const sessionSwitch of sessionSwitches) {
         await dispatch(
-          cancelGuestActivity({
+          switchGuestActivitySession({
             tripId,
             travelerNumber: registration.travelerNumber,
-            activityId: selection.activityId ?? selection.id,
-            sessionId: selection.sessionId,
+            ...sessionSwitch,
           }),
         ).unwrap();
       }
@@ -148,7 +172,18 @@ const GuestDetails = () => {
           reserveGuestActivity({
             tripId,
             travelerNumber: registration.travelerNumber,
-            activityId: selection.activityId ?? selection.id,
+            activityId: selection.activityId,
+            sessionId: selection.sessionId,
+          }),
+        ).unwrap();
+      }
+
+      for (const selection of selectionsToCancel) {
+        await dispatch(
+          cancelGuestActivity({
+            tripId,
+            travelerNumber: registration.travelerNumber,
+            activityId: selection.activityId,
             sessionId: selection.sessionId,
           }),
         ).unwrap();
@@ -166,7 +201,6 @@ const GuestDetails = () => {
       }
     }
   };
-
   const handleSavePersonalInfo = async () => {
     const updatedRegistration = {
       ...registration,
@@ -630,101 +664,90 @@ const GuestDetails = () => {
         {isEditingSelections ? (
           <div className="selection-edit-list">
             {availableSelections.map((selection) => (
-              <label key={selection.id}>
-                <input
-                  type="checkbox"
-                  disabled={isSavingSelections}
-                  checked={editSelections.some(
-                    (activity) =>
-                      (activity.activityId ?? activity.id) === selection.id,
-                  )}
-                  onChange={() => {
-                    setEditSelections((currentSelections) => {
-                      const isSelected = currentSelections.some(
-                        (activity) =>
-                          (activity.activityId ?? activity.id) === selection.id,
-                      );
-
-                      if (isSelected) {
-                        return currentSelections.filter(
-                          (activity) =>
-                            (activity.activityId ?? activity.id) !==
-                            selection.id,
-                        );
-                      }
-
-                      return [
-                        ...currentSelections,
-                        {
-                          activityId: selection.id,
-                          type: selection.type,
-                          name: selection.name,
-                        },
-                      ];
-                    });
-                  }}
-                />
-
+              <div key={selection.id}>
                 <div className="selection-edit-content">
                   <strong>
                     {selection.type}: {selection.name}
                   </strong>
 
                   <div className="selection-session-list">
-                    {selection.sessions.map((session) => (
-                      <label className="selection-session" key={session.id}>
-                        <input
-                          type="radio"
-                          name={`selection-${selection.id}`}
-                          checked={editSelections.some(
-                            (activity) =>
-                              (activity.activityId ?? activity.id) ===
-                                selection.id &&
-                              activity.sessionId === session.id,
-                          )}
-                          disabled={
-                            isSavingSelections ||
-                            (!(guest.activities ?? []).some(
-                              (activity) =>
-                                (activity.activityId ?? activity.id) ===
-                                  selection.id &&
-                                activity.sessionId === session.id,
-                            ) &&
-                              (!session.active ||
-                                (session.reservedCount ?? 0) >=
-                                  session.maxCapacity))
-                          }
-                          onChange={() => {
-                            setEditSelections((currentSelections) =>
-                              currentSelections.map((activity) =>
-                                (activity.activityId ?? activity.id) ===
-                                selection.id
-                                  ? {
-                                      ...activity,
-                                      sessionId: session.id,
-                                    }
-                                  : activity,
-                              ),
-                            );
-                          }}
-                        />
+                    {selection.sessions.map((session) => {
+                      const isOriginallyReserved = (
+                        guest.activities ?? []
+                      ).some(
+                        (activity) =>
+                          activity.activityId === selection.id &&
+                          activity.sessionId === session.id,
+                      );
 
-                        <span>
-                          {formatSessionDateTime(session.date, session.time)}
-                        </span>
-                        <span>
-                          {!session.active
-                            ? "Unavailable"
-                            : (session.reservedCount ?? 0) >=
-                                session.maxCapacity
-                              ? "Full"
-                              : `${session.maxCapacity - (session.reservedCount ?? 0)} spots left`}
-                        </span>
-                      </label>
-                    ))}
+                      const isSelected = editSelections.some(
+                        (activity) =>
+                          activity.activityId === selection.id &&
+                          activity.sessionId === session.id,
+                      );
+
+                      const isFull =
+                        (session.reservedCount ?? 0) >= session.maxCapacity;
+
+                      return (
+                        <label className="selection-session" key={session.id}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={
+                              isSavingSelections ||
+                              (!isOriginallyReserved &&
+                                !isSelected &&
+                                (!session.active || isFull))
+                            }
+                            onChange={() => {
+                              setEditSelections((currentSelections) => {
+                                const alreadySelected = currentSelections.some(
+                                  (activity) =>
+                                    activity.activityId === selection.id &&
+                                    activity.sessionId === session.id,
+                                );
+
+                                if (alreadySelected) {
+                                  return currentSelections.filter(
+                                    (activity) =>
+                                      !(
+                                        activity.activityId === selection.id &&
+                                        activity.sessionId === session.id
+                                      ),
+                                  );
+                                }
+
+                                return [
+                                  ...currentSelections,
+                                  {
+                                    activityId: selection.id,
+                                    type: selection.type,
+                                    name: selection.name,
+                                    sessionId: session.id,
+                                  },
+                                ];
+                              });
+                            }}
+                          />
+
+                          <span>
+                            {formatSessionDateTime(session.date, session.time)}
+                          </span>
+
+                          <span>
+                            {!session.active
+                              ? "Unavailable"
+                              : isFull
+                                ? "Full"
+                                : `${session.maxCapacity - (session.reservedCount ?? 0)} spots left`}
+                          </span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
-              </label>
+              </div>
             ))}
             <div className="selection-edit-actions">
               <button
