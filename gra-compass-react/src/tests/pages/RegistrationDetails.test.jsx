@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
@@ -14,7 +14,7 @@ const registration = {
   lastName: "Henderson",
   email: "robert@example.com",
   phone: "216-555-0142",
-  dateOfBirth: "June 14, 1987",
+  dateOfBirth: "1987-06-14",
   address: {
     street: "123 Main Street",
     city: "Cleveland",
@@ -24,7 +24,7 @@ const registration = {
   airport: "CLE",
   tsaPrecheck: true,
   passportNumber: "123456789",
-  passportExpiration: "August 12, 2030",
+  passportExpiration: "2030-08-12",
   sex: "Male",
   bringingGuest: true,
   guest: {
@@ -192,6 +192,155 @@ const renderRegistrationDetails = (
   return store;
 };
 describe("RegistrationDetails", () => {
+  test("provides a sex dropdown and saves the selected sex and date of birth", async () => {
+    const user = userEvent.setup();
+    const store = renderRegistrationDetails();
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+
+    const sexSelect = screen.getByRole("combobox", { name: "Sex" });
+    const dateInput = screen.getByLabelText("Date of Birth");
+
+    expect(sexSelect).toHaveValue("Male");
+
+    expect(Array.from(sexSelect.options).map((option) => option.value)).toEqual(
+      ["", "Male", "Female"],
+    );
+
+    expect(dateInput).toHaveAttribute("type", "date");
+    expect(dateInput).toHaveValue("1987-06-14");
+
+    await user.selectOptions(sexSelect, "Female");
+
+    fireEvent.change(dateInput, {
+      target: { value: "1990-04-25" },
+    });
+
+    expect(sexSelect).toHaveValue("Female");
+    expect(dateInput).toHaveValue("1990-04-25");
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        ...registration,
+        sex: "Female",
+        dateOfBirth: "1990-04-25",
+      }),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("04/25/1990")).toBeInTheDocument();
+      expect(screen.getByText("Female")).toBeInTheDocument();
+    });
+
+    const putCall = globalThis.fetch.mock.calls.find(
+      ([, options]) => options?.method === "PUT",
+    );
+
+    const requestBody = JSON.parse(putCall[1].body);
+
+    expect(requestBody.sex).toBe("Female");
+    expect(requestBody.dateOfBirth).toBe("1990-04-25");
+    expect(requestBody.guest).toEqual(registration.guest);
+    expect(requestBody.activities).toEqual(registration.activities);
+
+    expect(store.getState().registrations.byTrip[1][0].dateOfBirth).toBe(
+      "1990-04-25",
+    );
+  });
+
+  test("provides a passport expiration date input and saves an ISO date", async () => {
+    const user = userEvent.setup();
+
+    renderRegistrationDetails();
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[1]);
+
+    const dateInput = screen.getByLabelText("Passport Expiration");
+
+    expect(dateInput).toHaveAttribute("type", "date");
+    expect(dateInput).toHaveValue("2030-08-12");
+
+    fireEvent.change(dateInput, {
+      target: { value: "2035-10-21" },
+    });
+
+    expect(dateInput).toHaveValue("2035-10-21");
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        ...registration,
+        passportExpiration: "2035-10-21",
+      }),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("10/21/2035")).toBeInTheDocument();
+    });
+
+    const putCall = globalThis.fetch.mock.calls.find(
+      ([, options]) => options?.method === "PUT",
+    );
+
+    const requestBody = JSON.parse(putCall[1].body);
+
+    expect(requestBody.passportExpiration).toBe("2035-10-21");
+    expect(requestBody.dateOfBirth).toBe("1987-06-14");
+  });
+
+  test("preserves an existing legacy sex value when saving personal information", async () => {
+    const user = userEvent.setup();
+
+    const legacyRegistration = {
+      ...registration,
+      sex: "Unspecified",
+    };
+
+    renderRegistrationDetails({ 1: [legacyRegistration] });
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+
+    const sexSelect = screen.getByRole("combobox", { name: "Sex" });
+
+    expect(sexSelect).toHaveValue("Unspecified");
+
+    expect(Array.from(sexSelect.options).map((option) => option.value)).toEqual(
+      ["", "Unspecified", "Male", "Female"],
+    );
+
+    const firstNameInput = screen.getByDisplayValue("Robert");
+
+    await user.clear(firstNameInput);
+    await user.type(firstNameInput, "Bob");
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        ...legacyRegistration,
+        firstName: "Bob",
+      }),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Unspecified")).toBeInTheDocument();
+    });
+
+    const putCall = globalThis.fetch.mock.calls.find(
+      ([, options]) => options?.method === "PUT",
+    );
+
+    const requestBody = JSON.parse(putCall[1].body);
+
+    expect(requestBody.sex).toBe("Unspecified");
+    expect(requestBody.firstName).toBe("Bob");
+  });
   test("displays the correct traveler from the URL", () => {
     renderRegistrationDetails();
 
@@ -204,6 +353,8 @@ describe("RegistrationDetails", () => {
     ).toBeInTheDocument();
 
     expect(screen.getAllByText("robert@example.com")).toHaveLength(2);
+    expect(screen.getByText("06/14/1987")).toBeInTheDocument();
+    expect(screen.getByText("08/12/2030")).toBeInTheDocument();
   });
   test("allows personal information to be edited and saved", async () => {
     const user = userEvent.setup();
@@ -278,6 +429,15 @@ describe("RegistrationDetails", () => {
 
     expect(screen.getByDisplayValue("Bob")).toBeInTheDocument();
 
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Sex" }),
+      "Female",
+    );
+
+    fireEvent.change(screen.getByLabelText("Date of Birth"), {
+      target: { value: "1990-04-25" },
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Cancel",
@@ -299,6 +459,14 @@ describe("RegistrationDetails", () => {
         name: "Robert Henderson",
       }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Male")).toBeInTheDocument();
+    expect(screen.getByText("06/14/1987")).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+
+    expect(screen.getByRole("combobox", { name: "Sex" })).toHaveValue("Male");
+
+    expect(screen.getByLabelText("Date of Birth")).toHaveValue("1987-06-14");
   });
   test("converts the departure airport to uppercase while editing", async () => {
     const user = userEvent.setup();

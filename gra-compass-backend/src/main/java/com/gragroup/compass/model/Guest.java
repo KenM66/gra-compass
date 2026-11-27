@@ -13,7 +13,9 @@ public class Guest {
 
     private String firstName;
     private String lastName;
+    private String preferredName;
     private String email;
+    private String phone;
 
     private String accessibility;
     private String dietaryRequirements;

@@ -13,6 +13,8 @@ import "../styles/RegistrationDetails.css";
 
 import { fetchActivities } from "../store/activitiesSlice";
 
+import { formatDate } from "../utils/dateUtils";
+
 const GuestDetails = () => {
   const { tripId, id } = useParams();
   const navigate = useNavigate();
@@ -398,8 +400,8 @@ const GuestDetails = () => {
           <span>Sex</span>
 
           {isEditingPersonalInfo ? (
-            <input
-              type="text"
+            <select
+              aria-label="Sex"
               value={editPersonalInfo.sex}
               onChange={(event) =>
                 setEditPersonalInfo({
@@ -407,7 +409,19 @@ const GuestDetails = () => {
                   sex: event.target.value,
                 })
               }
-            />
+            >
+              <option value="">Select Sex</option>
+
+              {editPersonalInfo.sex &&
+                !["Male", "Female"].includes(editPersonalInfo.sex) && (
+                  <option value={editPersonalInfo.sex}>
+                    {editPersonalInfo.sex}
+                  </option>
+                )}
+
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
           ) : (
             <strong>{guest.sex || ""}</strong>
           )}
@@ -437,7 +451,7 @@ const GuestDetails = () => {
 
           {isEditingPersonalInfo ? (
             <input
-              type="text"
+              type="tel"
               value={editPersonalInfo.phone}
               onChange={(event) =>
                 setEditPersonalInfo({
@@ -457,6 +471,7 @@ const GuestDetails = () => {
           {isEditingPersonalInfo ? (
             <input
               type="date"
+              aria-label="Date of Birth"
               value={editPersonalInfo.dateOfBirth}
               onChange={(event) =>
                 setEditPersonalInfo({
@@ -466,7 +481,7 @@ const GuestDetails = () => {
               }
             />
           ) : (
-            <strong>{guest.dateOfBirth || "Not Provided"}</strong>
+            <strong>{formatDate(guest.dateOfBirth, "Not Provided")}</strong>
           )}
         </div>
         {isEditingPersonalInfo && (
@@ -549,6 +564,7 @@ const GuestDetails = () => {
           {isEditingTravelInfo ? (
             <input
               type="date"
+              aria-label="Passport Expiration"
               value={editTravelInfo.passportExpiration}
               onChange={(event) =>
                 setEditTravelInfo({
@@ -558,7 +574,9 @@ const GuestDetails = () => {
               }
             />
           ) : (
-            <strong>{guest.passportExpiration || "Not Provided"}</strong>
+            <strong>
+              {formatDate(guest.passportExpiration, "Not Provided")}
+            </strong>
           )}
         </div>
 

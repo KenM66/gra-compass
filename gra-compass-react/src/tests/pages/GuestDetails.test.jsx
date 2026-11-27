@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
@@ -152,6 +152,8 @@ describe("GuestDetails", () => {
     expect(screen.getByText("Amanda")).toBeInTheDocument();
     expect(screen.getByText("Henderson")).toBeInTheDocument();
     expect(screen.getByText("amanda@example.com")).toBeInTheDocument();
+    expect(screen.getByText("09/22/1988")).toBeInTheDocument();
+    expect(screen.getByText("05/18/2031")).toBeInTheDocument();
   });
   test("shows a message when the traveler has no guest", () => {
     const registrationWithoutGuest = {
@@ -222,6 +224,29 @@ describe("GuestDetails", () => {
     await user.clear(emailInput);
     await user.type(emailInput, "mandy@example.com");
 
+    const sexSelect = screen.getByRole("combobox", { name: "Sex" });
+    const dateInput = screen.getByLabelText("Date of Birth");
+    const phoneInput = screen.getByDisplayValue("216-555-0123");
+
+    expect(sexSelect).toHaveValue("Female");
+
+    expect(Array.from(sexSelect.options).map((option) => option.value)).toEqual(
+      ["", "Male", "Female"],
+    );
+
+    expect(dateInput).toHaveAttribute("type", "date");
+    expect(dateInput).toHaveValue("1988-09-22");
+    expect(phoneInput).toHaveAttribute("type", "tel");
+
+    await user.selectOptions(sexSelect, "Male");
+
+    fireEvent.change(dateInput, {
+      target: { value: "1992-07-15" },
+    });
+
+    await user.clear(phoneInput);
+    await user.type(phoneInput, "216-555-0199");
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
@@ -247,6 +272,22 @@ describe("GuestDetails", () => {
     const updatedRegistration = JSON.parse(putCall[1].body);
 
     expect(updatedRegistration.guest.firstName).toBe("Mandy");
+    expect(updatedRegistration.guest.email).toBe("mandy@example.com");
+    expect(updatedRegistration.guest.sex).toBe("Male");
+    expect(updatedRegistration.guest.dateOfBirth).toBe("1992-07-15");
+    expect(updatedRegistration.guest.phone).toBe("216-555-0199");
+
+    expect(updatedRegistration.firstName).toBe("Robert");
+    expect(updatedRegistration.email).toBe("robert@example.com");
+    expect(updatedRegistration.activities).toEqual(registration.activities);
+    expect(updatedRegistration.guest.activities).toEqual(
+      registration.guest.activities,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("07/15/1992")).toBeInTheDocument();
+      expect(screen.getByText("Male")).toBeInTheDocument();
+    });
   });
   test("cancels guest personal information changes without saving", async () => {
     const user = userEvent.setup();
@@ -266,6 +307,15 @@ describe("GuestDetails", () => {
 
     expect(screen.getByDisplayValue("Princess Consuela")).toBeInTheDocument();
 
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Sex" }),
+      "Male",
+    );
+
+    fireEvent.change(screen.getByLabelText("Date of Birth"), {
+      target: { value: "1992-07-15" },
+    });
+
     await user.click(
       screen.getByRole("button", {
         name: "Cancel",
@@ -283,7 +333,72 @@ describe("GuestDetails", () => {
     ).not.toBeInTheDocument();
 
     expect(screen.getByText("Amanda")).toBeInTheDocument();
+    expect(screen.getByText("Female")).toBeInTheDocument();
+    expect(screen.getByText("09/22/1988")).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+
+    expect(screen.getByRole("combobox", { name: "Sex" })).toHaveValue("Female");
+
+    expect(screen.getByLabelText("Date of Birth")).toHaveValue("1988-09-22");
   });
+
+  test("preserves an existing legacy guest sex value when saving personal information", async () => {
+    const user = userEvent.setup();
+
+    const legacyRegistration = {
+      ...registration,
+      guest: {
+        ...registration.guest,
+        sex: "Unspecified",
+      },
+    };
+
+    renderGuestDetails({ 1: [legacyRegistration] });
+
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+
+    const sexSelect = screen.getByRole("combobox", { name: "Sex" });
+
+    expect(sexSelect).toHaveValue("Unspecified");
+
+    expect(Array.from(sexSelect.options).map((option) => option.value)).toEqual(
+      ["", "Unspecified", "Male", "Female"],
+    );
+
+    const firstNameInput = screen.getByDisplayValue("Amanda");
+
+    await user.clear(firstNameInput);
+    await user.type(firstNameInput, "Mandy");
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        ...legacyRegistration,
+        guest: {
+          ...legacyRegistration.guest,
+          firstName: "Mandy",
+        },
+      }),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Unspecified")).toBeInTheDocument();
+    });
+
+    const putCall = globalThis.fetch.mock.calls.find(
+      ([, options]) => options?.method === "PUT",
+    );
+
+    const requestBody = JSON.parse(putCall[1].body);
+
+    expect(requestBody.guest.sex).toBe("Unspecified");
+    expect(requestBody.guest.firstName).toBe("Mandy");
+    expect(requestBody.firstName).toBe("Robert");
+  });
+
   test("converts the guest departure airport to uppercase while editing", async () => {
     const user = userEvent.setup();
 
@@ -336,6 +451,17 @@ describe("GuestDetails", () => {
     await user.clear(passportInput);
     await user.type(passportInput, "ABC123456");
 
+    const expirationInput = screen.getByLabelText("Passport Expiration");
+
+    expect(expirationInput).toHaveAttribute("type", "date");
+    expect(expirationInput).toHaveValue("2031-05-18");
+
+    fireEvent.change(expirationInput, {
+      target: { value: "2036-11-24" },
+    });
+
+    expect(expirationInput).toHaveValue("2036-11-24");
+
     await user.click(
       screen.getByRole("button", {
         name: "Save",
@@ -362,7 +488,7 @@ describe("GuestDetails", () => {
 
     expect(updatedRegistration.guest.airport).toBe("JFK");
     expect(updatedRegistration.guest.passportNumber).toBe("ABC123456");
-    expect(updatedRegistration.guest.passportExpiration).toBe("2031-05-18");
+    expect(updatedRegistration.guest.passportExpiration).toBe("2036-11-24");
 
     expect(updatedRegistration.guest.departureAirport).toBeUndefined();
 
@@ -447,6 +573,8 @@ describe("GuestDetails", () => {
     expect(updatedRegistration.firstName).toBe("Robert");
     expect(updatedRegistration.email).toBe("robert@example.com");
     expect(updatedRegistration.travelerNumber).toBe(1047);
+
+    expect(updatedRegistration.guest.passportExpiration).toBe("2031-05-18");
   });
   test("disables reservations when the backend reports a full session", async () => {
     const user = userEvent.setup();

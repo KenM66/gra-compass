@@ -340,3 +340,23 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+.detail-row select,
+.detail-row input[type="date"] {
+  box-sizing: border-box;
+  width: 180px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  background-color: white;
+  color: #222;
+  font: inherit;
+}
+
+.detail-row select:focus,
+.detail-row input[type="date"]:focus {
+  outline: 2px solid #2f7d32;
+  outline-offset: 1px;
+}
