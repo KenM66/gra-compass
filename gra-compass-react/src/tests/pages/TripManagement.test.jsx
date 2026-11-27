@@ -27,13 +27,23 @@ const registrationsByTrip = {
   1: [],
 };
 
+const activitiesWithReservations = (reservedCount) =>
+  (selectionsByTrip[1] || []).map((activity, index) => ({
+    ...activity,
+    sessions: activity.sessions.map((session) => ({
+      ...session,
+      reservedCount: index === 0 && session.id === 101 ? reservedCount : 0,
+    })),
+  }));
+
 const renderTripManagement = ({
   testTrips = [trip],
   testRegistrationsByTrip = registrationsByTrip,
   initialEntry = "/trips/1/manage",
   mutationResponse = {},
+  testActivities = selectionsByTrip[1] || [],
 } = {}) => {
-  let savedActivities = structuredClone(selectionsByTrip[1] || []);
+  let savedActivities = structuredClone(testActivities);
   vi.stubGlobal(
     "fetch",
     vi.fn((url, options) => {
@@ -89,6 +99,7 @@ const renderTripManagement = ({
 
         const session = {
           id: 201,
+          reservedCount: 0,
           ...body,
         };
 
@@ -179,7 +190,7 @@ const renderTripManagement = ({
       },
       activities: {
         byTrip: {
-          1: selectionsByTrip[1] || [],
+          1: structuredClone(testActivities),
         },
         loading: false,
         error: null,
@@ -699,6 +710,7 @@ describe("TripManagement", () => {
 
     renderTripManagement({
       testRegistrationsByTrip,
+      testActivities: activitiesWithReservations(1),
       initialEntry: "/trips/1/manage?tab=selections",
     });
 
@@ -811,6 +823,7 @@ describe("TripManagement", () => {
 
     renderTripManagement({
       testRegistrationsByTrip,
+      testActivities: activitiesWithReservations(2),
       initialEntry: "/trips/1/manage?tab=selections",
     });
 
@@ -1154,5 +1167,293 @@ describe("TripManagement", () => {
     expect(within(selectionCard).getByDisplayValue("")).toBeInTheDocument();
 
     alertSpy.mockRestore();
+  });
+
+  test("displays reserved seats including guest-only reservations", async () => {
+    const testActivities = activitiesWithReservations(1);
+
+    const activity = testActivities[0];
+    const session = activity.sessions[0];
+
+    renderTripManagement({
+      testActivities,
+      testRegistrationsByTrip: {
+        1: [
+          {
+            travelerNumber: 1047,
+            firstName: "Robert",
+            bringingGuest: true,
+            activities: [],
+            guest: {
+              firstName: "Amanda",
+              activities: [
+                {
+                  activityId: activity.id,
+                  sessionId: session.id,
+                },
+              ],
+            },
+          },
+        ],
+      },
+      initialEntry: "/trips/1/manage?tab=selections",
+    });
+
+    const card = screen.getByText(activity.name).closest(".selection-card");
+
+    await waitFor(() => {
+      expect(
+        within(card).getByText("Registered:").parentElement,
+      ).toHaveTextContent("Registered: 1");
+
+      expect(
+        within(card).getByText("Remaining:").parentElement,
+      ).toHaveTextContent(`Remaining: ${session.maxCapacity - 1}`);
+    });
+  });
+
+  test("counts both traveler and guest and displays FULL when capacity is reached", async () => {
+    const testActivities = activitiesWithReservations(2);
+
+    const activity = testActivities[0];
+    const session = activity.sessions[0];
+
+    session.maxCapacity = 2;
+
+    const reservation = {
+      activityId: activity.id,
+      sessionId: session.id,
+    };
+
+    renderTripManagement({
+      testActivities,
+      testRegistrationsByTrip: {
+        1: [
+          {
+            travelerNumber: 1047,
+            firstName: "Robert",
+            bringingGuest: true,
+            activities: [reservation],
+            guest: {
+              firstName: "Amanda",
+              activities: [reservation],
+            },
+          },
+        ],
+      },
+      initialEntry: "/trips/1/manage?tab=selections",
+    });
+
+    const card = screen.getByText(activity.name).closest(".selection-card");
+
+    await waitFor(() => {
+      expect(
+        within(card).getByText("Registered:").parentElement,
+      ).toHaveTextContent("Registered: 2");
+
+      expect(
+        within(card).getByText("Remaining:").parentElement,
+      ).toHaveTextContent("Remaining: 0");
+
+      expect(within(card).getByText("FULL")).toBeInTheDocument();
+    });
+  });
+
+  test("keeps reservation counts separate for activities sharing a session ID", async () => {
+    const testActivities = [
+      {
+        id: "activity-one",
+        type: "Excursion",
+        name: "Catamaran Adventure",
+        sessions: [
+          {
+            id: 1,
+            date: "2027-03-09",
+            time: "10:00",
+            maxCapacity: 10,
+            reservedCount: 3,
+            active: true,
+          },
+        ],
+      },
+      {
+        id: "activity-two",
+        type: "Excursion",
+        name: "Pirate Adventure",
+        sessions: [
+          {
+            id: 1,
+            date: "2027-03-09",
+            time: "14:00",
+            maxCapacity: 10,
+            reservedCount: 7,
+            active: true,
+          },
+        ],
+      },
+    ];
+
+    renderTripManagement({
+      testActivities,
+      initialEntry: "/trips/1/manage?tab=selections",
+    });
+
+    const firstCard = screen
+      .getByText("Catamaran Adventure")
+      .closest(".selection-card");
+
+    const secondCard = screen
+      .getByText("Pirate Adventure")
+      .closest(".selection-card");
+
+    await waitFor(() => {
+      expect(
+        within(firstCard).getByText("Registered:").parentElement,
+      ).toHaveTextContent("Registered: 3");
+
+      expect(
+        within(firstCard).getByText("Remaining:").parentElement,
+      ).toHaveTextContent("Remaining: 7");
+
+      expect(
+        within(secondCard).getByText("Registered:").parentElement,
+      ).toHaveTextContent("Registered: 7");
+
+      expect(
+        within(secondCard).getByText("Remaining:").parentElement,
+      ).toHaveTextContent("Remaining: 3");
+    });
+  });
+
+  test("prevents deletion of a session occupied only by a guest", async () => {
+    const user = userEvent.setup();
+
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+    const confirmSpy = vi
+      .spyOn(window, "confirm")
+      .mockImplementation(() => true);
+
+    try {
+      const testActivities = activitiesWithReservations(1);
+      const activity = testActivities[0];
+
+      renderTripManagement({
+        testActivities,
+        testRegistrationsByTrip: {
+          1: [
+            {
+              travelerNumber: 1047,
+              firstName: "Robert",
+              bringingGuest: true,
+              activities: [],
+              guest: {
+                firstName: "Amanda",
+                activities: [
+                  {
+                    activityId: activity.id,
+                    sessionId: 101,
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        initialEntry: "/trips/1/manage?tab=selections",
+      });
+
+      const card = screen.getByText(activity.name).closest(".selection-card");
+
+      await user.click(
+        within(card).getByRole("button", {
+          name: "Delete Session",
+        }),
+      );
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        "This session cannot be deleted because 1 people are already registered for it.",
+      );
+
+      expect(confirmSpy).not.toHaveBeenCalled();
+
+      expect(fetch).not.toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          method: "DELETE",
+        }),
+      );
+    } finally {
+      alertSpy.mockRestore();
+      confirmSpy.mockRestore();
+    }
+  });
+
+  test("prevents reducing session capacity below combined traveler and guest reservations", async () => {
+    const user = userEvent.setup();
+
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+    try {
+      const testActivities = activitiesWithReservations(2);
+      const activity = testActivities[0];
+
+      const reservation = {
+        activityId: activity.id,
+        sessionId: 101,
+      };
+
+      renderTripManagement({
+        testActivities,
+        testRegistrationsByTrip: {
+          1: [
+            {
+              travelerNumber: 1047,
+              firstName: "Robert",
+              bringingGuest: true,
+              activities: [reservation],
+              guest: {
+                firstName: "Amanda",
+                activities: [reservation],
+              },
+            },
+          ],
+        },
+        initialEntry: "/trips/1/manage?tab=selections",
+      });
+
+      const card = screen.getByText(activity.name).closest(".selection-card");
+
+      await user.click(
+        within(card).getByRole("button", {
+          name: "Edit Session",
+        }),
+      );
+
+      const capacityInput = within(card).getByPlaceholderText("Max capacity");
+
+      await user.clear(capacityInput);
+      await user.type(capacityInput, "1");
+
+      await user.click(
+        within(card).getByRole("button", {
+          name: "Save",
+        }),
+      );
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Capacity cannot be lower than the 2 people already registered.",
+      );
+
+      expect(capacityInput).toBeInTheDocument();
+
+      expect(fetch).not.toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          method: "PUT",
+        }),
+      );
+    } finally {
+      alertSpy.mockRestore();
+    }
   });
 });

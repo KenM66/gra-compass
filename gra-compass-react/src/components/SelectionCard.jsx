@@ -44,7 +44,7 @@ const SelectionCard = ({
   );
 
   const registeredCount = selectedSession
-    ? getSessionRegistrationCount(selectedSession.id)
+    ? getSessionRegistrationCount(selection.id, selectedSession.id)
     : 0;
 
   return (
